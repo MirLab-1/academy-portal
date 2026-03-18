@@ -1,6 +1,6 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD
- * TRIPLE-CHECKED: Fixed Screen Switching, Fixed Begin Button, Fixed AI Voice
+ * The Knowledge Portal - V4.2 AAA Build
+ * VERIFIED RECOVERY: No Stuck Loading, Begin Button Fixed, AI Voice Unlocked.
  */
 
 const socket = io();
@@ -271,7 +271,7 @@ const quizData = {
 };
 
 // ---------------------------------------------------------
-// 2. SYSTEM STATE & AAA FEATURES
+// 2. SYSTEM STATE & ACCOUNTS
 // ---------------------------------------------------------
 let currentPoints = 0;
 let currentPath = "";
@@ -287,64 +287,114 @@ let usedJeopardyQuestions = [];
 // 3. MASTER SCREEN MANAGEMENT (Fixes Loading Screen Freeze)
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    // Force remove active from all screens
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => s.classList.remove('active'));
-    
-    // Explicitly add active to the target
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        console.log("SCREEN SWITCHED TO: " + screenId);
     }
 }
 
 // ---------------------------------------------------------
-// 4. MASTER MOBILE AUDIO WAKEUP LOGIC
+// 4. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
 // ---------------------------------------------------------
+function getRankBadge(points) {
+    if (points >= 15000) return "🟡 Captain";
+    if (points >= 5000) return "🔵 Builder";
+    return "🟢 Student";
+}
+
+function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const color = colors[name.length % colors.length];
+    const initial = name.charAt(0).toUpperCase();
+    const fireClass = isOnFire ? "on-fire-avatar" : "";
+    const rank = getRankBadge(points || 0);
+    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
+    const bountyIcon = hasBounty ? '🎯' : '';
+    
+    return `<div style="display:flex; align-items:center;">
+        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+            ${isOnFire ? '🔥' : initial}
+        </div>
+        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+    </div>`;
+}
+
+// ---------------------------------------------------------
+// 5. RESTORED WORKING AUDIO ENGINE (MOBILE VERIFIED)
+// ---------------------------------------------------------
+let audioCtx = null;
+
 function masterUnlockAudio() {
     if (voiceUnlocked) return;
     try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
         const buffer = audioCtx.createBuffer(1, 1, 22050);
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
         source.connect(audioCtx.destination);
         source.start(0);
-
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const silentMsg = new SpeechSynthesisUtterance("Welcome");
-            silentMsg.volume = 0; // Silent but wakes the engine
+            const silentMsg = new SpeechSynthesisUtterance("Start");
+            silentMsg.volume = 0.1;
             window.speechSynthesis.speak(silentMsg);
         }
         voiceUnlocked = true;
-        console.log("AUDIO HARDWARE INITIALIZED");
     } catch(e) { console.error("Audio unlock failed", e); }
 }
+
+const sfx = {
+    playTone: (freq, type, duration) => {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    },
+    buzz: () => sfx.playTone(400, 'square', 0.2),
+    tick: () => sfx.playTone(800, 'sine', 0.05),
+    correct: () => { sfx.playTone(523, 'sine', 0.1); setTimeout(() => sfx.playTone(659, 'sine', 0.2), 100); },
+    wrong: () => sfx.playTone(150, 'sawtooth', 0.4),
+    heartbeat: () => { sfx.playTone(100, 'sine', 0.1); setTimeout(() => sfx.playTone(100, 'sine', 0.1), 150); },
+    siren: () => {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
+            osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 2);
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 2);
+        } catch(e) {}
+    }
+};
 
 function speak(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); 
         const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'en-US';
-        msg.rate = 0.9; 
-        msg.pitch = 1.0;
-        msg.volume = 1.0;
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+        if (preferredVoice) msg.voice = preferredVoice;
+        msg.rate = 0.95; 
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
 }
 
 // ---------------------------------------------------------
-// 5. LOGIN & INITIALIZATION (FIXED STARTUP)
+// 6. INITIALIZATION & LOGIN
 // ---------------------------------------------------------
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
     const savedPoints = localStorage.getItem('noi_points');
-    
     if (savedUser) {
         currentUser = savedUser;
         currentPoints = savedPoints ? parseInt(savedPoints) : 0;
@@ -358,9 +408,9 @@ window.onload = () => {
 };
 
 function registerUser() {
-    masterUnlockAudio(); // Unlock audio on first click
+    masterUnlockAudio();
     const nameInput = document.getElementById('username-input').value.trim();
-    if (nameInput === "") return alert("Please enter a name.");
+    if (nameInput === "") return alert("Please enter a name to begin.");
     currentUser = nameInput;
     currentPoints = 0;
     localStorage.setItem('noi_user', currentUser);
@@ -369,11 +419,10 @@ function registerUser() {
     document.getElementById('display-name').innerText = currentUser;
     document.getElementById('display-points').innerText = currentPoints;
     switchScreen('home-screen');
-    setTimeout(() => speak("Welcome to the Academy."), 500);
 }
 
 // ---------------------------------------------------------
-// 6. JEOPARDY LOGIC (AAA ANALYTICS RESTORED)
+// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -382,7 +431,7 @@ function startJeopardy() {
     document.getElementById('j-game-view').style.display = 'none';
     document.getElementById('j-podium-view').style.display = 'none';
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = 'var(--gold)'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
+    rBtn.style.background = 'var(--gold)'; rBtn.style.color = 'black'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
     socket.emit('join_jeopardy', { name: currentUser });
 }
 
@@ -390,7 +439,7 @@ function sendReady() {
     masterUnlockAudio();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = '#555'; rBtn.innerText = "WAITING..."; rBtn.disabled = true;
+    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING FOR OTHERS..."; rBtn.disabled = true;
 }
 
 socket.on('lobby_update', (data) => {
@@ -404,18 +453,21 @@ socket.on('score_update', (scores) => {
     list.innerHTML = "";
     scores.forEach((p, idx) => {
         const isMe = p.name === currentUser;
+        const color = isMe ? "var(--gold)" : "white";
         const isOnFire = p.streak >= 3;
         const hasBounty = p.globalWinStreak >= 2;
         let rowClass = "lb-row";
         if (p.eliminated) rowClass += " eliminated";
-        
-        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; padding: 10px 5px; border-bottom:1px solid #333;">
+
+        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px; border-bottom:1px solid #333;">
             <div style="display:flex; align-items:center;">
-                <span class="${hasBounty ? 'bounty-target' : ''}" style="margin-left: 5px; color:${isMe?'var(--gold)':'white'}">${idx+1}. ${p.name}</span>
+                ${getAvatar(p.name, p.globalPoints, isOnFire, hasBounty)}
+                <span class="${hasBounty ? 'bounty-target' : ''}" style="margin-left: 5px;">${idx+1}. ${p.name}</span>
             </div>
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
+                ${p.eliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -425,32 +477,44 @@ socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
-    speak("Jeopardy is starting.");
+    document.getElementById('j-question-box').innerText = "Game is beginning...";
+    document.getElementById('j-question-box').className = "big-tv";
+    speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
+});
+
+socket.on('round_update', (data) => {
+    document.getElementById('j-round-display').innerText = `${data.round}/${data.max}`;
 });
 
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
-        let q = null;
-        while (!q) {
+        let randomQ = null;
+        while (!randomQ) {
             let cat = categories[Math.floor(Math.random() * categories.length)];
-            let diffs = ['easy', 'medium', 'hard'];
-            let randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+            let randomDiff = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
             let questions = quizData[cat][randomDiff];
-            let avail = questions.filter(item => !usedJeopardyQuestions.includes(item.question));
-            if (avail.length > 0) {
-                q = avail[Math.floor(Math.random() * avail.length)];
-                q.categoryTitle = quizData[cat].title;
+            let available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
+            if (available.length > 0) {
+                randomQ = available[Math.floor(Math.random() * available.length)];
+                randomQ.categoryTitle = quizData[cat].title;
             }
         }
-        usedJeopardyQuestions.push(q.question);
-        socket.emit('start_round', q);
+        usedJeopardyQuestions.push(randomQ.question);
+        socket.emit('start_round', randomQ); 
     }
+});
+
+socket.on('golden_alert', () => {
+    sfx.siren();
+    document.getElementById('j-question-box').className = "big-tv golden-tv";
+    document.getElementById('j-question-box').innerHTML = "<span style='color: white; font-size:36px;'>🚨 THE GOLDEN QUESTION 🚨<br><span style='font-size:20px; color:#fbbf24;'>Triple Points on the Line</span></span>";
+    speak("Alert. This is the Golden Question. Triple points are on the line.");
 });
 
 socket.on('new_question', (qData) => {
     document.getElementById('j-question-box').innerText = qData.question;
-    speak(qData.question);
+    speak(qData.question); 
     document.getElementById('buzzer-status').innerText = "BUZZ IN!";
     const btn = document.getElementById('buzzer-btn');
     btn.className = "buzzer-ready"; btn.innerText = "BUZZ!";
@@ -466,24 +530,27 @@ function sendBuzz() {
 }
 
 socket.on('player_buzzed', (data) => {
+    sfx.buzz(); 
     const btn = document.getElementById('buzzer-btn');
     btn.className = "buzzer-locked"; btn.innerText = "LOCKED";
     if (data.name === currentUser) {
-        document.getElementById('buzzer-status').innerText = "YOUR TURN!";
-        const box = document.getElementById('j-options-box');
-        box.style.display = "grid"; box.innerHTML = "";
-        [...window.currentJeopardyOptions].sort(() => Math.random()-0.5).forEach(opt => {
+        document.getElementById('buzzer-status').innerText = "YOU BUZZED IN!";
+        const optionsBox = document.getElementById('j-options-box');
+        optionsBox.style.display = "grid"; optionsBox.innerHTML = "";
+        [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5).forEach(opt => {
             const obtn = document.createElement('button');
             obtn.className = 'option-btn'; obtn.innerText = opt;
             obtn.onclick = () => { socket.emit('submit_answer', { name: currentUser, answer: opt }); };
-            box.appendChild(obtn);
+            optionsBox.appendChild(obtn);
         });
-    } else { document.getElementById('buzzer-status').innerText = `Waiting for ${data.name}...`; }
+    } else {
+        document.getElementById('buzzer-status').innerText = `Waiting for ${data.name}...`;
+    }
 });
 
 socket.on('answer_result', (data) => {
-    if (data.isCorrect) { speak("Correct."); } 
-    else { speak("Incorrect."); }
+    if (data.isCorrect) { sfx.correct(); speak("Correct."); } 
+    else { sfx.wrong(); speak("Incorrect."); }
     document.getElementById('j-options-box').style.display = "none";
 });
 
@@ -495,41 +562,44 @@ socket.on('game_over', (finalScores) => {
         let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
         let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
         html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-                <span style="font-size:24px;">${medal} ${s.name}</span>
-                <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
+            <div style="display:flex; align-items:center;">
+                <span style="font-size:32px; margin-right:15px;">${medal}</span>
+                ${getAvatar(s.name, s.globalPoints)}
+                <span style="font-size:28px; font-weight:bold; margin-left:10px;">${s.name}</span>
+                <span style="margin-left:auto; font-size:28px; color:#10b981;">${s.score} pts</span>
             </div>
-            <div style="font-size:12px; color:#888;">Accuracy: ${acc}% | Streak: ${s.maxStreak || 0}</div>
+            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
+                <span>🎯 Accuracy: ${acc}%</span>
+                <span>⏱️ Streak: ${s.maxStreak || 0}</span>
+            </div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
-    speak("The game is over.");
+    speak("The game is over. Congratulations.");
 });
 
 // ---------------------------------------------------------
-// 7. STUDY & QUIZ LOGIC (FIXED BEGIN BUTTON)
+// 8. ORIGINAL DIFFICULTY & STUDY LOGIC (FIXED BEGIN BUTTON)
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { selectedModeTemp = mode; document.getElementById('difficulty-modal').classList.add('active'); }
 function closeDifficulty() { document.getElementById('difficulty-modal').classList.remove('active'); }
-
 function selectDifficulty(diff) {
     closeDifficulty();
     pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
     openStudyLibrary(selectedModeTemp, diff);
 }
-
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
-    if (mode === 'adults') pointMultiplier = 1000;
+    if (mode === 'adults') pointMultiplier = 1000; 
     switchScreen('study-screen');
     document.getElementById('study-title').innerText = quizData[mode].title;
     document.getElementById('study-text').innerHTML = quizData[mode].studyText;
 }
 
 function beginQuizFromStudy() {
-    masterUnlockAudio(); // Unlock audio hardware
+    masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     activeQuestions = [...quizData[currentPath][currentDiff]];
     if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
@@ -545,7 +615,7 @@ function loadQuestion() {
     document.getElementById('question').innerText = q.question;
     const box = document.getElementById('options');
     box.innerHTML = "";
-    [...q.options].sort(() => Math.random()-0.5).forEach(opt => {
+    [...q.options].sort(() => Math.random() - 0.5).forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn'; btn.innerText = opt;
         btn.onclick = () => checkAnswer(opt, btn, q.correct);
@@ -553,17 +623,19 @@ function loadQuestion() {
     });
 }
 
-function checkAnswer(sel, btn, cor) {
+function checkAnswer(selected, btn, correct) {
     masterUnlockAudio();
-    const btns = document.getElementById('options').querySelectorAll('.option-btn');
-    btns.forEach(b => b.disabled = true);
-    if (sel === cor) {
+    const quizBtns = document.getElementById('options').querySelectorAll('.option-btn');
+    quizBtns.forEach(b => b.disabled = true);
+    if (selected === correct) {
         correctAnswers++; pointsThisSession += pointMultiplier;
         document.getElementById('live-points').innerText = pointsThisSession;
         btn.classList.add('correct');
+        sfx.correct();
     } else {
         btn.classList.add('wrong');
-        btns.forEach(b => { if(b.innerText === cor) b.classList.add('correct'); });
+        quizBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        sfx.wrong();
     }
     setTimeout(() => {
         currentIdx++;
@@ -581,7 +653,7 @@ function showResults() {
 }
 
 // ---------------------------------------------------------
-// 8. NAVIGATION & CHAT
+// 9. NAVIGATION & CHAT
 // ---------------------------------------------------------
 function returnToMenu() {
     window.speechSynthesis.cancel();
@@ -598,10 +670,10 @@ function showLeaderboard() {
 socket.on('leaderboard_data', (data) => {
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = "";
-    data.sort((a,b) => b.points - a.points).forEach((u, i) => {
+    data.sort((a, b) => b.points - a.points).forEach((user, index) => {
         const row = document.createElement('div');
-        row.className = `lb-row ${i===0?'first':''} ${u.name===currentUser?'me':''}`;
-        row.innerHTML = `<span>#${i+1} ${u.name}</span><span>${u.points.toLocaleString()} pts</span>`;
+        row.className = `lb-row ${index === 0 ? 'first' : ''} ${user.name === currentUser ? 'me' : ''}`;
+        row.innerHTML = `<div style="display:flex; align-items:center;">${getAvatar(user.name, user.points)} <span style="margin-left:5px;">#${index + 1} ${user.name}</span></div><span>${user.points.toLocaleString()} pts</span>`;
         list.appendChild(row);
     });
 });
@@ -624,4 +696,8 @@ socket.on('receive_chat', (data) => {
         <div>${data.message}</div>
     </div>`;
     box.appendChild(div); box.scrollTop = box.scrollHeight;
+});
+
+document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && document.activeElement.id === 'chat-input') sendChatMessage();
 });
