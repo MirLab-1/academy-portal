@@ -1,9 +1,7 @@
 /**
- * The Knowledge Portal - V4.2 AAA Build
- * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
- * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
- * MOBILE PATCH: Audio Engine Wakeup & Viewport Logic Integrated.
- * FINAL FIX: Master Begin Button logic and Mobile Auto-Centering.
+ * The Knowledge Portal - V4.2 AAA FULL BUILD
+ * RESTORED: Full 180 Question Database, Sudden Death, Bounties, Analytics
+ * FIXES: No Stuck Loading Screen, Begin Button Works, Mobile Auto-Center, AI Voice Wakeup
  */
 
 const socket = io();
@@ -290,10 +288,6 @@ let usedJeopardyQuestions = [];
 // 3. MASTER SCREEN MANAGEMENT (Fixes Loading and Centering)
 // ---------------------------------------------------------
 
-/**
- * RECOVERY FIX: This function explicitly hides/shows screens and FORCE SNAPS to top.
- * This fixes the issue where screens were offset or didn't show up correctly.
- */
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
     screens.forEach(id => {
@@ -309,7 +303,7 @@ function switchScreen(screenId) {
 }
 
 // ---------------------------------------------------------
-// 4. RANK BADGES, AVATARS & BOUNTY RENDERER
+// 4. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
 // ---------------------------------------------------------
 function getRankBadge(points) {
     if (points >= 15000) return "🟡 Captain";
@@ -338,9 +332,6 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 // 5. RESTORED WORKING AUDIO ENGINE
 // ---------------------------------------------------------
 
-/**
- * FIXED: This function is the "Engine Starter". It handles SFX and AI Voice.
- */
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
     try {
@@ -355,8 +346,8 @@ function masterUnlockAudio() {
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const wakeup = new SpeechSynthesisUtterance("Welcome");
-            wakeup.volume = 0.1;
+            const wakeup = new SpeechSynthesisUtterance(" ");
+            wakeup.volume = 0;
             window.speechSynthesis.speak(wakeup);
         }
         voiceUnlocked = true;
@@ -488,7 +479,7 @@ socket.on('score_update', (scores) => {
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
-                ${isEliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
+                ${p.eliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -510,17 +501,15 @@ socket.on('round_update', (data) => {
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
-        const diffs = ['easy', 'medium', 'hard'];
         let randomQ = null;
-        let randomCat = "";
         while (!randomQ) {
-            randomCat = categories[Math.floor(Math.random() * categories.length)];
-            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-            const questions = quizData[randomCat][randomDiff];
-            const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
+            let cat = categories[Math.floor(Math.random() * categories.length)];
+            let randomDiff = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
+            let questions = quizData[cat][randomDiff];
+            let available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
             if (available.length > 0) {
                 randomQ = available[Math.floor(Math.random() * available.length)];
-                randomQ.categoryTitle = quizData[randomCat].title;
+                randomQ.categoryTitle = quizData[cat].title;
             }
         }
         usedJeopardyQuestions.push(randomQ.question);
@@ -554,12 +543,8 @@ function sendBuzz() {
 
 socket.on('player_buzzed', (data) => {
     sfx.buzz(); 
-    window.speechSynthesis.cancel(); 
     const btn = document.getElementById('buzzer-btn');
-    if (!btn.className.includes("DEAD")) {
-        btn.className = "buzzer-locked";
-        btn.innerText = "LOCKED";
-    }
+    btn.className = "buzzer-locked"; btn.innerText = "LOCKED";
     if (data.name === currentUser) {
         document.getElementById('buzzer-status').innerText = "YOU BUZZED IN!";
         const optionsBox = document.getElementById('j-options-box');
@@ -568,7 +553,7 @@ socket.on('player_buzzed', (data) => {
             const obtn = document.createElement('button');
             obtn.className = 'option-btn';
             obtn.innerText = opt;
-            obtn.onclick = () => { masterUnlockAudio(); submitJeopardyAnswer(opt); };
+            obtn.onclick = () => { masterUnlockAudio(); socket.emit('submit_answer', { name: currentUser, answer: opt }); };
             optionsBox.appendChild(obtn);
         });
     } else {
@@ -602,7 +587,11 @@ socket.on('game_over', (finalScores) => {
                 <span style="font-size:24px;">${medal} ${s.name}</span>
                 <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
             </div>
-            <div style="font-size:12px; color:#aaa; margin-top:5px;">Accuracy: ${acc}% | Avg Buzz: ${avgTime}s | Max Streak: ${s.maxStreak || 0}</div>
+            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
+                <span>🎯 Accuracy: ${acc}%</span>
+                <span>⏱️ Avg Buzz: ${avgTime}s</span>
+                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
+            </div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
@@ -650,8 +639,8 @@ function loadQuestion() {
     const q = activeQuestions[currentIdx];
     document.getElementById('progress-bar').style.width = ((currentIdx)/activeQuestions.length)*100 + "%";
     document.getElementById('question').innerText = q.question;
-    const optionsDiv = document.getElementById('options');
-    optionsDiv.innerHTML = "";
+    const box = document.getElementById('options');
+    box.innerHTML = "";
     
     let shuffledOptions = [...q.options];
     if (currentPath !== 'adults') shuffledOptions.sort(() => Math.random() - 0.5);
@@ -660,11 +649,12 @@ function loadQuestion() {
         const btn = document.createElement('button');
         btn.className = 'option-btn'; btn.innerText = opt;
         btn.onclick = () => { masterUnlockAudio(); checkAnswer(opt, btn, q.correct); };
-        optionsDiv.appendChild(btn);
+        box.appendChild(btn);
     });
 }
 
 function checkAnswer(selected, btn, correct) {
+    masterUnlockAudio();
     const quizBtns = document.getElementById('options').querySelectorAll('.option-btn');
     quizBtns.forEach(b => b.disabled = true);
     if (selected === correct) {
@@ -674,7 +664,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        quizBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
         sfx.wrong();
     }
     setTimeout(() => {
@@ -696,7 +686,7 @@ function showResults() {
 // 11. NAVIGATION & CHAT
 // ---------------------------------------------------------
 function returnToMenu() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     switchScreen('home-screen');
 }
@@ -708,14 +698,13 @@ function showLeaderboard() {
 }
 
 socket.on('leaderboard_data', (data) => {
-    const listDiv = document.getElementById('leaderboard-list');
-    if (!listDiv) return;
-    listDiv.innerHTML = "";
+    const list = document.getElementById('leaderboard-list');
+    list.innerHTML = "";
     data.sort((a, b) => b.points - a.points).forEach((user, index) => {
         const row = document.createElement('div');
         row.className = `lb-row ${index === 0 ? 'first' : ''} ${user.name === currentUser ? 'me' : ''}`;
         row.innerHTML = `<div style="display:flex; align-items:center;">${getAvatar(user.name, user.points)} <span style="margin-left:5px;">#${index + 1} ${user.name}</span></div><span>${user.points.toLocaleString()} pts</span>`;
-        listDiv.appendChild(row);
+        list.appendChild(row);
     });
 });
 
@@ -734,11 +723,9 @@ socket.on('receive_chat', (data) => {
     div.style.display = "flex"; div.style.justifyContent = isMe ? "flex-end" : "flex-start";
     div.innerHTML = `<div style="background:${isMe?'rgba(212,175,55,0.1)':'#222'}; padding:10px; border-radius:10px; max-width:80%;">
         <div style="font-size:10px; color:var(--gold);">${data.name}</div>
-        <div style="color:white;">${data.message}</div>
+        <div>${data.message}</div>
     </div>`;
     box.appendChild(div); box.scrollTop = box.scrollHeight;
 });
 
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.activeElement.id === 'chat-input') sendChatMessage();
-});
+document.addEventListener('keypress', (e) => { if(e.key==='Enter' && document.activeElement.id==='chat-input') sendChatMessage(); });
