@@ -1,6 +1,8 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD
- * VERIFIED: 180 Questions, No Stuck Loading, Begin Button Fixed, AI Voice Unlocked.
+ * The Knowledge Portal - V4.2 AAA Build
+ * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
+ * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
+ * MOBILE PATCH: Audio Engine Wakeup & Viewport Logic Integrated.
  */
 
 const socket = io();
@@ -9,7 +11,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
+// 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -271,7 +273,7 @@ const quizData = {
 };
 
 // ---------------------------------------------------------
-// 2. SYSTEM STATE & AAA FEATURES
+// 2. SYSTEM STATE & ACCOUNTS
 // ---------------------------------------------------------
 let currentPoints = 0;
 let currentPath = "";
@@ -284,26 +286,19 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (Fixes Loading Screen Freeze)
+// 3. MASTER MOBILE ENGINE WAKEUP (MANDATORY FOR VOICE)
 // ---------------------------------------------------------
-function switchScreen(screenId) {
-    const screens = document.querySelectorAll('.screen');
-    screens.forEach(s => s.classList.remove('active'));
-    const target = document.getElementById(screenId);
-    if (target) {
-        target.classList.add('active');
-        console.log("SCREEN SWITCHED TO: " + screenId);
-    }
-}
 
-// ---------------------------------------------------------
-// 4. MASTER MOBILE AUDIO WAKEUP LOGIC
-// ---------------------------------------------------------
+/**
+ * FIXED: This function is the "Engine Starter". It handles SFX and AI Voice.
+ * It is called on EVERY major user interaction to ensure the browser doesn't fall asleep.
+ */
 function masterUnlockAudio() {
-    if (voiceUnlocked) return;
+    if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
     try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        
         const buffer = audioCtx.createBuffer(1, 1, 22050);
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
@@ -312,14 +307,60 @@ function masterUnlockAudio() {
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const silentMsg = new SpeechSynthesisUtterance("Start");
-            silentMsg.volume = 0.1; 
-            window.speechSynthesis.speak(silentMsg);
+            const wakeup = new SpeechSynthesisUtterance(" ");
+            wakeup.volume = 0;
+            window.speechSynthesis.speak(wakeup);
         }
         voiceUnlocked = true;
-    } catch(e) { console.error("Audio unlock failed", e); }
+        console.log("SYSTEM: AUDIO ENGINE AWAKE");
+    } catch(e) { console.error("Audio Bypass Failed", e); }
 }
 
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+        if (preferredVoice) msg.voice = preferredVoice;
+        msg.rate = 0.95; 
+        
+        // Re-wake audio hardware if browser suspended it
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        
+        window.speechSynthesis.speak(msg);
+    }
+}
+
+// ---------------------------------------------------------
+// 4. RANK BADGES, AVATARS & BOUNTY RENDERER
+// ---------------------------------------------------------
+function getRankBadge(points) {
+    if (points >= 15000) return "🟡 Captain";
+    if (points >= 5000) return "🔵 Builder";
+    return "🟢 Student";
+}
+
+function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const color = colors[name.length % colors.length];
+    const initial = name.charAt(0).toUpperCase();
+    const fireClass = isOnFire ? "on-fire-avatar" : "";
+    const rank = getRankBadge(points || 0);
+    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
+    const bountyIcon = hasBounty ? '🎯' : '';
+    
+    return `<div style="display:flex; align-items:center;">
+        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+            ${isOnFire ? '🔥' : initial}
+        </div>
+        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+    </div>`;
+}
+
+// ---------------------------------------------------------
+// 5. WORKING SFX ENGINE (AAA)
+// ---------------------------------------------------------
 const sfx = {
     playTone: (freq, type, duration) => {
         try {
@@ -331,9 +372,9 @@ const sfx = {
             osc.start(); osc.stop(audioCtx.currentTime + duration);
         } catch(e) {}
     },
-    buzz: () => sfx.playTone(400, 'square', 0.2),
-    tick: () => sfx.playTone(800, 'sine', 0.05),
-    correct: () => { sfx.playTone(523, 'sine', 0.1); setTimeout(() => sfx.playTone(659, 'sine', 0.2), 100); },
+    buzz: () => sfx.playTone(400, 'square', 0.2),    
+    tick: () => sfx.playTone(800, 'sine', 0.05),    
+    correct: () => { sfx.playTone(523, 'sine', 0.1); setTimeout(() => sfx.playTone(659, 'sine', 0.2), 100); },   
     wrong: () => sfx.playTone(150, 'sawtooth', 0.4),
     heartbeat: () => { sfx.playTone(100, 'sine', 0.1); setTimeout(() => sfx.playTone(100, 'sine', 0.1), 150); },
     siren: () => {
@@ -350,21 +391,8 @@ const sfx = {
     }
 };
 
-function speak(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(text);
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-        if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.95; 
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        window.speechSynthesis.speak(msg);
-    }
-}
-
 // ---------------------------------------------------------
-// 5. LOGIN & INITIALIZATION (FIXED STARTUP)
+// 6. INITIALIZATION & LOGIN (FIXED LOADING ISSUE)
 // ---------------------------------------------------------
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
@@ -375,14 +403,15 @@ window.onload = () => {
         document.getElementById('display-name').innerText = currentUser;
         document.getElementById('display-points').innerText = currentPoints;
         socket.emit('join_game', { name: currentUser, points: currentPoints });
-        switchScreen('home-screen');
-    } else {
-        switchScreen('login-screen');
+        
+        // RECOVERY FIX: Remove Loading state immediately
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('home-screen').classList.add('active');
     }
 };
 
 function registerUser() {
-    masterUnlockAudio();
+    masterUnlockAudio(); // KEYPRESS WAKEUP
     const nameInput = document.getElementById('username-input').value.trim();
     if (nameInput === "") return alert("Please enter a name to begin.");
     currentUser = nameInput;
@@ -392,32 +421,8 @@ function registerUser() {
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     document.getElementById('display-name').innerText = currentUser;
     document.getElementById('display-points').innerText = currentPoints;
-    switchScreen('home-screen');
-}
-
-// ---------------------------------------------------------
-// 6. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
-// ---------------------------------------------------------
-function getRankBadge(points) {
-    if (points >= 15000) return "🟡 Captain";
-    if (points >= 5000) return "🔵 Builder";
-    return "🟢 Student";
-}
-
-function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-    const color = colors[name.length % colors.length];
-    const initial = name.charAt(0).toUpperCase();
-    const rank = getRankBadge(points || 0);
-    const fireClass = isOnFire ? "on-fire-avatar" : "";
-    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
-    const bountyIcon = hasBounty ? '🎯' : '';
-    return `<div style="display:flex; align-items:center;">
-        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
-            ${isOnFire ? '🔥' : initial}
-        </div>
-        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
-    </div>`;
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('home-screen').classList.add('active');
 }
 
 // ---------------------------------------------------------
@@ -425,12 +430,13 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
-    switchScreen('jeopardy-screen');
+    document.getElementById('home-screen').classList.remove('active');
+    document.getElementById('jeopardy-screen').classList.add('active');
     document.getElementById('j-lobby-view').style.display = 'block';
     document.getElementById('j-game-view').style.display = 'none';
     document.getElementById('j-podium-view').style.display = 'none';
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = 'var(--gold)'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
+    rBtn.style.background = 'var(--gold)'; rBtn.style.color = 'black'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
     socket.emit('join_jeopardy', { name: currentUser });
 }
 
@@ -438,7 +444,7 @@ function sendReady() {
     masterUnlockAudio();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = '#555'; rBtn.innerText = "WAITING..."; rBtn.disabled = true;
+    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING..."; rBtn.disabled = true;
 }
 
 socket.on('lobby_update', (data) => {
@@ -454,9 +460,12 @@ socket.on('score_update', (scores) => {
         const isMe = p.name === currentUser;
         const color = isMe ? "var(--gold)" : "white";
         const isOnFire = p.streak >= 3;
+        const isEliminated = p.eliminated;
         const hasBounty = p.globalWinStreak >= 2;
+        
         let rowClass = "lb-row";
-        if (p.eliminated) rowClass += " eliminated";
+        if (isEliminated) rowClass += " eliminated";
+
         list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px; border-bottom:1px solid #333;">
             <div style="display:flex; align-items:center;">
                 ${getAvatar(p.name, p.globalPoints, isOnFire, hasBounty)}
@@ -465,6 +474,7 @@ socket.on('score_update', (scores) => {
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
+                ${isEliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -474,6 +484,8 @@ socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
+    document.getElementById('j-question-box').innerText = "Game is beginning...";
+    document.getElementById('j-question-box').className = "big-tv";
     speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
 });
 
@@ -484,15 +496,17 @@ socket.on('round_update', (data) => {
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
+        const diffs = ['easy', 'medium', 'hard'];
         let randomQ = null;
+        let randomCat = "";
         while (!randomQ) {
-            let cat = categories[Math.floor(Math.random() * categories.length)];
-            let randomDiff = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
-            let questions = quizData[cat][randomDiff];
-            let available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
+            randomCat = categories[Math.floor(Math.random() * categories.length)];
+            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+            const questions = quizData[randomCat][randomDiff];
+            const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
             if (available.length > 0) {
                 randomQ = available[Math.floor(Math.random() * available.length)];
-                randomQ.categoryTitle = quizData[cat].title;
+                randomQ.categoryTitle = quizData[randomCat].title;
             }
         }
         usedJeopardyQuestions.push(randomQ.question);
@@ -507,35 +521,88 @@ socket.on('golden_alert', () => {
     speak("Alert. This is the Golden Question. Triple points are on the line.");
 });
 
+socket.on('player_on_fire', (data) => {
+    speak(`${data.name} is on fire!`);
+});
+
+socket.on('announce_category', (data) => {
+    if (!data.isGolden) document.getElementById('j-question-box').className = "big-tv";
+    document.getElementById('j-question-box').innerHTML = `<span style="font-size:20px; color:var(--gold); display:block; margin-bottom:10px; text-transform:uppercase;">Category</span>${data.categoryTitle}`;
+    speak(`The category is... ${data.categoryTitle}. Here is the question.`);
+});
+
+socket.on('timer_update', (data) => {
+    const t = document.getElementById('j-timer-display');
+    const bar = document.getElementById('pressure-bar');
+    
+    t.innerText = data.text;
+    
+    if (data.maxTime && bar) {
+        const percentage = (data.timeLeft / data.maxTime) * 100;
+        bar.style.width = percentage + "%";
+        
+        if (percentage > 50) {
+            bar.style.background = "var(--gold)"; t.style.color = "var(--gold)";
+        } else if (percentage > 25) {
+            bar.style.background = "#f97316"; t.style.color = "#f97316";
+        } else {
+            bar.style.background = "#ef4444"; t.style.color = "#ef4444";
+            sfx.heartbeat();
+        }
+    }
+});
+
 socket.on('new_question', (qData) => {
     document.getElementById('j-question-box').innerText = qData.question;
     speak(qData.question); 
     document.getElementById('buzzer-status').innerText = "BUZZ IN!";
+    document.getElementById('buzzer-status').style.color = "#10b981"; 
+    
     const btn = document.getElementById('buzzer-btn');
-    btn.className = "buzzer-ready"; btn.innerText = "BUZZ!";
+    btn.className = "buzzer-ready";
+    btn.innerText = "BUZZ!";
+    
     document.getElementById('j-options-box').style.display = "none";
     window.currentJeopardyOptions = qData.options;
 });
 
 function sendBuzz() {
     masterUnlockAudio();
-    if(document.getElementById('buzzer-btn').classList.contains('buzzer-ready')){
+    if(document.getElementById('buzzer-btn').className.includes('buzzer-ready')){
         socket.emit('buzz', { name: currentUser });
     }
 }
 
+socket.on('player_eliminated', () => {
+    const btn = document.getElementById('buzzer-btn');
+    btn.className = "buzzer-locked";
+    btn.innerText = "DEAD";
+    document.getElementById('buzzer-status').innerText = "YOU ARE ELIMINATED.";
+    document.getElementById('buzzer-status').style.color = "#ef4444";
+});
+
 socket.on('player_buzzed', (data) => {
     sfx.buzz(); 
+    window.speechSynthesis.cancel(); 
+    
     const btn = document.getElementById('buzzer-btn');
-    btn.className = "buzzer-locked"; btn.innerText = "LOCKED";
-    if (data.name === currentUser) {
+    if (!btn.className.includes("DEAD")) {
+        btn.className = "buzzer-locked";
+        btn.innerText = "LOCKED";
+    }
+    
+    const isMe = (data.name === currentUser);
+    if (isMe) {
         document.getElementById('buzzer-status').innerText = "YOU BUZZED IN!";
         const optionsBox = document.getElementById('j-options-box');
-        optionsBox.style.display = "grid"; optionsBox.innerHTML = "";
-        [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5).forEach(opt => {
+        optionsBox.style.display = "grid";
+        optionsBox.innerHTML = "";
+        let shuffled = [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5); 
+        shuffled.forEach(opt => {
             const obtn = document.createElement('button');
-            obtn.className = 'option-btn'; obtn.innerText = opt;
-            obtn.onclick = () => { socket.emit('submit_answer', { name: currentUser, answer: opt }); };
+            obtn.className = 'option-btn';
+            obtn.innerText = opt;
+            obtn.onclick = () => { masterUnlockAudio(); submitJeopardyAnswer(opt); };
             optionsBox.appendChild(obtn);
         });
     } else {
@@ -543,33 +610,84 @@ socket.on('player_buzzed', (data) => {
     }
 });
 
+function submitJeopardyAnswer(selectedAnswer) {
+    const btns = document.getElementById('j-options-box').querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    socket.emit('submit_answer', { name: currentUser, answer: selectedAnswer });
+}
+
 socket.on('answer_result', (data) => {
-    if (data.isCorrect) { sfx.correct(); speak("Correct."); } 
-    else { sfx.wrong(); speak("Incorrect."); }
+    const qBox = document.getElementById('j-question-box');
+    if (data.isCorrect) {
+        sfx.correct();
+        qBox.innerText = `${data.name} got it right!`;
+        speak(`Correct. ${data.name} gains points.`);
+    } else {
+        sfx.wrong();
+        qBox.innerText = `${data.name} was incorrect.`;
+        speak(`Incorrect.`);
+    }
     document.getElementById('j-options-box').style.display = "none";
+});
+
+socket.on('reset_buzzer', () => {
+    const btn = document.getElementById('buzzer-btn');
+    if (!btn.className.includes("DEAD")) {
+        btn.className = "buzzer-locked";
+        btn.innerText = "WAIT";
+    }
+    document.getElementById('buzzer-status').innerText = "Preparing next question...";
+    document.getElementById('buzzer-status').style.color = "#aaa";
+    if (document.getElementById('pressure-bar')) {
+        document.getElementById('pressure-bar').style.width = "100%";
+        document.getElementById('pressure-bar').style.background = "var(--gold)";
+    }
 });
 
 socket.on('game_over', (finalScores) => {
     document.getElementById('j-game-view').style.display = 'none';
     document.getElementById('j-podium-view').style.display = 'block';
+    
     let html = "";
     finalScores.forEach((s, i) => {
         let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
         let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
+        let avgTime = s.stats.buzzes > 0 ? (s.stats.responseTimeSum / s.stats.buzzes).toFixed(1) : 0;
+
         html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-                <span style="font-size:24px;">${medal} ${s.name}</span>
-                <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
+            <div style="display:flex; align-items:center;">
+                <span style="font-size:32px; margin-right:15px;">${medal}</span>
+                ${getAvatar(s.name, s.globalPoints)}
+                <span style="font-size:28px; color:${i===0?'var(--gold)':'white'}; font-weight:bold; margin-left:10px;">${s.name}</span>
+                <span style="margin-left:auto; font-size:28px; color:#10b981;">${s.score} pts</span>
             </div>
-            <div style="font-size:12px; color:#aaa; margin-top:5px;">Accuracy: ${acc}% | Avg Buzz: ${(s.stats.responseTimeSum/(s.stats.buzzes||1)).toFixed(1)}s | Max Streak: ${s.maxStreak || 0}</div>
+            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
+                <span>🎯 Accuracy: ${acc}%</span>
+                <span>⏱️ Avg Buzz: ${avgTime}s</span>
+                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
+            </div>
         </div>`;
+        
+        if (i === 0 && s.bountyCollected) {
+            html += `<div style="text-align:center; color:#ef4444; font-weight:bold; font-size:18px; margin-bottom:10px;">🎯 BOUNTY COLLECTED! +5,000 Global Points!</div>`;
+        }
     });
     document.getElementById('podium-results').innerHTML = html;
-    speak("The game is over. Congratulations.");
+    
+    if (typeof confetti !== 'undefined') {
+        var end = Date.now() + 3000;
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#d4af37', '#ffffff', '#000000'] });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#d4af37', '#ffffff', '#000000'] });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    }
+
+    if (finalScores.length > 0) speak(`The game is over. Congratulations to ${finalScores[0].name}.`);
 });
 
 // ---------------------------------------------------------
-// 8. ORIGINAL DIFFICULTY & STUDY LOGIC (FIXED BEGIN BUTTON)
+// 8. ORIGINAL DIFFICULTY & STUDY LOGIC
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { selectedModeTemp = mode; document.getElementById('difficulty-modal').classList.add('active'); }
@@ -579,55 +697,70 @@ function selectDifficulty(diff) {
     pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
     openStudyLibrary(selectedModeTemp, diff);
 }
-
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
     if (mode === 'adults') pointMultiplier = 1000; 
-    switchScreen('study-screen');
+    document.getElementById('home-screen').classList.remove('active');
+    document.getElementById('study-screen').classList.add('active');
     document.getElementById('study-title').innerText = quizData[mode].title;
     document.getElementById('study-text').innerHTML = quizData[mode].studyText;
 }
 
+// ---------------------------------------------------------
+// 9. ORIGINAL QUIZ LOGIC (VERIFIED BEGIN BUTTON)
+// ---------------------------------------------------------
 function beginQuizFromStudy() {
-    masterUnlockAudio();
-    switchScreen('quiz-screen'); 
-    
+    masterUnlockAudio(); // CRITICAL WAKEUP
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
-    activeQuestions = [...quizData[currentPath][currentDiff]];
-    if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
-    
     document.getElementById('live-points').innerText = "0";
+    activeQuestions = [...quizData[currentPath][currentDiff]];
+    
+    if (currentPath !== 'adults') {
+        for (let i = activeQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [activeQuestions[i], activeQuestions[j]] = [activeQuestions[j], activeQuestions[i]];
+        }
+    }
+    
+    document.getElementById('study-screen').classList.remove('active');
+    document.getElementById('quiz-screen').classList.add('active');
     loadQuestion();
 }
 
 function loadQuestion() {
     const q = activeQuestions[currentIdx];
-    document.getElementById('progress-bar').style.width = ((currentIdx)/activeQuestions.length)*100 + "%";
+    const progress = ((currentIdx) / activeQuestions.length) * 100;
+    document.getElementById('progress-bar').style.width = progress + "%";
     document.getElementById('question').innerText = q.question;
-    const box = document.getElementById('options');
-    box.innerHTML = "";
-    [...q.options].sort(() => Math.random() - 0.5).forEach(opt => {
+    
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = "";
+    
+    let shuffledOptions = [...q.options];
+    if (currentPath !== 'adults') {
+        shuffledOptions.sort(() => Math.random() - 0.5);
+    }
+    
+    shuffledOptions.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn'; btn.innerText = opt;
-        btn.onclick = () => checkAnswer(opt, btn, q.correct);
-        box.appendChild(btn);
+        btn.onclick = () => { masterUnlockAudio(); checkAnswer(opt, btn, q.correct); };
+        optionsDiv.appendChild(btn);
     });
 }
 
 function checkAnswer(selected, btn, correct) {
-    masterUnlockAudio();
     const quizBtns = document.getElementById('options').querySelectorAll('.option-btn');
     quizBtns.forEach(b => b.disabled = true);
+    
     if (selected === correct) {
         correctAnswers++; pointsThisSession += pointMultiplier;
         document.getElementById('live-points').innerText = pointsThisSession;
         btn.classList.add('correct');
-        sfx.correct();
     } else {
         btn.classList.add('wrong');
-        quizBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
-        sfx.wrong();
+        quizBtns.forEach(b => { if(b.innerText === correct) b.style.borderColor = "#10b981"; });
     }
     setTimeout(() => {
         currentIdx++;
@@ -635,59 +768,97 @@ function checkAnswer(selected, btn, correct) {
     }, 1500);
 }
 
+// ---------------------------------------------------------
+// 10. REAL-TIME GLOBAL LEADERBOARD FIX
+// ---------------------------------------------------------
 function showResults() {
-    switchScreen('result-screen');
-    document.getElementById('final-score').innerText = `${correctAnswers}/${activeQuestions.length}`;
+    document.getElementById('quiz-screen').classList.remove('active');
+    document.getElementById('result-screen').classList.add('active');
+    
+    const totalQ = activeQuestions.length;
+    document.getElementById('final-score').innerText = `${correctAnswers}/${totalQ}`;
+    document.getElementById('earned-points').innerText = pointsThisSession;
     currentPoints += pointsThisSession;
+    
+    let rank = "Student";
+    if (correctAnswers === totalQ) rank = "Vanguard / Captain";
+    else if (correctAnswers >= totalQ / 2) rank = "Builder";
+    
     localStorage.setItem('noi_points', currentPoints);
     document.getElementById('display-points').innerText = currentPoints;
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
 }
 
-// ---------------------------------------------------------
-// 9. NAVIGATION & CHAT
-// ---------------------------------------------------------
-function returnToMenu() {
-    window.speechSynthesis.cancel();
-    socket.emit('leave_jeopardy');
-    switchScreen('home-screen');
-}
-
 function showLeaderboard() {
     masterUnlockAudio();
-    switchScreen('leaderboard-screen');
+    document.getElementById('home-screen').classList.remove('active');
+    document.getElementById('leaderboard-screen').classList.add('active');
     socket.emit('get_leaderboard');
 }
 
 socket.on('leaderboard_data', (data) => {
-    const list = document.getElementById('leaderboard-list');
-    list.innerHTML = "";
-    data.sort((a, b) => b.points - a.points).forEach((user, index) => {
+    const listDiv = document.getElementById('leaderboard-list');
+    if (!listDiv) return;
+    listDiv.innerHTML = "";
+    data.sort((a, b) => b.points - a.points);
+    data.forEach((user, index) => {
+        const isMe = user.name === currentUser;
         const row = document.createElement('div');
-        row.className = `lb-row ${index === 0 ? 'first' : ''} ${user.name === currentUser ? 'me' : ''}`;
-        row.innerHTML = `<div style="display:flex; align-items:center;">${getAvatar(user.name, user.points)} <span style="margin-left:5px;">#${index + 1} ${user.name}</span></div><span>${user.points.toLocaleString()} pts</span>`;
-        list.appendChild(row);
+        row.className = `lb-row ${index === 0 ? 'first' : ''} ${isMe ? 'me' : ''}`;
+        row.innerHTML = `
+            <div style="display:flex; align-items:center;">
+                ${getAvatar(user.name, user.points)}
+                <span style="margin-left:5px;">#${index + 1} ${user.name}</span>
+            </div>
+            <span>${user.points.toLocaleString()} pts</span>
+        `;
+        listDiv.appendChild(row);
     });
 });
 
+// ---------------------------------------------------------
+// 11. MASTER NAVIGATION FIX
+// ---------------------------------------------------------
+function returnToMenu() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    socket.emit('leave_jeopardy');
+
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
+    document.getElementById('home-screen').classList.add('active');
+}
+
+// ---------------------------------------------------------
+// 12. MODERN LOBBY CHAT LOGIC (No Sound)
+// ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
-    if (input.value.trim() !== "") {
-        socket.emit('send_chat', { name: currentUser, message: input.value.trim() });
+    const msg = input.value.trim();
+    if (msg !== "") {
+        socket.emit('send_chat', { name: currentUser, message: msg });
         input.value = "";
     }
 }
 
 socket.on('receive_chat', (data) => {
     const box = document.getElementById('chat-box');
-    const div = document.createElement('div');
+    const msgDiv = document.createElement('div');
     const isMe = data.name === currentUser;
-    div.style.display = "flex"; div.style.justifyContent = isMe ? "flex-end" : "flex-start";
-    div.innerHTML = `<div style="background:${isMe?'rgba(212,175,55,0.1)':'#222'}; padding:10px; border-radius:10px; max-width:80%;">
-        <div style="font-size:10px; color:var(--gold);">${data.name}</div>
-        <div>${data.message}</div>
+    msgDiv.style.display = "flex";
+    msgDiv.style.margin = "10px 0";
+    msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
+    
+    let bubble = `<div style="background:${isMe ? 'rgba(212,175,55,0.15)' : '#222'}; border:1px solid #333; padding:10px 15px; border-radius:12px; max-width:80%;">
+        <div style="font-size:11px; font-weight:bold; color:var(--gold); margin-bottom:4px;">${data.name}</div>
+        <div style="color:white; font-size:14px;">${data.message}</div>
     </div>`;
-    box.appendChild(div); box.scrollTop = box.scrollHeight;
+    
+    msgDiv.innerHTML = isMe ? bubble + getAvatar(data.name, data.globalPoints) : getAvatar(data.name, data.globalPoints) + bubble;
+    box.appendChild(msgDiv);
+    box.scrollTop = box.scrollHeight; 
 });
 
 document.addEventListener('keypress', (e) => {
