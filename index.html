@@ -8,21 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* FIXED: This ensures only the 'active' screen is ever visible */
-        .screen { 
-            display: none; 
-            transition: opacity 0.4s ease, transform 0.4s ease; 
-            opacity: 0; 
-            transform: translateY(20px); 
-            position: relative; 
-            width: 100%; 
-        }
-        .screen.active { 
-            display: block !important; 
-            opacity: 1; 
-            transform: translateY(0); 
-            z-index: 10; 
-        }
+        .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
+        .screen.active { display: block !important; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; }
 
         @keyframes pulseBuzzer {
             0% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
@@ -183,14 +170,27 @@
 
     <div id="quiz-screen" class="screen">
         <div class="quiz-container">
-            <h2 id="mode-title" style="color: var(--gold);">Portal Academy</h2>
+            <h2 id="mode-title" style="color: var(--gold); margin-bottom: 10px;">Portal Academy</h2>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
+                <span id="progress-text" style="color: #aaa;">Question 1</span>
+                <span style="color: var(--gold);">Points: <span id="live-points">0</span></span>
+            </div>
             <div class="progress-bar-container"><div id="progress-bar"></div></div>
             <div id="question" class="question">Preparing questions...</div>
             <div id="options" class="options-grid"></div>
         </div>
     </div>
 
-    <div id="result-screen" class="screen"><div class="quiz-container text-center"><h1>COMPLETE</h1><h2 id="final-score">0/0</h2><p id="rank-display">Rank: Student</p><button class="option-btn" onclick="returnToMenu()">Back Home</button></div></div>
+    <div id="result-screen" class="screen">
+        <div class="quiz-container text-center">
+            <h1>COMPLETE</h1>
+            <h2 id="final-score" style="font-size: 40px; color: white;">0/0</h2>
+            <p style="font-size: 20px; color: var(--gold); font-weight: bold;">Points Earned: <span id="earned-points">0</span></p>
+            <p id="rank-display" style="font-size: 18px; color: #aaa; margin-bottom: 20px;">Rank: Student</p>
+            <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black;">Back Home</button>
+        </div>
+    </div>
+    
     <div id="leaderboard-screen" class="screen"><div class="quiz-container"><h1>🏆 Leaderboard</h1><div id="leaderboard-list"></div><button class="option-btn" onclick="returnToMenu()" style="margin-top:20px;">Back</button></div></div>
 
     <script src="/socket.io/socket.io.js"></script>
