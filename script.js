@@ -1,6 +1,6 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD
- * VERSION: 4.2.0-STABLE
+ * The Knowledge Portal - V4.2 AAA FULL BUILD (EXTREME UPDATE)
+ * VERSION: 4.3.0-EXTREME
  * * FEATURES INCLUDED:
  * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
  * 2. Sudden Death Elimination Logic
@@ -9,7 +9,8 @@
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
  * 7. Screen Management System (Fixed Sticky Mobile Hover & Centering)
- * * DATABASE: 180 Questions across 7 Paths
+ * 8. EXTREME MODE ADDED (60 New Deep-Cut Questions + 1000pt Multiplier)
+ * * DATABASE: 240 Total Questions across 7 Paths
  */
 
 const socket = io();
@@ -18,7 +19,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
+// 1. FULL MASSIVE QUESTION DATABASE (EXTREME ADDED)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -59,7 +60,19 @@ const quizData = {
             { question: "What is the name of the NOI's main mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "The Grand Mosque"], correct: "Mosque Maryam" },
             { question: "In what year did the Honorable Minister Louis Farrakhan join the Nation of Islam?", options: ["1955", "1965", "1975"], correct: "1955" },
             { question: "What does the 'White' in the Flag of Islam represent?", options: ["Clouds", "Purity and Truth", "Peace"], correct: "Purity and Truth" }
-        ] 
+        ],
+        extreme: [
+            { question: "How many years did Master Fard Muhammad study to prepare for His mission?", options: ["20 Years", "42 Years", "10 Years"], correct: "42 Years" },
+            { question: "What was the original street address of Temple No. 1 in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Ave", "Mosque Maryam"], correct: "3159 Hastings Street" },
+            { question: "What is the mathematical meaning of the word 'Allah'?", options: ["Arm, Leg, Leg, Arm, Head", "The Supreme Being", "Peace and Power"], correct: "Arm, Leg, Leg, Arm, Head" },
+            { question: "How many languages did Master Fard Muhammad speak perfectly?", options: ["10 Languages", "5 Languages", "16 Languages"], correct: "16 Languages" },
+            { question: "What is the First Law of Nature according to the teachings?", options: ["Self-Preservation", "Peace", "Knowledge of Self"], correct: "Self-Preservation" },
+            { question: "What year was the Honorable Elijah Muhammad born?", options: ["1897", "1910", "1930"], correct: "1897" },
+            { question: "What is the exact diameter of the planet Earth?", options: ["7,926 miles", "10,000 miles", "24,896 miles"], correct: "7,926 miles" },
+            { question: "What does the Crescent Moon on the flag mathematically represent?", options: ["Freedom", "Equality", "Justice"], correct: "Equality" },
+            { question: "How many attributes of Allah are commonly taught?", options: ["99 Attributes", "50 Attributes", "10 Attributes"], correct: "99 Attributes" },
+            { question: "Who was the first person to accept the teachings of Master Fard Muhammad?", options: ["The Honorable Elijah Muhammad", "Mother Clara Muhammad", "Malcolm X"], correct: "Mother Clara Muhammad" }
+        ]
     },
     teens: { 
         title: "The Awakening", 
@@ -99,7 +112,19 @@ const quizData = {
             { question: "What city did Minister Farrakhan first lead as the Minister?", options: ["Chicago, Mosque No. 2", "Boston, Mosque No. 11", "New York, Mosque No. 7"], correct: "Boston, Mosque No. 11" },
             { question: "Who did the Honorable Elijah Muhammad appoint as the National Representative before Minister Farrakhan?", options: ["Malcolm X", "Muhammad Ali", "Imam W.D. Mohammed"], correct: "Malcolm X" },
             { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["The Millions More Movement", "Justice Or Else", "The Holy Day of Atonement"], correct: "Justice Or Else" }
-        ] 
+        ],
+        extreme: [
+            { question: "In what year did Minister Louis Farrakhan receive his Vision on the Mother Plane?", options: ["1975", "1985", "1995"], correct: "1985" },
+            { question: "What is the exact speed of thought according to the Honorable Elijah Muhammad?", options: ["24 billion miles per second", "186,000 miles per second", "1,120 feet per second"], correct: "24 billion miles per second" },
+            { question: "What was the original name of the foundational document for the Million Man March?", options: ["The Divine Blueprint", "Atonement, Reconciliation, and Responsibility", "Justice Or Else"], correct: "Atonement, Reconciliation, and Responsibility" },
+            { question: "What year was the Final Call newspaper first published by Minister Farrakhan?", options: ["1979", "1985", "1990"], correct: "1979" },
+            { question: "What does the 'C' in C.C.C. stand for in the original lessons?", options: ["Colored Civilian Conservation", "City Council Court", "Caucasian Central Command"], correct: "Colored Civilian Conservation" },
+            { question: "What is the exact distance from the Earth to the Sun according to the lessons?", options: ["93,000,000 miles", "50,000,000 miles", "237,000 miles"], correct: "93,000,000 miles" },
+            { question: "Who was the first Supreme Captain of the M.G.T.?", options: ["Mother Tynnetta Muhammad", "Mother Clara Muhammad", "Minister Ava Muhammad"], correct: "Mother Clara Muhammad" },
+            { question: "What year was the Million Family March held?", options: ["1995", "2000", "2005"], correct: "2000" },
+            { question: "How many million Original people were in the wilderness of North America in the 1930s lessons?", options: ["17 Million", "30 Million", "50 Million"], correct: "17 Million" },
+            { question: "What does the word 'Saviour' mean in the context of the Nation of Islam?", options: ["One who fights back", "One who saves from mental death and the power of the enemy", "A politician"], correct: "One who saves from mental death and the power of the enemy" }
+        ]
     },
     training: { 
         title: "M.G.T. & F.O.I. Training", 
@@ -139,7 +164,19 @@ const quizData = {
             { question: "What is the highest rank an F.O.I. can achieve locally in a Mosque?", options: ["Lieutenant", "Student Captain", "General"], correct: "Student Captain" },
             { question: "What does the military drill of the F.O.I. represent?", options: ["Unity, order, and acting as one body", "Preparing for physical war", "Exercise"], correct: "Unity, order, and acting as one body" },
             { question: "According to the teachings, who gave the M.G.T. their 7 training units?", options: ["Mother Clara Muhammad", "Master Fard Muhammad", "Minister Farrakhan"], correct: "Master Fard Muhammad" }
-        ] 
+        ],
+        extreme: [
+            { question: "What are the specific dimensions of the Universe according to the lessons?", options: ["1 Trillion Miles", "76 Quintillion Miles", "Without end"], correct: "76 Quintillion Miles" },
+            { question: "What is the duty of a civilized person?", options: ["To fight the devil", "To teach the uncivilized people", "To build businesses"], correct: "To teach the uncivilized people" },
+            { question: "In what year did the Honorable Elijah Muhammad institute the F.O.I.?", options: ["1930", "1933", "1955"], correct: "1933" },
+            { question: "What does the 'Fruit' in Fruit of Islam symbolize?", options: ["Sweetness", "The finest and most productive of the Nation", "Farming"], correct: "The finest and most productive of the Nation" },
+            { question: "Who authored the book 'The Cultural Revolution'?", options: ["Mother Tynnetta Muhammad", "Mother Clara Muhammad", "Minister Farrakhan"], correct: "Mother Tynnetta Muhammad" },
+            { question: "What is the minimum age to be classified as a Junior M.G.T.?", options: ["12", "15", "18"], correct: "15" },
+            { question: "What year was the Muhammad University of Islam established?", options: ["1930", "1934", "1960"], correct: "1934" },
+            { question: "What does the acronym G.C.C. officially translate to?", options: ["General Civilization Class", "Global Citizen Committee", "Girls Cooking Center"], correct: "General Civilization Class" },
+            { question: "According to the lessons, who is the 85%?", options: ["The civilized world", "The uncivilized people suffering from mental death", "The poor teachers"], correct: "The uncivilized people suffering from mental death" },
+            { question: "According to the lessons, who is the 10%?", options: ["The poor, righteous teachers", "The uncivilized people", "The rich slave-makers of the poor"], correct: "The rich slave-makers of the poor" }
+        ]
     },
     lessons: { 
         title: "The 52 Lessons", 
@@ -179,7 +216,19 @@ const quizData = {
             { question: "What is the distance from the Earth to the Moon?", options: ["100,000 miles", "237,000 miles", "93,000,000 miles"], correct: "237,000 miles" },
             { question: "How many tribes were in the Original Nation?", options: ["12 tribes", "13 tribes", "10 tribes"], correct: "13 tribes" },
             { question: "What is the fraction of the Earth that is covered by water?", options: ["1/2", "3/4", "7/10ths (or roughly 139 million sq miles)"], correct: "7/10ths (or roughly 139 million sq miles)" }
-        ] 
+        ],
+        extreme: [
+            { question: "What is the exact weight of the planet Earth?", options: ["10 billion tons", "1 trillion tons", "6 sextillion tons"], correct: "6 sextillion tons" },
+            { question: "What is the exact speed of sound in the lessons?", options: ["1,120 feet per second", "186,000 miles per second", "24 billion miles per second"], correct: "1,120 feet per second" },
+            { question: "How many years did Yakub's grafted history last before the original man takes over?", options: ["1,000 years", "6,000 years", "10,000 years"], correct: "6,000 years" },
+            { question: "Who is the 5% according to the 14th degree of the 1-40?", options: ["The poor, righteous Teachers", "The rich slave-makers", "The uncivilized people"], correct: "The poor, righteous Teachers" },
+            { question: "How far is the Earth from the Moon?", options: ["100,000 miles", "237,000 miles", "93,000,000 miles"], correct: "237,000 miles" },
+            { question: "How much useful land is used every day by the population of the Earth?", options: ["57,255,000 square miles", "196,940,000 square miles", "139,685,000 square miles"], correct: "57,255,000 square miles" },
+            { question: "What is the exact population of the Original Nation all over the planet Earth in the original lessons?", options: ["1 Billion", "4,400,000,000", "85 Million"], correct: "4,400,000,000" },
+            { question: "Where did Yacub go to graft the new race of people?", options: ["Mecca", "Detroit", "The Island of Patmos / Pelan"], correct: "The Island of Patmos / Pelan" },
+            { question: "How many people went with Yacub to the Island?", options: ["59,999", "144,000", "10,000"], correct: "59,999" },
+            { question: "What is the mathematical circumference of the Earth at the Equator according to the lessons?", options: ["20,000 miles", "24,896 miles", "25,000 miles"], correct: "24,896 miles" }
+        ]
     },
     health: { 
         title: "How to Eat to Live", 
@@ -219,7 +268,19 @@ const quizData = {
             { question: "What temperature should water be when you drink it?", options: ["Ice cold", "Boiling hot", "Room temperature or warm"], correct: "Room temperature or warm" },
             { question: "Why are peas (other than the navy bean) generally discouraged?", options: ["They are hard to digest for the original man", "They are too expensive", "They cause sleepiness"], correct: "They are hard to digest for the original man" },
             { question: "What is the maximum frequency you should eat meat?", options: ["Every day", "Never", "No more than 2 or 3 times a week"], correct: "No more than 2 or 3 times a week" }
-        ] 
+        ],
+        extreme: [
+            { question: "According to Book 2, how many days does the Honorable Elijah Muhammad suggest fasting to cure serious illnesses?", options: ["3 days", "7 days", "9 days"], correct: "9 days" },
+            { question: "At what temperature does the Honorable Elijah Muhammad recommend drinking water?", options: ["Ice cold", "Room temperature", "Boiling hot"], correct: "Room temperature" },
+            { question: "What does the Honorable Elijah Muhammad say about the consumption of soybeans?", options: ["They are highly nutritious", "They are strictly for cattle, not humans", "They should be eaten daily"], correct: "They are strictly for cattle, not humans" },
+            { question: "What kind of bread does the Honorable Elijah Muhammad say causes the stomach to stretch?", options: ["Whole wheat bread", "Freshly baked, hot bread with active yeast", "White bread"], correct: "Freshly baked, hot bread with active yeast" },
+            { question: "What is the exact quote regarding the 'Scavenger of the Sea'?", options: ["The shark and the whale", "The crab and the catfish", "The eel and the shrimp"], correct: "The crab and the catfish" },
+            { question: "Why are nuts discouraged in the dietary law?", options: ["They contain too much fat", "They are too hard on the digestive system", "They cause allergies"], correct: "They are too hard on the digestive system" },
+            { question: "How long did the Honorable Elijah Muhammad say one meal every 72 hours could extend your life?", options: ["100 years", "120 years", "140 years or more"], correct: "140 years or more" },
+            { question: "What does the Honorable Elijah Muhammad describe as 'the white poison'?", options: ["White sugar and white flour", "Salt and pepper", "Milk and cheese"], correct: "White sugar and white flour" },
+            { question: "What meat is described as being 'divinely prohibited' besides swine?", options: ["Lamb", "Scavenger birds like crow and buzzard", "Chicken"], correct: "Scavenger birds like crow and buzzard" },
+            { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" }
+        ]
     },
     history: { 
         title: "Our History", 
@@ -259,7 +320,19 @@ const quizData = {
             { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
-        ] 
+        ],
+        extreme: [
+            { question: "On what date did the Honorable Elijah Muhammad depart this timeline?", options: ["February 26, 1970", "February 25, 1975", "October 7, 1975"], correct: "February 25, 1975" },
+            { question: "In what year did Master Fard Muhammad arrive in Detroit, Michigan?", options: ["July 4, 1930", "February 26, 1930", "October 10, 1931"], correct: "July 4, 1930" },
+            { question: "How many followers did Master Fard Muhammad gather during his 3.5 years in Detroit?", options: ["10,000", "25,000", "50,000"], correct: "Approximately 25,000" },
+            { question: "What was Minister Farrakhan's first assignment as a Minister?", options: ["New York, Mosque No. 7", "Boston, Mosque No. 11", "Chicago, Mosque No. 2"], correct: "Boston, Mosque No. 11" },
+            { question: "What specific vision did Minister Farrakhan receive on September 17, 1985?", options: ["The Million Man March", "The Vision on the Mother Plane in Tepotzlan, Mexico", "The rebuilding of Mosque Maryam"], correct: "The Vision on the Mother Plane in Tepotzlan, Mexico" },
+            { question: "What year was the Nation of Islam's flagship farm in Georgia purchased?", options: ["1989", "1994", "2000"], correct: "1994" },
+            { question: "Who was the founder of the Moorish Science Temple, preceding the NOI?", options: ["Marcus Garvey", "Noble Drew Ali", "Booker T. Washington"], correct: "Noble Drew Ali" },
+            { question: "What was the street address of the first Temple of Islam in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Ave", "7351 South Stony Island"], correct: "3159 Hastings Street" },
+            { question: "What year was the Million Family March held?", options: ["1995", "2000", "2005"], correct: "2000" },
+            { question: "What year was 'Message to the Blackman in America' published?", options: ["1955", "1965", "1975"], correct: "1965" }
+        ]
     },
     adults: { 
         title: "Registration Track", 
@@ -293,7 +366,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT
+// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -359,7 +432,6 @@ function masterUnlockAudio() {
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
 
-// Global touch/click listeners to ensure audio wakes up on iOS
 document.addEventListener('touchstart', masterUnlockAudio, { once: true });
 document.addEventListener('click', masterUnlockAudio, { once: true });
 
@@ -448,7 +520,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC
+// 7. PRO JEOPARDY LOGIC 
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -478,7 +550,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING FOR OTHERS..."; 
+        rBtn.innerText = "WAITING..."; 
         rBtn.disabled = true;
     }
 }
@@ -773,7 +845,7 @@ socket.on('game_over', (finalScores) => {
 });
 
 // ---------------------------------------------------------
-// 8. ORIGINAL DIFFICULTY & STUDY LOGIC
+// 8. EXTREME DIFFICULTY & STUDY LOGIC
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { 
@@ -789,7 +861,7 @@ function closeDifficulty() {
 
 function selectDifficulty(diff) {
     closeDifficulty();
-    pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
+    pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : (diff === 'hard' ? 500 : 1000));
     openStudyLibrary(selectedModeTemp, diff);
 }
 
@@ -853,6 +925,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
+    // IMPORTANT FIX: Clears out old buttons entirely to stop sticky hover state
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -869,7 +942,7 @@ function loadQuestion() {
         btn.innerText = opt;
         
         btn.onclick = () => { 
-            // CRITICAL FIX: Forces browser to drop sticky mobile focus immediately
+            // IMPORTANT FIX: Forces browser to drop mobile focus target immediately
             if (document.activeElement) document.activeElement.blur();
             masterUnlockAudio(); 
             checkAnswer(opt, btn, q.correct); 
