@@ -11,6 +11,10 @@
         .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
         .screen.active { display: block !important; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; }
 
+        /* FIXED: Added explicit flexbox centering for the mobile gallery cards */
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; margin: 0 auto; width: 100%; max-width: 1200px; }
+        .pioneer-card { margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
+
         @keyframes pulseBuzzer {
             0% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
             50% { transform: scale(1.02); box-shadow: 0 10px 0 #7f1d1d, 0 0 40px rgba(239, 68, 68, 0.8); }
@@ -55,7 +59,7 @@
                 </div>
                 <button class="action-btn" onclick="showLeaderboard()">🏆 Leaderboard</button>
             </div>
-            <h1>Select Your Path</h1>
+            <h1 style="text-align: center;">Select Your Path</h1>
         </header>
 
         <div class="gallery">
@@ -177,7 +181,11 @@
             </div>
             <div class="progress-bar-container"><div id="progress-bar"></div></div>
             <div id="question" class="question">Preparing questions...</div>
-            <div id="options" class="options-grid"></div>
+            <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
+            
+            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+                <button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button>
+            </div>
         </div>
     </div>
 
