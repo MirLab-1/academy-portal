@@ -8,26 +8,45 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* PERFECT MOBILE CENTERING FIX */
+        /* PERFECT MOBILE CENTERING FIX (UNTOUCHED) */
         * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; }
         
         .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh; }
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         
-        /* OPTION BUTTON MOBILE HOVER FIX & RESTORED GREEN/RED */
-        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; outline: none !important; transition: all 0.2s ease; }
+        /* 🚨 ABSOLUTE YELLOW HIGHLIGHT KILLER FOR MOBILE 🚨 */
+        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; outline: none !important; transition: transform 0.1s ease; }
         
-        /* This applies the yellow hover ONLY to computers with a mouse. Kills sticky mobile hover perfectly. */
-        @media (hover: hover) {
-            .option-btn:hover { border-color: var(--gold) !important; background: rgba(212, 175, 55, 0.1) !important; }
+        @media (max-width: 1024px) {
+            /* This completely destroys the yellow hover and focus states from your style.css on mobile */
+            .options-grid .option-btn:hover, 
+            .options-grid .option-btn:focus,
+            .options-grid .option-btn:active {
+                border-color: #333 !important;
+                background-color: transparent !important;
+                color: white !important;
+                box-shadow: none !important;
+                outline: none !important;
+            }
+            
+            /* Only allow a slight shrink effect when tapping so it feels responsive */
+            .options-grid .option-btn:active {
+                transform: scale(0.96) !important;
+            }
+            
+            /* Make sure correct (green) and wrong (red) states bypass the nuke */
+            .options-grid .option-btn.correct { 
+                border-color: #10b981 !important; 
+                background: rgba(16, 185, 129, 0.2) !important; 
+                color: #10b981 !important; 
+            }
+            .options-grid .option-btn.wrong { 
+                border-color: #ef4444 !important; 
+                background: rgba(239, 68, 68, 0.2) !important; 
+                color: #ef4444 !important; 
+            }
         }
-        
-        .option-btn:active { transform: scale(0.98) !important; border-color: var(--gold) !important; }
-        
-        /* These correctly color the buttons Green and Red */
-        .option-btn.correct { background: rgba(16, 185, 129, 0.2) !important; border-color: #10b981 !important; color: #10b981 !important; }
-        .option-btn.wrong { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; color: #ef4444 !important; }
 
         .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
         .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
@@ -65,8 +84,8 @@
             <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
-            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); max-width: 300px;">ENTER ACADEMY</button>
+            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
+            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">ENTER ACADEMY</button>
         </div>
     </div>
 
