@@ -8,10 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
-        .screen.active { display: block !important; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; }
+        /* PERFECT MOBILE CENTERING FIX */
+        .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; }
+        .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; box-sizing: border-box; }
 
-        /* FIXED: Added explicit flexbox centering for the mobile gallery cards */
+        .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
+        .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
+
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; margin: 0 auto; width: 100%; max-width: 1200px; }
         .pioneer-card { margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
@@ -37,79 +41,81 @@
         .bounty-target { color: #ef4444 !important; text-shadow: 0 0 10px rgba(239,68,68,0.8); }
     </style>
 </head>
-<body style="background-color: #050505; color: white; overflow-x: hidden;">
+<body style="background-color: #050505; color: white; overflow-x: hidden; margin: 0; padding: 0;">
 
     <div id="login-screen" class="screen active">
-        <div class="quiz-container text-center" style="max-width: 400px; margin: 10vh auto;">
+        <div class="quiz-container text-center">
             <img src="logo.png" alt="Logo" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--gold); margin-bottom: 20px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/100/000000/d4af37?text=Portal'">
             <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px;">
+            <input type="text" id="username-input" placeholder="Enter Name" style="width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
             <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">ENTER ACADEMY</button>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
-        <header>
-            <div class="user-profile">
-                <div class="user-info">
-                    <h2 id="display-name" style="margin: 0; color: white;">Student</h2>
-                    <p style="margin: 5px 0 0 0; color: var(--gold); font-weight: bold;">Total Points: <span id="display-points">0</span></p>
+        <div style="width: 100%; max-width: 1200px; padding: 20px; box-sizing: border-box;">
+            <header style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
+                <div class="user-profile" style="width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 600px;">
+                    <div class="user-info">
+                        <h2 id="display-name" style="margin: 0; color: white;">Student</h2>
+                        <p style="margin: 5px 0 0 0; color: var(--gold); font-weight: bold;">Total Points: <span id="display-points">0</span></p>
+                    </div>
+                    <button class="action-btn" onclick="showLeaderboard()">🏆 Leaderboard</button>
                 </div>
-                <button class="action-btn" onclick="showLeaderboard()">🏆 Leaderboard</button>
-            </div>
-            <h1 style="text-align: center;">Select Your Path</h1>
-        </header>
+                <h1 style="text-align: center; margin-top: 20px;">Select Your Path</h1>
+            </header>
 
-        <div class="gallery">
-            <div class="pioneer-card" onclick="showDifficulty('kids')">
-                <img src="fard.png" alt="Junior Vanguard" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Junior+Vanguard'">
-                <h3>Junior Vanguard</h3>
-                <p class="badge">Ages 5 - 12</p>
-            </div>
-            <div class="pioneer-card" onclick="showDifficulty('teens')">
-                <img src="elijah.png" alt="The Awakening" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=The+Awakening'">
-                <h3>The Awakening</h3>
-                <p class="badge">Ages 13 - 19</p>
-            </div>
-            <div class="pioneer-card" onclick="openStudyLibrary('adults', 'exact')">
-                <img src="registration.png" alt="Registration" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Registration'">
-                <h3>Registration Track</h3>
-                <p class="badge">Student Enrollment</p>
-            </div>
-            <div class="pioneer-card new-mode" onclick="showDifficulty('training')">
-                <img src="training.png" alt="Training" onerror="this.src='https://via.placeholder.com/250x200/064e3b/d4af37?text=M.G.T.+%26+F.O.I.'">
-                <h3>M.G.T. & F.O.I.</h3>
-                <p class="badge">Discipline</p>
-            </div>
-            <div class="pioneer-card new-mode" onclick="showDifficulty('lessons')">
-                <img src="lessons.png" alt="Lessons" onerror="this.src='https://via.placeholder.com/250x200/000000/d4af37?text=The+52+Lessons'">
-                <h3>The 52 Lessons</h3>
-                <p class="badge">Advanced Science</p>
-            </div>
-            <div class="pioneer-card new-mode" onclick="showDifficulty('health')">
-                <img src="health.png" alt="Health" onerror="this.src='https://via.placeholder.com/250x200/1e3a8a/d4af37?text=Eat+To+Live'">
-                <h3>How to Eat to Live</h3>
-                <p class="badge">Health & Law</p>
-            </div>
-            <div class="pioneer-card new-mode" onclick="showDifficulty('history')">
-                <img src="history.png" alt="History" onerror="this.src='https://via.placeholder.com/250x200/451a03/d4af37?text=Our+History'">
-                <h3>Our History</h3>
-                <p class="badge">The Timeline</p>
-            </div>
-            <div class="pioneer-card" onclick="startJeopardy()" style="border: 2px solid #ef4444; background: linear-gradient(to bottom, #1a1a1a, #450a0a);">
-                <div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">LIVE</div>
-                <img src="jeopardy.png" alt="Jeopardy" onerror="this.src='https://via.placeholder.com/250x200/450a0a/ffffff?text=JEOPARDY'">
-                <h3>Live Jeopardy</h3>
-                <p class="badge">Multiplayer Arena</p>
+            <div class="gallery">
+                <div class="pioneer-card" onclick="showDifficulty('kids')">
+                    <img src="fard.png" alt="Junior Vanguard" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Junior+Vanguard'">
+                    <h3>Junior Vanguard</h3>
+                    <p class="badge">Ages 5 - 12</p>
+                </div>
+                <div class="pioneer-card" onclick="showDifficulty('teens')">
+                    <img src="elijah.png" alt="The Awakening" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=The+Awakening'">
+                    <h3>The Awakening</h3>
+                    <p class="badge">Ages 13 - 19</p>
+                </div>
+                <div class="pioneer-card" onclick="openStudyLibrary('adults', 'exact')">
+                    <img src="registration.png" alt="Registration" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Registration'">
+                    <h3>Registration Track</h3>
+                    <p class="badge">Student Enrollment</p>
+                </div>
+                <div class="pioneer-card new-mode" onclick="showDifficulty('training')">
+                    <img src="training.png" alt="Training" onerror="this.src='https://via.placeholder.com/250x200/064e3b/d4af37?text=M.G.T.+%26+F.O.I.'">
+                    <h3>M.G.T. & F.O.I.</h3>
+                    <p class="badge">Discipline</p>
+                </div>
+                <div class="pioneer-card new-mode" onclick="showDifficulty('lessons')">
+                    <img src="lessons.png" alt="Lessons" onerror="this.src='https://via.placeholder.com/250x200/000000/d4af37?text=The+52+Lessons'">
+                    <h3>The 52 Lessons</h3>
+                    <p class="badge">Advanced Science</p>
+                </div>
+                <div class="pioneer-card new-mode" onclick="showDifficulty('health')">
+                    <img src="health.png" alt="Health" onerror="this.src='https://via.placeholder.com/250x200/1e3a8a/d4af37?text=Eat+To+Live'">
+                    <h3>How to Eat to Live</h3>
+                    <p class="badge">Health & Law</p>
+                </div>
+                <div class="pioneer-card new-mode" onclick="showDifficulty('history')">
+                    <img src="history.png" alt="History" onerror="this.src='https://via.placeholder.com/250x200/451a03/d4af37?text=Our+History'">
+                    <h3>Our History</h3>
+                    <p class="badge">The Timeline</p>
+                </div>
+                <div class="pioneer-card" onclick="startJeopardy()" style="border: 2px solid #ef4444; background: linear-gradient(to bottom, #1a1a1a, #450a0a);">
+                    <div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">LIVE</div>
+                    <img src="jeopardy.png" alt="Jeopardy" onerror="this.src='https://via.placeholder.com/250x200/450a0a/ffffff?text=JEOPARDY'">
+                    <h3>Live Jeopardy</h3>
+                    <p class="badge">Multiplayer Arena</p>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="jeopardy-screen" class="screen">
         <div class="quiz-container text-center" style="max-width: 1000px; background: #0f0f0f; border-color: #222;">
-            <div id="j-lobby-view">
+            <div id="j-lobby-view" style="width: 100%;">
                 <h1 style="color: var(--gold); font-size: 40px; margin-bottom: 20px; text-transform: uppercase;">Jeopardy Lobby</h1>
                 <div style="background: #111; border: 2px solid #333; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
                     <h2 style="color: white; margin-bottom: 10px;">Waiting for Players...</h2>
@@ -122,18 +128,18 @@
                         <button onclick="sendChatMessage()" style="background: var(--gold); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: black; border-radius: 6px; margin-left: 10px;">SEND</button>
                     </div>
                 </div>
-                <button id="ready-btn" class="option-btn" onclick="sendReady()" style="background: var(--gold); color: black; font-weight: bold; width: 250px; height: 70px; font-size: 24px;">I'M READY</button>
+                <button id="ready-btn" class="option-btn" onclick="sendReady()" style="background: var(--gold); color: black; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto;">I'M READY</button>
                 <br><button class="option-btn" onclick="returnToMenu()" style="background: #333; width: 150px; margin-top: 20px;">Back</button>
             </div>
 
-            <div id="j-game-view" style="display: none;">
+            <div id="j-game-view" style="display: none; width: 100%;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
                     <h1 style="color: var(--gold); margin: 0; font-size: 24px;">LIVE JEOPARDY</h1>
                     <div style="background: #111; padding: 5px 15px; border-radius: 20px; color: #10b981; font-weight: bold;">Round: <span id="j-round-display" style="color: white;">1/10</span></div>
                 </div>
 
-                <div class="jeopardy-flex-container" style="display: flex; gap: 30px; text-align: left;">
-                    <div style="flex: 3;">
+                <div class="jeopardy-flex-container" style="display: flex; gap: 30px; text-align: left; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px; width: 100%;">
                         <div id="j-timer-display" style="font-size: 20px; font-weight: bold; color: var(--gold); margin-bottom: 5px; text-align: center;">Waiting...</div>
                         <div id="j-pressure-bar-container" style="width: 100%; height: 12px; background: #222; border-radius: 6px; margin-bottom: 20px; border: 1px solid #444; overflow: hidden;">
                             <div id="pressure-bar" style="width: 100%; height: 100%; background: var(--gold); transition: width 1s linear;"></div>
@@ -142,19 +148,19 @@
                         <p id="buzzer-status" style="color: #aaa; margin-bottom: 20px; font-weight: bold; height: 20px; text-align: center; font-size: 20px; text-transform: uppercase;">...</p>
                         <div id="buzzer-btn" class="buzzer-locked" onclick="sendBuzz()" style="width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; user-select: none;">LOCKED</div>
                         <div id="j-options-box" class="options-grid" style="display: none; margin-bottom: 30px;"></div>
-                        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;"><button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px;">Quit</button></div>
+                        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;"><button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button></div>
                     </div>
-                    <div id="j-score-sidebar" style="flex: 1; background: #111; border: 2px solid #333; border-radius: 12px; padding: 20px;">
+                    <div id="j-score-sidebar" style="flex: 1; min-width: 250px; background: #111; border: 2px solid #333; border-radius: 12px; padding: 20px;">
                         <h3 style="color: var(--gold); margin-top: 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px;">LIVE SCORES</h3>
                         <div id="j-live-scores"></div>
                     </div>
                 </div>
             </div>
 
-            <div id="j-podium-view" style="display: none; padding: 40px 0;">
+            <div id="j-podium-view" style="display: none; padding: 40px 0; width: 100%;">
                 <h1 style="color: var(--gold); font-size: 60px; margin-bottom: 10px;">GAME OVER</h1>
                 <div id="podium-results" style="background: #111; border: 2px solid var(--gold); padding: 30px; border-radius: 15px; margin-bottom: 40px; text-align:left;"></div>
-                <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black; font-weight: bold; width: 300px;">Return Dashboard</button>
+                <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto;">Return Dashboard</button>
             </div>
         </div>
     </div>
@@ -162,10 +168,10 @@
     <div id="difficulty-modal" class="modal"><div class="modal-content"><h2 style="color: var(--gold); text-align: center;">Difficulty</h2><div class="options-grid"><button class="option-btn" style="border-color: #10b981;" onclick="selectDifficulty('easy')">Easy</button><button class="option-btn" style="border-color: #f59e0b;" onclick="selectDifficulty('medium')">Medium</button><button class="option-btn" style="border-color: #ef4444;" onclick="selectDifficulty('hard')">Hard</button><button class="option-btn" style="background: #333;" onclick="closeDifficulty()">Cancel</button></div></div></div>
     
     <div id="study-screen" class="screen">
-        <div class="study-container">
+        <div class="study-container quiz-container">
             <h2 id="study-title" style="color: var(--gold);">Study</h2>
             <div id="study-text" class="study-text-box"></div>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width: 100%;">
                 <button class="option-btn" style="background:#333;" onclick="returnToMenu()">Back</button>
                 <button class="option-btn" style="background:var(--gold); color:black;" onclick="beginQuizFromStudy()">Begin</button>
             </div>
@@ -174,16 +180,16 @@
 
     <div id="quiz-screen" class="screen">
         <div class="quiz-container">
-            <h2 id="mode-title" style="color: var(--gold); margin-bottom: 10px;">Portal Academy</h2>
-            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
-                <span id="progress-text" style="color: #aaa;">Question 1</span>
-                <span style="color: var(--gold);">Points: <span id="live-points">0</span></span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width: 100%;">
+                <h2 id="mode-title" style="color: var(--gold); margin: 0;">Portal Academy</h2>
+                <div style="color: var(--gold); font-weight: bold; font-size: 16px;">Points: <span id="live-points">0</span></div>
             </div>
-            <div class="progress-bar-container"><div id="progress-bar"></div></div>
-            <div id="question" class="question">Preparing questions...</div>
+            <div id="progress-text" style="color: #aaa; font-weight: bold; text-align: left; width: 100%; margin-bottom: 5px;">Question 1</div>
+            <div class="progress-bar-container" style="width: 100%;"><div id="progress-bar"></div></div>
+            <div id="question" class="question" style="width: 100%;">...</div>
             <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
             
-            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
                 <button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button>
             </div>
         </div>
@@ -192,9 +198,9 @@
     <div id="result-screen" class="screen">
         <div class="quiz-container text-center">
             <h1>COMPLETE</h1>
-            <h2 id="final-score" style="font-size: 40px; color: white;">0/0</h2>
-            <p style="font-size: 20px; color: var(--gold); font-weight: bold;">Points Earned: <span id="earned-points">0</span></p>
-            <p id="rank-display" style="font-size: 18px; color: #aaa; margin-bottom: 20px;">Rank: Student</p>
+            <h2 id="final-score" style="font-size: 40px;">0/0</h2>
+            <p style="color: var(--gold); font-weight: bold; font-size: 20px;">Points Earned: <span id="earned-points">0</span></p>
+            <p id="rank-display">Rank: Student</p>
             <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black;">Back Home</button>
         </div>
     </div>
