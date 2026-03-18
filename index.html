@@ -8,8 +8,21 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        .screen { transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); pointer-events: none; position: absolute; width: 100%; top: 0; left: 0; }
-        .screen.active { opacity: 1; transform: translateY(0); pointer-events: all; position: relative; z-index: 10; }
+        /* FIXED: This ensures only the 'active' screen is ever visible */
+        .screen { 
+            display: none; 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            opacity: 0; 
+            transform: translateY(20px); 
+            position: relative; 
+            width: 100%; 
+        }
+        .screen.active { 
+            display: block !important; 
+            opacity: 1; 
+            transform: translateY(0); 
+            z-index: 10; 
+        }
 
         @keyframes pulseBuzzer {
             0% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
@@ -156,8 +169,27 @@
     </div>
 
     <div id="difficulty-modal" class="modal"><div class="modal-content"><h2 style="color: var(--gold); text-align: center;">Difficulty</h2><div class="options-grid"><button class="option-btn" style="border-color: #10b981;" onclick="selectDifficulty('easy')">Easy</button><button class="option-btn" style="border-color: #f59e0b;" onclick="selectDifficulty('medium')">Medium</button><button class="option-btn" style="border-color: #ef4444;" onclick="selectDifficulty('hard')">Hard</button><button class="option-btn" style="background: #333;" onclick="closeDifficulty()">Cancel</button></div></div></div>
-    <div id="study-screen" class="screen"><div class="study-container"><h2 id="study-title" style="color: var(--gold);">Study</h2><div id="study-text" class="study-text-box"></div><div style="display:flex; gap:10px; justify-content:center; margin-top:20px;"><button class="option-btn" style="background:#333;" onclick="returnToMenu()">Back</button><button class="option-btn" style="background:var(--gold); color:black;" onclick="beginQuizFromStudy()">Begin</button></div></div></div>
-    <div id="quiz-screen" class="screen"><div class="quiz-container"><h2 id="mode-title" style="color: var(--gold);">Loading...</h2><div class="progress-bar-container"><div id="progress-bar"></div></div><div id="question" class="question">...</div><div id="options" class="options-grid"></div></div></div>
+    
+    <div id="study-screen" class="screen">
+        <div class="study-container">
+            <h2 id="study-title" style="color: var(--gold);">Study</h2>
+            <div id="study-text" class="study-text-box"></div>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button class="option-btn" style="background:#333;" onclick="returnToMenu()">Back</button>
+                <button class="option-btn" style="background:var(--gold); color:black;" onclick="beginQuizFromStudy()">Begin</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-container">
+            <h2 id="mode-title" style="color: var(--gold);">Portal Academy</h2>
+            <div class="progress-bar-container"><div id="progress-bar"></div></div>
+            <div id="question" class="question">Preparing questions...</div>
+            <div id="options" class="options-grid"></div>
+        </div>
+    </div>
+
     <div id="result-screen" class="screen"><div class="quiz-container text-center"><h1>COMPLETE</h1><h2 id="final-score">0/0</h2><p id="rank-display">Rank: Student</p><button class="option-btn" onclick="returnToMenu()">Back Home</button></div></div>
     <div id="leaderboard-screen" class="screen"><div class="quiz-container"><h1>🏆 Leaderboard</h1><div id="leaderboard-list"></div><button class="option-btn" onclick="returnToMenu()" style="margin-top:20px;">Back</button></div></div>
 
