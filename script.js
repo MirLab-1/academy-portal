@@ -256,7 +256,7 @@ const quizData = {
             { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
             { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
             { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 2015 gathering in Washington D.C.?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ] 
@@ -293,7 +293,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT
+// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -449,7 +449,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC
+// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -808,7 +808,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC
+// 9. ORIGINAL QUIZ LOGIC (FIXED HIGHLIGHT REMOVED)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -857,6 +857,7 @@ function loadQuestion() {
     if (mTitle) mTitle.innerText = quizData[currentPath].title;
     
     if (!optionsDiv) return;
+    
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -899,6 +900,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
+        // DELIBERATELY REMOVED CORRECT ANSWER HIGHLIGHT
         sfx.wrong();
     }
     
