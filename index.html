@@ -12,18 +12,20 @@
         * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; }
         
-        .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh;}
+        .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; }
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; outline: none; transition: background 0.1s, transform 0.1s; }
-
-        .screen { display: none; transition: opacity 0.4s ease; opacity: 0; position: absolute; width: 100%; top: 0; left: 0; }
-        .screen.active { display: flex !important; flex-direction: column; align-items: center; opacity: 1; z-index: 10; pointer-events: all; position: relative; min-height: 100vh; }
-
-        /* KILL STICKY HOVER ON MOBILE */
-        @media (hover: none), (max-width: 768px) {
-            .option-btn:hover { background: #1a1a1a !important; color: white !important; transform: none !important; box-shadow: none !important; border-color: #333 !important;}
-            .option-btn:active { background: var(--gold) !important; color: black !important; }
+        
+        /* OPTION BUTTON MOBILE HOVER FIX */
+        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; outline: none !important; transition: background 0.1s, transform 0.1s; }
+        .option-btn:focus { outline: none !important; box-shadow: none !important; }
+        
+        @media (hover: none) {
+            /* This stops mobile browsers from applying sticky hover effects to newly spawned buttons */
+            .option-btn:hover { transform: none !important; }
         }
+
+        .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
+        .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
 
         .gallery { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; margin: 0 auto; width: 100%; max-width: 1200px; }
         .pioneer-card { margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
