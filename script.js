@@ -8,7 +8,7 @@
  * 4. Triple-Point Golden Questions
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Sticky Mobile Hover)
+ * 7. Screen Management System (Fixed Sticky Mobile Hover & Centering)
  * * DATABASE: 180 Questions across 7 Paths
  */
 
@@ -479,7 +479,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING..."; 
+        rBtn.innerText = "WAITING FOR OTHERS..."; 
         rBtn.disabled = true;
     }
 }
@@ -808,7 +808,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED HIGHLIGHT REMOVED)
+// 9. ORIGINAL QUIZ LOGIC (HIGHLIGHTS RESTORED BUT FIX STICKINESS)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -858,6 +858,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
+    // Completely destroy old buttons to guarantee no hover/focus states carry over
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -888,8 +889,12 @@ function checkAnswer(selected, btn, correct) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
-            b.blur();
         });
+    }
+    
+    // Force blur to completely kill any mobile focus highlight
+    if (document.activeElement) {
+        document.activeElement.blur();
     }
     
     if (selected === correct) {
@@ -900,7 +905,15 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // DELIBERATELY REMOVED CORRECT ANSWER HIGHLIGHT
+        // RESTORED: Highlights the correct answer in green
+        if (optionsDiv) {
+            const quizBtns = optionsDiv.querySelectorAll('.option-btn');
+            quizBtns.forEach(b => {
+                if (b.innerText === correct) {
+                    b.classList.add('correct');
+                }
+            });
+        }
         sfx.wrong();
     }
     
