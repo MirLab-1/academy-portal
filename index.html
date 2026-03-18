@@ -8,12 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
+        /* FIXED: Added strict centering rules for the mobile container to prevent left-leaning */
+        .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; box-sizing: border-box; }
+
         .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
         .screen.active { display: block !important; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; }
-
-        /* FIXED: Added explicit flexbox centering for the mobile gallery cards */
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; margin: 0 auto; width: 100%; max-width: 1200px; }
-        .pioneer-card { margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
         @keyframes pulseBuzzer {
             0% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
@@ -162,7 +163,7 @@
     <div id="difficulty-modal" class="modal"><div class="modal-content"><h2 style="color: var(--gold); text-align: center;">Difficulty</h2><div class="options-grid"><button class="option-btn" style="border-color: #10b981;" onclick="selectDifficulty('easy')">Easy</button><button class="option-btn" style="border-color: #f59e0b;" onclick="selectDifficulty('medium')">Medium</button><button class="option-btn" style="border-color: #ef4444;" onclick="selectDifficulty('hard')">Hard</button><button class="option-btn" style="background: #333;" onclick="closeDifficulty()">Cancel</button></div></div></div>
     
     <div id="study-screen" class="screen">
-        <div class="study-container">
+        <div class="study-container quiz-container">
             <h2 id="study-title" style="color: var(--gold);">Study</h2>
             <div id="study-text" class="study-text-box"></div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
@@ -174,16 +175,16 @@
 
     <div id="quiz-screen" class="screen">
         <div class="quiz-container">
-            <h2 id="mode-title" style="color: var(--gold); margin-bottom: 10px;">Portal Academy</h2>
-            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
-                <span id="progress-text" style="color: #aaa;">Question 1</span>
-                <span style="color: var(--gold);">Points: <span id="live-points">0</span></span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width: 100%;">
+                <h2 id="mode-title" style="color: var(--gold); margin: 0;">Portal Academy</h2>
+                <div style="color: var(--gold); font-weight: bold; font-size: 16px;">Points: <span id="live-points">0</span></div>
             </div>
-            <div class="progress-bar-container"><div id="progress-bar"></div></div>
-            <div id="question" class="question">Preparing questions...</div>
+            <div id="progress-text" style="color: #aaa; font-weight: bold; text-align: left; width: 100%; margin-bottom: 5px;">Question 1</div>
+            <div class="progress-bar-container" style="width: 100%;"><div id="progress-bar"></div></div>
+            <div id="question" class="question" style="width: 100%;">...</div>
             <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
             
-            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
                 <button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button>
             </div>
         </div>
@@ -192,10 +193,10 @@
     <div id="result-screen" class="screen">
         <div class="quiz-container text-center">
             <h1>COMPLETE</h1>
-            <h2 id="final-score" style="font-size: 40px; color: white;">0/0</h2>
-            <p style="font-size: 20px; color: var(--gold); font-weight: bold;">Points Earned: <span id="earned-points">0</span></p>
-            <p id="rank-display" style="font-size: 18px; color: #aaa; margin-bottom: 20px;">Rank: Student</p>
-            <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black;">Back Home</button>
+            <h2 id="final-score" style="font-size: 40px;">0/0</h2>
+            <p style="color: var(--gold); font-weight: bold; font-size: 20px;">Points Earned: <span id="earned-points">0</span></p>
+            <p id="rank-display">Rank: Student</p>
+            <button class="option-btn" onclick="returnToMenu()">Back Home</button>
         </div>
     </div>
     
