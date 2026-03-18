@@ -1,6 +1,7 @@
 /**
- * The Knowledge Portal - V4.2 AAA Build
- * TRIPLE-CHECKED FIX: Master Begin Button, Mobile Audio, and Database Preservation
+ * The Knowledge Portal - V4.2 AAA FULL BUILD (Restored)
+ * FULL FEATURES: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
+ * FIXES: Master Audio Wake-up, Responsive Layout, Master Begin Button
  */
 
 const socket = io();
@@ -9,7 +10,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
+// 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -271,7 +272,7 @@ const quizData = {
 };
 
 // ---------------------------------------------------------
-// 2. SYSTEM STATE
+// 2. SYSTEM STATE & CORE DATA (FULL AAA RECOVERY)
 // ---------------------------------------------------------
 let currentPoints = 0;
 let currentPath = "";
@@ -297,6 +298,7 @@ function masterUnlockAudio() {
         source.buffer = buffer;
         source.connect(audioCtx.destination);
         source.start(0);
+
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const silentMsg = new SpeechSynthesisUtterance(" ");
@@ -321,13 +323,8 @@ function speak(text) {
     }
 }
 
-if ('speechSynthesis' in window) {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-}
-
 // ---------------------------------------------------------
-// 4. HELPERS: RANK BADGES & AVATARS
+// 4. AAA HELPERS: RANK BADGES & AVATARS
 // ---------------------------------------------------------
 function getRankBadge(points) {
     if (points >= 15000) return "🟡 Captain";
@@ -343,6 +340,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
     const rank = getRankBadge(points || 0);
     const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
     const bountyIcon = hasBounty ? '🎯' : '';
+    
     return `<div style="display:flex; align-items:center;">
         <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
             ${isOnFire ? '🔥' : initial}
@@ -352,7 +350,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. SFX ENGINE
+// 5. WORKING SFX ENGINE
 // ---------------------------------------------------------
 const sfx = {
     playTone: (freq, type, duration) => {
@@ -414,11 +412,11 @@ function registerUser() {
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('login-screen').classList.remove('active');
     document.getElementById('home-screen').classList.add('active');
-    setTimeout(() => speak("Welcome to the Academy."), 500);
+    setTimeout(() => speak("Access Granted. Welcome to the Academy."), 500);
 }
 
 // ---------------------------------------------------------
-// 7. JEOPARDY LOGIC
+// 7. FULL JEOPARDY LOGIC (RESTORED ANALYTICS)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -461,6 +459,7 @@ socket.on('score_update', (scores) => {
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
+                ${p.eliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -476,13 +475,13 @@ socket.on('game_starting', () => {
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
-        let q = null; let cat = "";
+        let q = null;
         while (!q) {
-            cat = categories[Math.floor(Math.random() * categories.length)];
-            const diffs = ['easy', 'medium', 'hard'];
-            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-            const questions = quizData[cat][randomDiff];
-            const avail = questions.filter(item => !usedJeopardyQuestions.includes(item.question));
+            let cat = categories[Math.floor(Math.random() * categories.length)];
+            let diffs = ['easy', 'medium', 'hard'];
+            let randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+            let questions = quizData[cat][randomDiff];
+            let avail = questions.filter(item => !usedJeopardyQuestions.includes(item.question));
             if (avail.length > 0) {
                 q = avail[Math.floor(Math.random() * avail.length)];
                 q.categoryTitle = quizData[cat].title;
@@ -538,17 +537,26 @@ socket.on('game_over', (finalScores) => {
     document.getElementById('j-podium-view').style.display = 'block';
     let html = "";
     finalScores.forEach((s, i) => {
-        let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : "🥉");
+        let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
+        let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
+        let avgTime = s.stats.buzzes > 0 ? (s.stats.responseTimeSum / s.stats.buzzes).toFixed(1) : 0;
+
         html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
             <div style="display:flex; align-items:center;">
-                <span style="font-size:32px;">${medal}</span>
+                <span style="font-size:32px; margin-right:15px;">${medal}</span>
                 ${getAvatar(s.name, s.globalPoints)}
-                <span style="font-size:24px; font-weight:bold; margin-left:10px;">${s.name}: ${s.score} pts</span>
+                <span style="font-size:28px; font-weight:bold; margin-left:10px;">${s.name}</span>
+                <span style="margin-left:auto; font-size:28px; color:#10b981;">${s.score} pts</span>
+            </div>
+            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
+                <span>🎯 Accuracy: ${acc}%</span>
+                <span>⏱️ Avg Buzz: ${avgTime}s</span>
+                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
             </div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
-    speak("Game Over.");
+    speak("Game Over. Congratulations.");
 });
 
 // ---------------------------------------------------------
@@ -573,16 +581,11 @@ function openStudyLibrary(mode, diff) {
     document.getElementById('study-text').innerHTML = quizData[mode].studyText;
 }
 
-// THE FIXED BEGIN BUTTON FUNCTION
 function beginQuizFromStudy() {
-    masterUnlockAudio(); // Unlocks audio again just in case
+    masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     activeQuestions = [...quizData[currentPath][currentDiff]];
-    
-    // Shuffle if not registration track
-    if (currentPath !== 'adults') {
-        activeQuestions.sort(() => Math.random() - 0.5);
-    }
+    if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
     
     document.getElementById('study-screen').classList.remove('active');
     document.getElementById('quiz-screen').classList.add('active');
@@ -615,6 +618,7 @@ function checkAnswer(sel, btn, cor) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
+        btns.forEach(b => { if(b.innerText === cor) b.classList.add('correct'); });
         sfx.wrong();
     }
     setTimeout(() => {
@@ -634,13 +638,13 @@ function showResults() {
 }
 
 // ---------------------------------------------------------
-// 9. NAVIGATION & CHAT
+// 9. NAVIGATION & CHAT (FULL RECOVERY)
 // ---------------------------------------------------------
 function returnToMenu() {
     window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     const ids = ['home-screen','study-screen','quiz-screen','result-screen','leaderboard-screen','jeopardy-screen'];
-    ids.forEach(id => document.getElementById(id).classList.remove('active'));
+    ids.forEach(id => { if(document.getElementById(id)) document.getElementById(id).classList.remove('active'); });
     document.getElementById('home-screen').classList.add('active');
 }
 
