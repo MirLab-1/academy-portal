@@ -8,7 +8,7 @@
  * 4. Triple-Point Golden Questions
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Stuck Loading & Sticky Highlight Removed)
+ * 7. Screen Management System (Fixed Sticky Mobile Hover)
  * * DATABASE: 180 Questions across 7 Paths
  */
 
@@ -256,7 +256,7 @@ const quizData = {
             { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
             { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
             { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was the theme of the 2015 gathering in Washington D.C.?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ] 
@@ -293,7 +293,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
+// 3. MASTER SCREEN MANAGEMENT
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -402,7 +402,6 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
-        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -450,7 +449,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
+// 7. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -480,7 +479,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING FOR OTHERS..."; 
+        rBtn.innerText = "WAITING..."; 
         rBtn.disabled = true;
     }
 }
@@ -809,7 +808,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED HIGHLIGHT ISSUE)
+// 9. ORIGINAL QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -834,11 +833,8 @@ function beginQuizFromStudy() {
     
     switchScreen('quiz-screen');
     
-    // Clear out any stale buttons from a previous round before loading
     const optionsDiv = document.getElementById('options');
-    if (optionsDiv) {
-        optionsDiv.innerHTML = "";
-    }
+    if (optionsDiv) optionsDiv.innerHTML = "";
     
     loadQuestion();
 }
@@ -861,8 +857,6 @@ function loadQuestion() {
     if (mTitle) mTitle.innerText = quizData[currentPath].title;
     
     if (!optionsDiv) return;
-    
-    // CRITICAL FIX: Completely empty the container so old buttons die.
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -875,7 +869,6 @@ function loadQuestion() {
     
     shuffledOptions.forEach(opt => {
         const btn = document.createElement('button');
-        // CRITICAL FIX: Reset the class back to default so no sticky hover remains
         btn.className = 'option-btn'; 
         btn.innerText = opt;
         
@@ -894,7 +887,6 @@ function checkAnswer(selected, btn, correct) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
-            // CRITICAL FIX: Wipe out sticky mobile pseudo-hover state
             b.blur();
         });
     }
@@ -907,7 +899,6 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // Highlight logic removed completely as requested
         sfx.wrong();
     }
     
