@@ -1,8 +1,7 @@
 /**
  * The Knowledge Portal - V4.2 AAA Build
- * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
- * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
- * MOBILE PATCH: Audio Engine Wakeup & Viewport Logic Integrated.
+ * FINAL MASTER VERSION: Mobile Layout, AI Voice Wakeup, Auto-Centering, Missing IDs Bypassed
+ * 180 Questions | Sudden Death | Bounties | Post-Game Analytics
  */
 
 const socket = io();
@@ -11,7 +10,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
+// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -249,7 +248,7 @@ const quizData = {
             { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
             { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
             { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was the theme of the 2015 gathering in Washington D.C.?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ] 
@@ -265,7 +264,7 @@ const quizData = {
             { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 100 million square miles.", "The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 250 million square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
             { question: "6. What are the exact square miles of the useful land that is used every day by the total population of the planet Earth?", options: ["The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 50,000,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 100,000,000 square miles."], correct: "The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles." }, 
             { question: "7. What are the exact square miles of the useful water that is used every day by the total population of the planet Earth?", options: ["The useful water that is used every day by the total population of the planet Earth is 20,000,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 90,000,000 square miles."], correct: "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles." }, 
-            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers)." }, 
+            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "6 sextillion tons (a six followed by twenty-one ciphers)." }, 
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
@@ -328,7 +327,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 5. RESTORED WORKING AUDIO ENGINE (GLOBAL TOUCH ENABLED)
 // ---------------------------------------------------------
 
 function masterUnlockAudio() {
@@ -352,6 +351,10 @@ function masterUnlockAudio() {
         voiceUnlocked = true;
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
+
+// GLOBAL EVENT LISTENERS TO FIX MOBILE VOICE AND PREVENT CRASHES
+document.addEventListener('touchstart', masterUnlockAudio, { once: true });
+document.addEventListener('click', masterUnlockAudio, { once: true });
 
 const sfx = {
     playTone: (freq, type, duration) => {
@@ -406,8 +409,10 @@ window.onload = () => {
     if (savedUser) {
         currentUser = savedUser;
         currentPoints = savedPoints ? parseInt(savedPoints) : 0;
-        document.getElementById('display-name').innerText = currentUser;
-        document.getElementById('display-points').innerText = currentPoints;
+        const dispName = document.getElementById('display-name');
+        const dispPts = document.getElementById('display-points');
+        if (dispName) dispName.innerText = currentUser;
+        if (dispPts) dispPts.innerText = currentPoints;
         socket.emit('join_game', { name: currentUser, points: currentPoints });
         switchScreen('home-screen');
     } else {
@@ -417,15 +422,22 @@ window.onload = () => {
 
 function registerUser() {
     masterUnlockAudio();
-    const nameInput = document.getElementById('username-input').value.trim();
-    if (nameInput === "") return alert("Please enter a name to begin.");
-    currentUser = nameInput;
+    const nameInput = document.getElementById('username-input');
+    if (!nameInput) return;
+    const nameVal = nameInput.value.trim();
+    if (nameVal === "") return alert("Please enter a name to begin.");
+    
+    currentUser = nameVal;
     currentPoints = 0;
     localStorage.setItem('noi_user', currentUser);
     localStorage.setItem('noi_points', currentPoints);
     socket.emit('join_game', { name: currentUser, points: currentPoints });
-    document.getElementById('display-name').innerText = currentUser;
-    document.getElementById('display-points').innerText = currentPoints;
+    
+    const dispName = document.getElementById('display-name');
+    const dispPts = document.getElementById('display-points');
+    if (dispName) dispName.innerText = currentUser;
+    if (dispPts) dispPts.innerText = currentPoints;
+    
     switchScreen('home-screen');
 }
 
@@ -435,11 +447,21 @@ function registerUser() {
 function startJeopardy() {
     masterUnlockAudio();
     switchScreen('jeopardy-screen');
-    document.getElementById('j-lobby-view').style.display = 'block';
-    document.getElementById('j-game-view').style.display = 'none';
-    document.getElementById('j-podium-view').style.display = 'none';
+    
+    const lView = document.getElementById('j-lobby-view');
+    const gView = document.getElementById('j-game-view');
+    const pView = document.getElementById('j-podium-view');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = 'var(--gold)'; rBtn.style.color = 'black'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
+    
+    if (lView) lView.style.display = 'block';
+    if (gView) gView.style.display = 'none';
+    if (pView) pView.style.display = 'none';
+    if (rBtn) {
+        rBtn.style.background = 'var(--gold)'; 
+        rBtn.style.color = 'black'; 
+        rBtn.innerText = "I'M READY"; 
+        rBtn.disabled = false;
+    }
     socket.emit('join_jeopardy', { name: currentUser });
 }
 
@@ -447,12 +469,19 @@ function sendReady() {
     masterUnlockAudio();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING FOR OTHERS..."; rBtn.disabled = true;
+    if (rBtn) {
+        rBtn.style.background = '#555'; 
+        rBtn.style.color = 'white'; 
+        rBtn.innerText = "WAITING FOR OTHERS..."; 
+        rBtn.disabled = true;
+    }
 }
 
 socket.on('lobby_update', (data) => {
-    document.getElementById('lobby-ready-count').innerText = data.ready;
-    document.getElementById('lobby-total-count').innerText = data.total;
+    const rc = document.getElementById('lobby-ready-count');
+    const tc = document.getElementById('lobby-total-count');
+    if (rc) rc.innerText = data.ready;
+    if (tc) tc.innerText = data.total;
 });
 
 socket.on('score_update', (scores) => {
@@ -485,15 +514,22 @@ socket.on('score_update', (scores) => {
 
 socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
-    document.getElementById('j-lobby-view').style.display = 'none';
-    document.getElementById('j-game-view').style.display = 'block';
-    document.getElementById('j-question-box').innerText = "Game is beginning...";
-    document.getElementById('j-question-box').className = "big-tv";
+    const lView = document.getElementById('j-lobby-view');
+    const gView = document.getElementById('j-game-view');
+    const qBox = document.getElementById('j-question-box');
+    
+    if (lView) lView.style.display = 'none';
+    if (gView) gView.style.display = 'block';
+    if (qBox) {
+        qBox.innerText = "Game is beginning...";
+        qBox.className = "big-tv";
+    }
     speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
 });
 
 socket.on('round_update', (data) => {
-    document.getElementById('j-round-display').innerText = `${data.round}/${data.max}`;
+    const rd = document.getElementById('j-round-display');
+    if (rd) rd.innerText = `${data.round}/${data.max}`;
 });
 
 socket.on('request_question', (data) => {
@@ -519,8 +555,11 @@ socket.on('request_question', (data) => {
 
 socket.on('golden_alert', () => {
     sfx.siren();
-    document.getElementById('j-question-box').className = "big-tv golden-tv";
-    document.getElementById('j-question-box').innerHTML = "<span style='color: white; font-size:36px;'>🚨 THE GOLDEN QUESTION 🚨<br><span style='font-size:20px; color:#fbbf24;'>Triple Points on the Line</span></span>";
+    const qBox = document.getElementById('j-question-box');
+    if (qBox) {
+        qBox.className = "big-tv golden-tv";
+        qBox.innerHTML = "<span style='color: white; font-size:36px;'>🚨 THE GOLDEN QUESTION 🚨<br><span style='font-size:20px; color:#fbbf24;'>Triple Points on the Line</span></span>";
+    }
     speak("Alert. This is the Golden Question. Triple points are on the line.");
 });
 
@@ -529,8 +568,11 @@ socket.on('player_on_fire', (data) => {
 });
 
 socket.on('announce_category', (data) => {
-    if (!data.isGolden) document.getElementById('j-question-box').className = "big-tv";
-    document.getElementById('j-question-box').innerHTML = `<span style="font-size:20px; color:var(--gold); display:block; margin-bottom:10px; text-transform:uppercase;">Category</span>${data.categoryTitle}`;
+    const qBox = document.getElementById('j-question-box');
+    if (qBox) {
+        if (!data.isGolden) qBox.className = "big-tv";
+        qBox.innerHTML = `<span style="font-size:20px; color:var(--gold); display:block; margin-bottom:10px; text-transform:uppercase;">Category</span>${data.categoryTitle}`;
+    }
     speak(`The category is... ${data.categoryTitle}. Here is the question.`);
 });
 
@@ -538,118 +580,154 @@ socket.on('timer_update', (data) => {
     const t = document.getElementById('j-timer-display');
     const bar = document.getElementById('pressure-bar');
     
-    t.innerText = data.text;
+    if (t) t.innerText = data.text;
     
     if (data.maxTime && bar) {
         const percentage = (data.timeLeft / data.maxTime) * 100;
         bar.style.width = percentage + "%";
         
         if (percentage > 50) {
-            bar.style.background = "var(--gold)"; t.style.color = "var(--gold)";
+            bar.style.background = "var(--gold)"; 
+            if (t) t.style.color = "var(--gold)";
         } else if (percentage > 25) {
-            bar.style.background = "#f97316"; t.style.color = "#f97316";
+            bar.style.background = "#f97316"; 
+            if (t) t.style.color = "#f97316";
         } else {
-            bar.style.background = "#ef4444"; t.style.color = "#ef4444";
+            bar.style.background = "#ef4444"; 
+            if (t) t.style.color = "#ef4444";
             sfx.heartbeat();
         }
     }
 });
 
 socket.on('new_question', (qData) => {
-    document.getElementById('j-question-box').innerText = qData.question;
-    speak(qData.question); 
-    document.getElementById('buzzer-status').innerText = "BUZZ IN!";
-    document.getElementById('buzzer-status').style.color = "#10b981"; 
-    
+    const qBox = document.getElementById('j-question-box');
+    const bStatus = document.getElementById('buzzer-status');
     const btn = document.getElementById('buzzer-btn');
-    btn.className = "buzzer-ready";
-    btn.innerText = "BUZZ!";
+    const optBox = document.getElementById('j-options-box');
     
-    document.getElementById('j-options-box').style.display = "none";
+    if (qBox) qBox.innerText = qData.question;
+    speak(qData.question); 
+    
+    if (bStatus) {
+        bStatus.innerText = "BUZZ IN!";
+        bStatus.style.color = "#10b981"; 
+    }
+    
+    if (btn) {
+        btn.className = "buzzer-ready";
+        btn.innerText = "BUZZ!";
+    }
+    
+    if (optBox) optBox.style.display = "none";
     window.currentJeopardyOptions = qData.options;
 });
 
 function sendBuzz() {
     masterUnlockAudio();
-    if(document.getElementById('buzzer-btn').className.includes('buzzer-ready')){
+    const btn = document.getElementById('buzzer-btn');
+    if(btn && btn.className.includes('buzzer-ready')){
         socket.emit('buzz', { name: currentUser });
     }
 }
 
 socket.on('player_eliminated', () => {
     const btn = document.getElementById('buzzer-btn');
-    btn.className = "buzzer-locked";
-    btn.innerText = "DEAD";
-    document.getElementById('buzzer-status').innerText = "YOU ARE ELIMINATED.";
-    document.getElementById('buzzer-status').style.color = "#ef4444";
+    const bStatus = document.getElementById('buzzer-status');
+    if (btn) {
+        btn.className = "buzzer-locked";
+        btn.innerText = "DEAD";
+    }
+    if (bStatus) {
+        bStatus.innerText = "YOU ARE ELIMINATED.";
+        bStatus.style.color = "#ef4444";
+    }
 });
 
 socket.on('player_buzzed', (data) => {
     sfx.buzz(); 
-    window.speechSynthesis.cancel(); 
+    if (window.speechSynthesis) window.speechSynthesis.cancel(); 
     
     const btn = document.getElementById('buzzer-btn');
-    if (!btn.className.includes("DEAD")) {
+    const bStatus = document.getElementById('buzzer-status');
+    const optBox = document.getElementById('j-options-box');
+
+    if (btn && !btn.className.includes("DEAD")) {
         btn.className = "buzzer-locked";
         btn.innerText = "LOCKED";
     }
     
     const isMe = (data.name === currentUser);
     if (isMe) {
-        document.getElementById('buzzer-status').innerText = "YOU BUZZED IN!";
-        const optionsBox = document.getElementById('j-options-box');
-        optionsBox.style.display = "grid";
-        optionsBox.innerHTML = "";
-        let shuffled = [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5); 
-        shuffled.forEach(opt => {
-            const obtn = document.createElement('button');
-            obtn.className = 'option-btn';
-            obtn.innerText = opt;
-            obtn.onclick = () => { masterUnlockAudio(); submitJeopardyAnswer(opt); };
-            optionsBox.appendChild(obtn);
-        });
+        if (bStatus) bStatus.innerText = "YOU BUZZED IN!";
+        if (optBox) {
+            optBox.style.display = "grid";
+            optBox.innerHTML = "";
+            let shuffled = [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5); 
+            shuffled.forEach(opt => {
+                const obtn = document.createElement('button');
+                obtn.className = 'option-btn';
+                obtn.innerText = opt;
+                obtn.onclick = () => submitJeopardyAnswer(opt);
+                optBox.appendChild(obtn);
+            });
+        }
     } else {
-        document.getElementById('buzzer-status').innerText = `Waiting for ${data.name}...`;
+        if (bStatus) bStatus.innerText = `Waiting for ${data.name}...`;
     }
 });
 
 function submitJeopardyAnswer(selectedAnswer) {
-    const btns = document.getElementById('j-options-box').querySelectorAll('.option-btn');
-    btns.forEach(b => b.disabled = true);
+    const box = document.getElementById('j-options-box');
+    if (box) {
+        const btns = box.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+    }
     socket.emit('submit_answer', { name: currentUser, answer: selectedAnswer });
 }
 
 socket.on('answer_result', (data) => {
     const qBox = document.getElementById('j-question-box');
+    const optBox = document.getElementById('j-options-box');
+    
     if (data.isCorrect) {
         sfx.correct();
-        qBox.innerText = `${data.name} got it right!`;
+        if (qBox) qBox.innerText = `${data.name} got it right!`;
         speak(`Correct. ${data.name} gains points.`);
     } else {
         sfx.wrong();
-        qBox.innerText = `${data.name} was incorrect.`;
+        if (qBox) qBox.innerText = `${data.name} was incorrect.`;
         speak(`Incorrect.`);
     }
-    document.getElementById('j-options-box').style.display = "none";
+    if (optBox) optBox.style.display = "none";
 });
 
 socket.on('reset_buzzer', () => {
     const btn = document.getElementById('buzzer-btn');
-    if (!btn.className.includes("DEAD")) {
+    const bStatus = document.getElementById('buzzer-status');
+    const pBar = document.getElementById('pressure-bar');
+    
+    if (btn && !btn.className.includes("DEAD")) {
         btn.className = "buzzer-locked";
         btn.innerText = "WAIT";
     }
-    document.getElementById('buzzer-status').innerText = "Preparing next question...";
-    document.getElementById('buzzer-status').style.color = "#aaa";
-    if (document.getElementById('pressure-bar')) {
-        document.getElementById('pressure-bar').style.width = "100%";
-        document.getElementById('pressure-bar').style.background = "var(--gold)";
+    if (bStatus) {
+        bStatus.innerText = "Preparing next question...";
+        bStatus.style.color = "#aaa";
+    }
+    if (pBar) {
+        pBar.style.width = "100%";
+        pBar.style.background = "var(--gold)";
     }
 });
 
 socket.on('game_over', (finalScores) => {
-    document.getElementById('j-game-view').style.display = 'none';
-    document.getElementById('j-podium-view').style.display = 'block';
+    const gView = document.getElementById('j-game-view');
+    const pView = document.getElementById('j-podium-view');
+    const pResults = document.getElementById('podium-results');
+    
+    if (gView) gView.style.display = 'none';
+    if (pView) pView.style.display = 'block';
     
     let html = "";
     finalScores.forEach((s, i) => {
@@ -675,7 +753,8 @@ socket.on('game_over', (finalScores) => {
             html += `<div style="text-align:center; color:#ef4444; font-weight:bold; font-size:18px; margin-bottom:10px;">🎯 BOUNTY COLLECTED! +5,000 Global Points!</div>`;
         }
     });
-    document.getElementById('podium-results').innerHTML = html;
+    
+    if (pResults) pResults.innerHTML = html;
     
     if (typeof confetti !== 'undefined') {
         var end = Date.now() + 3000;
@@ -693,29 +772,46 @@ socket.on('game_over', (finalScores) => {
 // 8. ORIGINAL DIFFICULTY & STUDY LOGIC
 // ---------------------------------------------------------
 let selectedModeTemp = "";
-function showDifficulty(mode) { selectedModeTemp = mode; document.getElementById('difficulty-modal').classList.add('active'); }
-function closeDifficulty() { document.getElementById('difficulty-modal').classList.remove('active'); }
+function showDifficulty(mode) { 
+    selectedModeTemp = mode; 
+    const modal = document.getElementById('difficulty-modal');
+    if (modal) modal.classList.add('active'); 
+}
+
+function closeDifficulty() { 
+    const modal = document.getElementById('difficulty-modal');
+    if (modal) modal.classList.remove('active'); 
+}
+
 function selectDifficulty(diff) {
     closeDifficulty();
     pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
     openStudyLibrary(selectedModeTemp, diff);
 }
+
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
     if (mode === 'adults') pointMultiplier = 1000; 
+    
     switchScreen('study-screen');
-    document.getElementById('study-title').innerText = quizData[mode].title;
-    document.getElementById('study-text').innerHTML = quizData[mode].studyText;
+    
+    const sTitle = document.getElementById('study-title');
+    const sText = document.getElementById('study-text');
+    if (sTitle) sTitle.innerText = quizData[mode].title + (diff === 'exact' ? " (Exact Translation)" : ` (${diff.toUpperCase()})`);
+    if (sText) sText.innerHTML = quizData[mode].studyText;
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (VERIFIED BEGIN BUTTON)
+// 9. ORIGINAL QUIZ LOGIC (FIXED BEGIN BUTTON AND HIGHLIGHTS)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
-    document.getElementById('live-points').innerText = "0";
+    
+    const lp = document.getElementById('live-points');
+    if (lp) lp.innerText = "0";
+    
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
     if (currentPath !== 'adults') {
@@ -732,37 +828,54 @@ function beginQuizFromStudy() {
 function loadQuestion() {
     const q = activeQuestions[currentIdx];
     const progress = ((currentIdx) / activeQuestions.length) * 100;
-    document.getElementById('progress-bar').style.width = progress + "%";
-    document.getElementById('question').innerText = q.question;
     
+    const pBar = document.getElementById('progress-bar');
+    const pText = document.getElementById('progress-text');
+    const qText = document.getElementById('question');
     const optionsDiv = document.getElementById('options');
+    const mTitle = document.getElementById('mode-title');
+    
+    if (pBar) pBar.style.width = progress + "%";
+    if (pText) pText.innerText = `Question ${currentIdx + 1} of ${activeQuestions.length}`;
+    if (qText) qText.innerText = q.question;
+    if (mTitle) mTitle.innerText = quizData[currentPath].title;
+    
+    if (!optionsDiv) return;
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
     if (currentPath !== 'adults') {
-        shuffledOptions.sort(() => Math.random() - 0.5);
+        for (let i = shuffledOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+        }
     }
     
     shuffledOptions.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn'; btn.innerText = opt;
-        btn.onclick = () => { masterUnlockAudio(); checkAnswer(opt, btn, q.correct); };
+        btn.onclick = () => checkAnswer(opt, btn, q.correct);
         optionsDiv.appendChild(btn);
     });
 }
 
 function checkAnswer(selected, btn, correct) {
-    const quizBtns = document.getElementById('options').querySelectorAll('.option-btn');
-    quizBtns.forEach(b => b.disabled = true);
+    masterUnlockAudio();
+    const optionsDiv = document.getElementById('options');
+    if (optionsDiv) {
+        const quizBtns = optionsDiv.querySelectorAll('.option-btn');
+        quizBtns.forEach(b => b.disabled = true);
+    }
     
     if (selected === correct) {
         correctAnswers++; pointsThisSession += pointMultiplier;
-        document.getElementById('live-points').innerText = pointsThisSession;
+        const lp = document.getElementById('live-points');
+        if (lp) lp.innerText = pointsThisSession;
         btn.classList.add('correct');
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        quizBtns.forEach(b => { if(b.innerText === correct) b.style.borderColor = "#10b981"; });
+        // REMOVED: Auto-highlight of correct answer on wrong guess
         sfx.wrong();
     }
     setTimeout(() => {
@@ -778,17 +891,24 @@ function showResults() {
     switchScreen('result-screen');
     
     const totalQ = activeQuestions.length;
-    document.getElementById('final-score').innerText = `${correctAnswers}/${totalQ}`;
-    document.getElementById('earned-points').innerText = pointsThisSession;
+    const fScore = document.getElementById('final-score');
+    const ePoints = document.getElementById('earned-points');
+    const rDisp = document.getElementById('rank-display');
+    const dPts = document.getElementById('display-points');
+    
+    if (fScore) fScore.innerText = `${correctAnswers}/${totalQ}`;
+    if (ePoints) ePoints.innerText = pointsThisSession;
+    
     currentPoints += pointsThisSession;
     
     let rank = "Student";
     if (correctAnswers === totalQ) rank = "Vanguard / Captain";
     else if (correctAnswers >= totalQ / 2) rank = "Builder";
-    document.getElementById('rank-display').innerText = `Rank Earned: ${rank}`;
+    
+    if (rDisp) rDisp.innerText = `Rank Earned: ${rank}`;
     
     localStorage.setItem('noi_points', currentPoints);
-    document.getElementById('display-points').innerText = currentPoints;
+    if (dPts) dPts.innerText = currentPoints;
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
 }
 
@@ -810,7 +930,7 @@ socket.on('leaderboard_data', (data) => {
         row.innerHTML = `
             <div style="display:flex; align-items:center;">
                 ${getAvatar(user.name, user.points)}
-                <span style="margin-left:5px;">#${index + 1} ${user.name}</span>
+                <span style="margin-left:5px;">#${index + 1} ${user.name} ${isMe ? "(You)" : ""}</span>
             </div>
             <span>${user.points.toLocaleString()} pts</span>
         `;
@@ -832,6 +952,7 @@ function returnToMenu() {
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
+    if (!input) return;
     const msg = input.value.trim();
     if (msg !== "") {
         socket.emit('send_chat', { name: currentUser, message: msg });
@@ -841,6 +962,7 @@ function sendChatMessage() {
 
 socket.on('receive_chat', (data) => {
     const box = document.getElementById('chat-box');
+    if (!box) return;
     const msgDiv = document.createElement('div');
     const isSystem = data.name === "SYSTEM";
     const isMe = data.name === currentUser;
@@ -867,5 +989,7 @@ socket.on('receive_chat', (data) => {
 });
 
 document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.activeElement.id === 'chat-input') sendChatMessage();
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') {
+        sendChatMessage();
+    }
 });
