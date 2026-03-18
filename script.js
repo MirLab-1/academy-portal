@@ -8,7 +8,7 @@
  * 4. Triple-Point Golden Questions
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Stuck Loading)
+ * 7. Screen Management System (Fixed Stuck Loading & Highlight Removed)
  * * DATABASE: 180 Questions across 7 Paths
  */
 
@@ -256,7 +256,7 @@ const quizData = {
             { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
             { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
             { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 2015 gathering in Washington D.C.?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ] 
@@ -304,7 +304,7 @@ function switchScreen(screenId) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -417,10 +417,10 @@ window.onload = () => {
     if (savedUser) {
         currentUser = savedUser;
         currentPoints = savedPoints ? parseInt(savedPoints) : 0;
-        const dispName = document.getElementById('display-name');
-        const dispPts = document.getElementById('display-points');
-        if (dispName) dispName.innerText = currentUser;
-        if (dispPts) dispPts.innerText = currentPoints;
+        const dName = document.getElementById('display-name');
+        const dPts = document.getElementById('display-points');
+        if (dName) dName.innerText = currentUser;
+        if (dPts) dPts.innerText = currentPoints;
         socket.emit('join_game', { name: currentUser, points: currentPoints });
         switchScreen('home-screen');
     } else {
@@ -441,10 +441,10 @@ function registerUser() {
     localStorage.setItem('noi_points', currentPoints);
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
-    const dispName = document.getElementById('display-name');
-    const dispPts = document.getElementById('display-points');
-    if (dispName) dispName.innerText = currentUser;
-    if (dispPts) dispPts.innerText = currentPoints;
+    const dName = document.getElementById('display-name');
+    const dPts = document.getElementById('display-points');
+    if (dName) dName.innerText = currentUser;
+    if (dPts) dPts.innerText = currentPoints;
     
     switchScreen('home-screen');
 }
@@ -621,12 +621,10 @@ socket.on('new_question', (qData) => {
         bStatus.innerText = "BUZZ IN!";
         bStatus.style.color = "#10b981"; 
     }
-    
     if (btn) {
         btn.className = "buzzer-ready";
         btn.innerText = "BUZZ!";
     }
-    
     if (optBox) optBox.style.display = "none";
     window.currentJeopardyOptions = qData.options;
 });
@@ -676,7 +674,7 @@ socket.on('player_buzzed', (data) => {
                 const obtn = document.createElement('button');
                 obtn.className = 'option-btn';
                 obtn.innerText = opt;
-                obtn.onclick = () => submitJeopardyAnswer(opt);
+                obtn.onclick = () => { masterUnlockAudio(); submitJeopardyAnswer(opt); };
                 optBox.appendChild(obtn);
             });
         }
@@ -883,7 +881,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // REMOVED HIGHLIGHTING LOGIC
+        // NO HIGHLIGHTING OF CORRECT ANSWER
         sfx.wrong();
     }
     setTimeout(() => {
