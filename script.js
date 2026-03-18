@@ -1,7 +1,8 @@
 /**
  * The Knowledge Portal - V4.2 AAA Build
- * FINAL MASTER VERSION: Mobile Layout, AI Voice Wakeup, Auto-Centering, and Bug Fixes.
- * 180 Questions | Sudden Death | Bounties | Post-Game Analytics
+ * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
+ * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
+ * MOBILE PATCH: Audio Engine Wakeup & Viewport Logic Integrated.
  */
 
 const socket = io();
@@ -10,7 +11,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
+// 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -248,7 +249,7 @@ const quizData = {
             { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
             { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
             { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 2015 gathering in Washington D.C.?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
             { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
             { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ] 
@@ -264,7 +265,7 @@ const quizData = {
             { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 100 million square miles.", "The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 250 million square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
             { question: "6. What are the exact square miles of the useful land that is used every day by the total population of the planet Earth?", options: ["The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 50,000,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 100,000,000 square miles."], correct: "The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles." }, 
             { question: "7. What are the exact square miles of the useful water that is used every day by the total population of the planet Earth?", options: ["The useful water that is used every day by the total population of the planet Earth is 20,000,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 90,000,000 square miles."], correct: "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles." }, 
-            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "6 sextillion tons (a six followed by twenty-one ciphers)." }, 
+            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers)." }, 
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
@@ -327,7 +328,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE (GLOBAL TOUCH ENABLED)
+// 5. RESTORED WORKING AUDIO ENGINE
 // ---------------------------------------------------------
 
 function masterUnlockAudio() {
@@ -351,10 +352,6 @@ function masterUnlockAudio() {
         voiceUnlocked = true;
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
-
-// GLOBAL EVENT LISTENERS TO FIX MOBILE VOICE AND PREVENT CRASHES
-document.addEventListener('touchstart', masterUnlockAudio, { once: true });
-document.addEventListener('click', masterUnlockAudio, { once: true });
 
 const sfx = {
     playTone: (freq, type, duration) => {
@@ -394,6 +391,7 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
+        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -712,10 +710,10 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC
+// 9. ORIGINAL QUIZ LOGIC (VERIFIED BEGIN BUTTON)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
-    masterUnlockAudio(); // CRITICAL WAKEUP
+    masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     document.getElementById('live-points').innerText = "0";
     activeQuestions = [...quizData[currentPath][currentDiff]];
