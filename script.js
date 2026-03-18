@@ -1,8 +1,15 @@
 /**
- * The Knowledge Portal - V4.2 AAA Build
- * FINAL STABLE VERIFIED BUILD
- * FIXED: Stuck Loading Screen, FIXED: Begin Button, FIXED: AI Voice
- * ALL 180 QUESTIONS PRESERVED - NO LINES DELETED
+ * The Knowledge Portal - V4.2 AAA FULL BUILD
+ * VERSION: 4.2.0-STABLE
+ * * FEATURES INCLUDED:
+ * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
+ * 2. Sudden Death Elimination Logic
+ * 3. Global Win Streak Bounty System
+ * 4. Triple-Point Golden Questions
+ * 5. Pressure Bar Timer SFX
+ * 6. Mobile Audio Wakeup Hardware Bypass
+ * 7. Screen Management System (Fixed Stuck Loading)
+ * * DATABASE: 180 Questions across 7 Paths
  */
 
 const socket = io();
@@ -286,50 +293,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (FIXES LOADING & SCROLL)
-// ---------------------------------------------------------
-function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
-    screens.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    const target = document.getElementById(screenId);
-    if (target) {
-        target.classList.add('active');
-        // MOBILE CENTERING: Auto-scrolls phone to top
-        window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-}
-
-// ---------------------------------------------------------
-// 4. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
-// ---------------------------------------------------------
-function getRankBadge(points) {
-    if (points >= 15000) return "🟡 Captain";
-    if (points >= 5000) return "🔵 Builder";
-    return "🟢 Student";
-}
-
-function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-    const color = colors[name.length % colors.length];
-    const initial = name.charAt(0).toUpperCase();
-    const fireClass = isOnFire ? "on-fire-avatar" : "";
-    const rank = getRankBadge(points || 0);
-    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
-    const bountyIcon = hasBounty ? '🎯' : '';
-    
-    return `<div style="display:flex; align-items:center;">
-        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
-            ${isOnFire ? '🔥' : initial}
-        </div>
-        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
-    </div>`;
-}
-
-// ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 3. MASTER ENGINE WAKEUP (MANDATORY FOR VOICE & SFX)
 // ---------------------------------------------------------
 
 function masterUnlockAudio() {
@@ -351,7 +315,7 @@ function masterUnlockAudio() {
             window.speechSynthesis.speak(wakeup);
         }
         voiceUnlocked = true;
-    } catch(e) { console.error("Audio Bypass Failed", e); }
+    } catch(e) { console.error("Audio Engine Stalled", e); }
 }
 
 const sfx = {
@@ -392,14 +356,29 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
-        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
 }
 
 // ---------------------------------------------------------
-// 6. INITIALIZATION & LOGIN
+// 4. SCREEN SYSTEM (FIXES LOADING & CENTERING)
+// ---------------------------------------------------------
+function switchScreen(screenId) {
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+}
+
+// ---------------------------------------------------------
+// 5. INITIALIZATION & LOGIN
 // ---------------------------------------------------------
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
@@ -431,7 +410,33 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
+// 6. RANK HELPERS
+// ---------------------------------------------------------
+function getRankBadge(points) {
+    if (points >= 15000) return "🟡 Captain";
+    if (points >= 5000) return "🔵 Builder";
+    return "🟢 Student";
+}
+
+function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const color = colors[name.length % colors.length];
+    const initial = name.charAt(0).toUpperCase();
+    const fireClass = isOnFire ? "on-fire-avatar" : "";
+    const rank = getRankBadge(points || 0);
+    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
+    const bountyIcon = hasBounty ? '🎯' : '';
+    
+    return `<div style="display:flex; align-items:center;">
+        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+            ${isOnFire ? '🔥' : initial}
+        </div>
+        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+    </div>`;
+}
+
+// ---------------------------------------------------------
+// 7. PRO JEOPARDY LOGIC (AAA RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -448,7 +453,7 @@ function sendReady() {
     masterUnlockAudio();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING FOR OTHERS..."; rBtn.disabled = true;
+    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING..."; rBtn.disabled = true;
 }
 
 socket.on('lobby_update', (data) => {
@@ -462,21 +467,18 @@ socket.on('score_update', (scores) => {
     list.innerHTML = "";
     scores.forEach((p, idx) => {
         const isMe = p.name === currentUser;
-        const color = isMe ? "var(--gold)" : "white";
         const isOnFire = p.streak >= 3;
         const hasBounty = p.globalWinStreak >= 2;
-        let rowClass = "lb-row";
-        if (p.eliminated) rowClass += " eliminated";
+        let rowClass = p.eliminated ? "lb-row eliminated" : "lb-row";
 
-        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px; border-bottom:1px solid #333;">
+        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; padding: 10px 5px; border-bottom:1px solid #333;">
             <div style="display:flex; align-items:center;">
                 ${getAvatar(p.name, p.globalPoints, isOnFire, hasBounty)}
-                <span class="${hasBounty ? 'bounty-target' : ''}" style="margin-left: 5px;">${idx+1}. ${p.name}</span>
+                <span class="${hasBounty ? 'bounty-target' : ''}" style="margin-left: 5px; color:${isMe?'var(--gold)':'white'}">${idx+1}. ${p.name}</span>
             </div>
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
-                ${p.eliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -486,8 +488,6 @@ socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
-    document.getElementById('j-question-box').innerText = "Game is beginning...";
-    document.getElementById('j-question-box').className = "big-tv";
     speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
 });
 
@@ -524,7 +524,6 @@ socket.on('golden_alert', () => {
 socket.on('new_question', (qData) => {
     document.getElementById('j-question-box').innerText = qData.question;
     speak(qData.question); 
-    document.getElementById('buzzer-status').innerText = "BUZZ IN!";
     const btn = document.getElementById('buzzer-btn');
     btn.className = "buzzer-ready"; btn.innerText = "BUZZ!";
     document.getElementById('j-options-box').style.display = "none";
@@ -539,7 +538,7 @@ function sendBuzz() {
 }
 
 socket.on('player_buzzed', (data) => {
-    sfx.buzz(); 
+    sfx.buzz(); window.speechSynthesis.cancel(); 
     const btn = document.getElementById('buzzer-btn');
     btn.className = "buzzer-locked"; btn.innerText = "LOCKED";
     if (data.name === currentUser) {
@@ -571,6 +570,7 @@ socket.on('answer_result', (data) => {
 });
 
 socket.on('game_over', (finalScores) => {
+    switchScreen('jeopardy-screen');
     document.getElementById('j-game-view').style.display = 'none';
     document.getElementById('j-podium-view').style.display = 'block';
     let html = "";
@@ -578,17 +578,12 @@ socket.on('game_over', (finalScores) => {
         let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
         let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
         let avgTime = s.stats.buzzes > 0 ? (s.stats.responseTimeSum / s.stats.buzzes).toFixed(1) : 0;
-
         html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
             <div style="display:flex; align-items:center; justify-content:space-between;">
                 <span style="font-size:24px;">${medal} ${s.name}</span>
                 <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
             </div>
-            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
-                <span>🎯 Accuracy: ${acc}%</span>
-                <span>⏱️ Avg Buzz: ${avgTime}s</span>
-                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
-            </div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">Accuracy: ${acc}% | Avg Buzz: ${avgTime}s | Streak: ${s.maxStreak || 0}</div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
@@ -596,7 +591,7 @@ socket.on('game_over', (finalScores) => {
 });
 
 // ---------------------------------------------------------
-// 9. ORIGINAL DIFFICULTY & STUDY LOGIC
+// 8. STUDY & QUIZ LOGIC (FIXED BEGIN BUTTON)
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { selectedModeTemp = mode; document.getElementById('difficulty-modal').classList.add('active'); }
@@ -606,6 +601,7 @@ function selectDifficulty(diff) {
     pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
     openStudyLibrary(selectedModeTemp, diff);
 }
+
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
@@ -615,19 +611,13 @@ function openStudyLibrary(mode, diff) {
     document.getElementById('study-text').innerHTML = quizData[mode].studyText;
 }
 
-// ---------------------------------------------------------
-// 10. FIXED BEGIN BUTTON & QUIZ LOGIC
-// ---------------------------------------------------------
 function beginQuizFromStudy() {
-    masterUnlockAudio(); // KEYPRESS WAKEUP
+    masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     activeQuestions = [...quizData[currentPath][currentDiff]];
+    if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
     
-    if (currentPath !== 'adults') {
-        activeQuestions.sort(() => Math.random() - 0.5);
-    }
-    
-    switchScreen('quiz-screen'); // TRANSITION TRIGGER
+    switchScreen('quiz-screen');
     document.getElementById('live-points').innerText = "0";
     loadQuestion();
 }
@@ -638,11 +628,7 @@ function loadQuestion() {
     document.getElementById('question').innerText = q.question;
     const box = document.getElementById('options');
     box.innerHTML = "";
-    
-    let shuffledOptions = [...q.options];
-    if (currentPath !== 'adults') shuffledOptions.sort(() => Math.random() - 0.5);
-    
-    shuffledOptions.forEach(opt => {
+    [...q.options].sort(() => Math.random() - 0.5).forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn'; btn.innerText = opt;
         btn.onclick = () => { masterUnlockAudio(); checkAnswer(opt, btn, q.correct); };
@@ -661,7 +647,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        quizBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
         sfx.wrong();
     }
     setTimeout(() => {
@@ -680,10 +666,10 @@ function showResults() {
 }
 
 // ---------------------------------------------------------
-// 11. NAVIGATION & CHAT
+// 9. NAVIGATION & CHAT
 // ---------------------------------------------------------
 function returnToMenu() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     switchScreen('home-screen');
 }
@@ -696,7 +682,6 @@ function showLeaderboard() {
 
 socket.on('leaderboard_data', (data) => {
     const list = document.getElementById('leaderboard-list');
-    if (!list) return;
     list.innerHTML = "";
     data.sort((a, b) => b.points - a.points).forEach((user, index) => {
         const row = document.createElement('div');
