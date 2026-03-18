@@ -450,7 +450,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC
+// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -480,7 +480,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING..."; 
+        rBtn.innerText = "WAITING FOR OTHERS..."; 
         rBtn.disabled = true;
     }
 }
@@ -809,7 +809,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
+// 9. ORIGINAL QUIZ LOGIC (HIGHLIGHTS FIXED)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -833,6 +833,10 @@ function beginQuizFromStudy() {
     }
     
     switchScreen('quiz-screen');
+    
+    const optionsDiv = document.getElementById('options');
+    if (optionsDiv) optionsDiv.innerHTML = "";
+    
     loadQuestion();
 }
 
@@ -855,7 +859,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // IMPORTANT FIX: Clears out old buttons entirely to stop sticky hover state
+    // Completely destroy old buttons to guarantee no hover/focus states carry over
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -889,6 +893,11 @@ function checkAnswer(selected, btn, correct) {
         quizBtns.forEach(b => {
             b.disabled = true;
         });
+    }
+    
+    // Force blur to completely kill any mobile focus highlight
+    if (document.activeElement) {
+        document.activeElement.blur();
     }
     
     if (selected === correct) {
