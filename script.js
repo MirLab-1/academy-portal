@@ -1,15 +1,7 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD
- * VERSION: 4.2.0-STABLE
- * * FEATURES INCLUDED:
- * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
- * 2. Sudden Death Elimination Logic
- * 3. Global Win Streak Bounty System
- * 4. Triple-Point Golden Questions
- * 5. Pressure Bar Timer SFX
- * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Stuck Loading)
- * * DATABASE: 180 Questions across 7 Paths
+ * The Knowledge Portal - V4.2 AAA Build
+ * FINAL MASTER VERSION: Centering Fixed, Null-Reference Crashing Fixed, Highlight Removed.
+ * 180 Questions | Sudden Death | Bounties | Post-Game Analytics
  */
 
 const socket = io();
@@ -272,7 +264,7 @@ const quizData = {
             { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 100 million square miles.", "The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 250 million square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
             { question: "6. What are the exact square miles of the useful land that is used every day by the total population of the planet Earth?", options: ["The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 50,000,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 100,000,000 square miles."], correct: "The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles." }, 
             { question: "7. What are the exact square miles of the useful water that is used every day by the total population of the planet Earth?", options: ["The useful water that is used every day by the total population of the planet Earth is 20,000,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 90,000,000 square miles."], correct: "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles." }, 
-            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers)." }, 
+            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "6 sextillion tons (a six followed by twenty-one ciphers)." }, 
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
@@ -293,7 +285,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
+// 3. MASTER SCREEN MANAGEMENT
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -304,7 +296,7 @@ function switchScreen(screenId) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -335,9 +327,8 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE (GLOBAL TOUCH ENABLED)
+// 5. RESTORED WORKING AUDIO ENGINE
 // ---------------------------------------------------------
-
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
     try {
@@ -352,17 +343,13 @@ function masterUnlockAudio() {
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const wakeup = new SpeechSynthesisUtterance(" ");
-            wakeup.volume = 0;
+            const wakeup = new SpeechSynthesisUtterance("Welcome");
+            wakeup.volume = 0.1;
             window.speechSynthesis.speak(wakeup);
         }
         voiceUnlocked = true;
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
-
-// GLOBAL EVENT LISTENERS TO FIX MOBILE VOICE AND PREVENT CRASHES
-document.addEventListener('touchstart', masterUnlockAudio, { once: true });
-document.addEventListener('click', masterUnlockAudio, { once: true });
 
 const sfx = {
     playTone: (freq, type, duration) => {
@@ -402,7 +389,6 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
-        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -417,10 +403,10 @@ window.onload = () => {
     if (savedUser) {
         currentUser = savedUser;
         currentPoints = savedPoints ? parseInt(savedPoints) : 0;
-        const dispName = document.getElementById('display-name');
-        const dispPts = document.getElementById('display-points');
-        if (dispName) dispName.innerText = currentUser;
-        if (dispPts) dispPts.innerText = currentPoints;
+        const dName = document.getElementById('display-name');
+        const dPts = document.getElementById('display-points');
+        if (dName) dName.innerText = currentUser;
+        if (dPts) dPts.innerText = currentPoints;
         socket.emit('join_game', { name: currentUser, points: currentPoints });
         switchScreen('home-screen');
     } else {
@@ -441,12 +427,13 @@ function registerUser() {
     localStorage.setItem('noi_points', currentPoints);
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
-    const dispName = document.getElementById('display-name');
-    const dispPts = document.getElementById('display-points');
-    if (dispName) dispName.innerText = currentUser;
-    if (dispPts) dispPts.innerText = currentPoints;
+    const dName = document.getElementById('display-name');
+    const dPts = document.getElementById('display-points');
+    if (dName) dName.innerText = currentUser;
+    if (dPts) dPts.innerText = currentPoints;
     
     switchScreen('home-screen');
+    setTimeout(() => speak("Welcome to the Academy."), 500);
 }
 
 // ---------------------------------------------------------
@@ -480,7 +467,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING FOR OTHERS..."; 
+        rBtn.innerText = "WAITING..."; 
         rBtn.disabled = true;
     }
 }
@@ -621,12 +608,10 @@ socket.on('new_question', (qData) => {
         bStatus.innerText = "BUZZ IN!";
         bStatus.style.color = "#10b981"; 
     }
-    
     if (btn) {
         btn.className = "buzzer-ready";
         btn.innerText = "BUZZ!";
     }
-    
     if (optBox) optBox.style.display = "none";
     window.currentJeopardyOptions = qData.options;
 });
@@ -820,6 +805,11 @@ function beginQuizFromStudy() {
     const lp = document.getElementById('live-points');
     if (lp) lp.innerText = "0";
     
+    if (!quizData[currentPath] || !quizData[currentPath][currentDiff]) {
+        console.error("Quiz data missing for path:", currentPath, currentDiff);
+        return; // Prevents crash if path is missing
+    }
+    
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
     if (currentPath !== 'adults') {
@@ -834,6 +824,8 @@ function beginQuizFromStudy() {
 }
 
 function loadQuestion() {
+    if (!activeQuestions || activeQuestions.length === 0) return;
+    
     const q = activeQuestions[currentIdx];
     const progress = ((currentIdx) / activeQuestions.length) * 100;
     
@@ -893,7 +885,7 @@ function checkAnswer(selected, btn, correct) {
 }
 
 // ---------------------------------------------------------
-// 10. REAL-TIME GLOBAL LEADERBOARD FIX
+// 10. REAL-TIME GLOBAL LEADERBOARD
 // ---------------------------------------------------------
 function showResults() {
     switchScreen('result-screen');
@@ -947,7 +939,7 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 11. MASTER NAVIGATION FIX
+// 11. MASTER NAVIGATION
 // ---------------------------------------------------------
 function returnToMenu() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -956,7 +948,7 @@ function returnToMenu() {
 }
 
 // ---------------------------------------------------------
-// 12. MODERN LOBBY CHAT LOGIC (No Sound)
+// 12. MODERN LOBBY CHAT LOGIC
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
