@@ -402,6 +402,7 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
+        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -449,7 +450,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
+// 7. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -479,7 +480,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING FOR OTHERS..."; 
+        rBtn.innerText = "WAITING..."; 
         rBtn.disabled = true;
     }
 }
@@ -808,7 +809,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (HIGHLIGHTS RESTORED BUT FIX STICKINESS)
+// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -832,10 +833,6 @@ function beginQuizFromStudy() {
     }
     
     switchScreen('quiz-screen');
-    
-    const optionsDiv = document.getElementById('options');
-    if (optionsDiv) optionsDiv.innerHTML = "";
-    
     loadQuestion();
 }
 
@@ -858,7 +855,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Completely destroy old buttons to guarantee no hover/focus states carry over
+    // IMPORTANT FIX: Clears out old buttons entirely to stop sticky hover state
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -875,6 +872,8 @@ function loadQuestion() {
         btn.innerText = opt;
         
         btn.onclick = () => { 
+            // IMPORTANT FIX: Forces browser to drop mobile focus target immediately
+            if (document.activeElement) document.activeElement.blur();
             masterUnlockAudio(); 
             checkAnswer(opt, btn, q.correct); 
         };
@@ -892,11 +891,6 @@ function checkAnswer(selected, btn, correct) {
         });
     }
     
-    // Force blur to completely kill any mobile focus highlight
-    if (document.activeElement) {
-        document.activeElement.blur();
-    }
-    
     if (selected === correct) {
         correctAnswers++; pointsThisSession += pointMultiplier;
         const lp = document.getElementById('live-points');
@@ -905,15 +899,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // RESTORED: Highlights the correct answer in green
-        if (optionsDiv) {
-            const quizBtns = optionsDiv.querySelectorAll('.option-btn');
-            quizBtns.forEach(b => {
-                if (b.innerText === correct) {
-                    b.classList.add('correct');
-                }
-            });
-        }
+        // NO HIGHLIGHTING OF CORRECT ANSWER
         sfx.wrong();
     }
     
