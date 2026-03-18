@@ -1,6 +1,6 @@
 /**
- * The Knowledge Portal - V4.2 AAA Build
- * VERIFIED RECOVERY: No Stuck Loading, Begin Button Fixed, AI Voice Unlocked.
+ * The Knowledge Portal - V4.2 AAA FULL BUILD
+ * VERIFIED: 180 Questions, No Stuck Loading, Begin Button Fixed, AI Voice Unlocked.
  */
 
 const socket = io();
@@ -271,7 +271,7 @@ const quizData = {
 };
 
 // ---------------------------------------------------------
-// 2. SYSTEM STATE & ACCOUNTS
+// 2. SYSTEM STATE & AAA FEATURES
 // ---------------------------------------------------------
 let currentPoints = 0;
 let currentPath = "";
@@ -292,40 +292,13 @@ function switchScreen(screenId) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
+        console.log("SCREEN SWITCHED TO: " + screenId);
     }
 }
 
 // ---------------------------------------------------------
-// 4. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
+// 4. MASTER MOBILE AUDIO WAKEUP LOGIC
 // ---------------------------------------------------------
-function getRankBadge(points) {
-    if (points >= 15000) return "🟡 Captain";
-    if (points >= 5000) return "🔵 Builder";
-    return "🟢 Student";
-}
-
-function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-    const color = colors[name.length % colors.length];
-    const initial = name.charAt(0).toUpperCase();
-    const fireClass = isOnFire ? "on-fire-avatar" : "";
-    const rank = getRankBadge(points || 0);
-    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
-    const bountyIcon = hasBounty ? '🎯' : '';
-    
-    return `<div style="display:flex; align-items:center;">
-        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
-            ${isOnFire ? '🔥' : initial}
-        </div>
-        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
-    </div>`;
-}
-
-// ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE (MOBILE VERIFIED)
-// ---------------------------------------------------------
-let audioCtx = null;
-
 function masterUnlockAudio() {
     if (voiceUnlocked) return;
     try {
@@ -336,10 +309,11 @@ function masterUnlockAudio() {
         source.buffer = buffer;
         source.connect(audioCtx.destination);
         source.start(0);
+
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const silentMsg = new SpeechSynthesisUtterance("Start");
-            silentMsg.volume = 0.1;
+            silentMsg.volume = 0.1; 
             window.speechSynthesis.speak(silentMsg);
         }
         voiceUnlocked = true;
@@ -390,7 +364,7 @@ function speak(text) {
 }
 
 // ---------------------------------------------------------
-// 6. INITIALIZATION & LOGIN
+// 5. LOGIN & INITIALIZATION (FIXED STARTUP)
 // ---------------------------------------------------------
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
@@ -422,6 +396,31 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
+// 6. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
+// ---------------------------------------------------------
+function getRankBadge(points) {
+    if (points >= 15000) return "🟡 Captain";
+    if (points >= 5000) return "🔵 Builder";
+    return "🟢 Student";
+}
+
+function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const color = colors[name.length % colors.length];
+    const initial = name.charAt(0).toUpperCase();
+    const rank = getRankBadge(points || 0);
+    const fireClass = isOnFire ? "on-fire-avatar" : "";
+    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
+    const bountyIcon = hasBounty ? '🎯' : '';
+    return `<div style="display:flex; align-items:center;">
+        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+            ${isOnFire ? '🔥' : initial}
+        </div>
+        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+    </div>`;
+}
+
+// ---------------------------------------------------------
 // 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
@@ -431,7 +430,7 @@ function startJeopardy() {
     document.getElementById('j-game-view').style.display = 'none';
     document.getElementById('j-podium-view').style.display = 'none';
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = 'var(--gold)'; rBtn.style.color = 'black'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
+    rBtn.style.background = 'var(--gold)'; rBtn.innerText = "I'M READY"; rBtn.disabled = false;
     socket.emit('join_jeopardy', { name: currentUser });
 }
 
@@ -439,7 +438,7 @@ function sendReady() {
     masterUnlockAudio();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
-    rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING FOR OTHERS..."; rBtn.disabled = true;
+    rBtn.style.background = '#555'; rBtn.innerText = "WAITING..."; rBtn.disabled = true;
 }
 
 socket.on('lobby_update', (data) => {
@@ -458,7 +457,6 @@ socket.on('score_update', (scores) => {
         const hasBounty = p.globalWinStreak >= 2;
         let rowClass = "lb-row";
         if (p.eliminated) rowClass += " eliminated";
-
         list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px; border-bottom:1px solid #333;">
             <div style="display:flex; align-items:center;">
                 ${getAvatar(p.name, p.globalPoints, isOnFire, hasBounty)}
@@ -467,7 +465,6 @@ socket.on('score_update', (scores) => {
             <div style="text-align: right;">
                 <span style="font-size:18px;">${p.score}</span>
                 ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
-                ${p.eliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -477,8 +474,6 @@ socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
-    document.getElementById('j-question-box').innerText = "Game is beginning...";
-    document.getElementById('j-question-box').className = "big-tv";
     speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
 });
 
@@ -562,16 +557,11 @@ socket.on('game_over', (finalScores) => {
         let medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : ""));
         let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
         html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
-            <div style="display:flex; align-items:center;">
-                <span style="font-size:32px; margin-right:15px;">${medal}</span>
-                ${getAvatar(s.name, s.globalPoints)}
-                <span style="font-size:28px; font-weight:bold; margin-left:10px;">${s.name}</span>
-                <span style="margin-left:auto; font-size:28px; color:#10b981;">${s.score} pts</span>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:24px;">${medal} ${s.name}</span>
+                <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
             </div>
-            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
-                <span>🎯 Accuracy: ${acc}%</span>
-                <span>⏱️ Streak: ${s.maxStreak || 0}</span>
-            </div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">Accuracy: ${acc}% | Avg Buzz: ${(s.stats.responseTimeSum/(s.stats.buzzes||1)).toFixed(1)}s | Max Streak: ${s.maxStreak || 0}</div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
@@ -589,6 +579,7 @@ function selectDifficulty(diff) {
     pointMultiplier = diff === 'easy' ? 100 : (diff === 'medium' ? 250 : 500);
     openStudyLibrary(selectedModeTemp, diff);
 }
+
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
@@ -600,11 +591,12 @@ function openStudyLibrary(mode, diff) {
 
 function beginQuizFromStudy() {
     masterUnlockAudio();
+    switchScreen('quiz-screen'); 
+    
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     activeQuestions = [...quizData[currentPath][currentDiff]];
     if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
     
-    switchScreen('quiz-screen');
     document.getElementById('live-points').innerText = "0";
     loadQuestion();
 }
