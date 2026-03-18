@@ -8,7 +8,7 @@
  * 4. Triple-Point Golden Questions
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Stuck Loading & Highlight Removed)
+ * 7. Screen Management System (Fixed Stuck Loading & Sticky Highlight Removed)
  * * DATABASE: 180 Questions across 7 Paths
  */
 
@@ -304,7 +304,7 @@ function switchScreen(screenId) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 }
 
@@ -809,7 +809,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED BEGIN BUTTON AND HIGHLIGHTS)
+// 9. ORIGINAL QUIZ LOGIC (FIXED HIGHLIGHT ISSUE)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -817,6 +817,11 @@ function beginQuizFromStudy() {
     
     const lp = document.getElementById('live-points');
     if (lp) lp.innerText = "0";
+    
+    if (!quizData[currentPath] || !quizData[currentPath][currentDiff]) {
+        console.error("Quiz data missing for path:", currentPath, currentDiff);
+        return; 
+    }
     
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
@@ -828,10 +833,19 @@ function beginQuizFromStudy() {
     }
     
     switchScreen('quiz-screen');
+    
+    // Clear out any stale buttons from a previous round before loading
+    const optionsDiv = document.getElementById('options');
+    if (optionsDiv) {
+        optionsDiv.innerHTML = "";
+    }
+    
     loadQuestion();
 }
 
 function loadQuestion() {
+    if (!activeQuestions || activeQuestions.length === 0) return;
+    
     const q = activeQuestions[currentIdx];
     const progress = ((currentIdx) / activeQuestions.length) * 100;
     
@@ -847,6 +861,8 @@ function loadQuestion() {
     if (mTitle) mTitle.innerText = quizData[currentPath].title;
     
     if (!optionsDiv) return;
+    
+    // CRITICAL FIX: Completely empty the container so old buttons die.
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -859,8 +875,14 @@ function loadQuestion() {
     
     shuffledOptions.forEach(opt => {
         const btn = document.createElement('button');
-        btn.className = 'option-btn'; btn.innerText = opt;
-        btn.onclick = () => checkAnswer(opt, btn, q.correct);
+        // CRITICAL FIX: Reset the class back to default so no sticky hover remains
+        btn.className = 'option-btn'; 
+        btn.innerText = opt;
+        
+        btn.onclick = () => { 
+            masterUnlockAudio(); 
+            checkAnswer(opt, btn, q.correct); 
+        };
         optionsDiv.appendChild(btn);
     });
 }
@@ -870,7 +892,11 @@ function checkAnswer(selected, btn, correct) {
     const optionsDiv = document.getElementById('options');
     if (optionsDiv) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
-        quizBtns.forEach(b => b.disabled = true);
+        quizBtns.forEach(b => {
+            b.disabled = true;
+            // CRITICAL FIX: Wipe out sticky mobile pseudo-hover state
+            b.blur();
+        });
     }
     
     if (selected === correct) {
@@ -881,17 +907,22 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // NO HIGHLIGHTING OF CORRECT ANSWER
+        // Highlight logic removed completely as requested
         sfx.wrong();
     }
+    
     setTimeout(() => {
         currentIdx++;
-        if (currentIdx < activeQuestions.length) loadQuestion(); else showResults();
+        if (currentIdx < activeQuestions.length) {
+            loadQuestion(); 
+        } else {
+            showResults();
+        }
     }, 1500);
 }
 
 // ---------------------------------------------------------
-// 10. REAL-TIME GLOBAL LEADERBOARD FIX
+// 10. REAL-TIME GLOBAL LEADERBOARD
 // ---------------------------------------------------------
 function showResults() {
     switchScreen('result-screen');
@@ -945,7 +976,7 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 11. MASTER NAVIGATION FIX
+// 11. MASTER NAVIGATION
 // ---------------------------------------------------------
 function returnToMenu() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -954,7 +985,7 @@ function returnToMenu() {
 }
 
 // ---------------------------------------------------------
-// 12. MODERN LOBBY CHAT LOGIC (No Sound)
+// 12. MODERN LOBBY CHAT LOGIC
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
