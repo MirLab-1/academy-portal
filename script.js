@@ -1,7 +1,8 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD
- * RESTORED: Full 180 Question Database, Sudden Death, Bounties, Analytics
- * FIXES: No Stuck Loading Screen, Begin Button Works, Mobile Auto-Center, AI Voice Wakeup
+ * The Knowledge Portal - V4.2 AAA Build
+ * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
+ * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
+ * MOBILE PATCH: Audio Engine Wakeup & Viewport Logic Integrated.
  */
 
 const socket = io();
@@ -10,7 +11,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (180 Questions Preserved)
+// 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -285,9 +286,8 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (Fixes Loading and Centering)
+// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
 // ---------------------------------------------------------
-
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
     screens.forEach(id => {
@@ -297,13 +297,12 @@ function switchScreen(screenId) {
     const target = document.getElementById(screenId);
     if (target) {
         target.classList.add('active');
-        // MOBILE CENTERING: Forces phone to snap back to top so no scroll is needed
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 }
 
 // ---------------------------------------------------------
-// 4. AAA HELPERS: RANK BADGES, AVATARS & BOUNTY RENDERER
+// 4. RANK BADGES, AVATARS & BOUNTY RENDERER
 // ---------------------------------------------------------
 function getRankBadge(points) {
     if (points >= 15000) return "🟡 Captain";
@@ -329,9 +328,8 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 5. WORKING AUDIO ENGINE
 // ---------------------------------------------------------
-
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
     try {
@@ -351,7 +349,6 @@ function masterUnlockAudio() {
             window.speechSynthesis.speak(wakeup);
         }
         voiceUnlocked = true;
-        console.log("SYSTEM: AUDIO ENGINE AWAKE");
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
 
@@ -393,7 +390,6 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
-        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -489,8 +485,6 @@ socket.on('game_starting', () => {
     usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
-    document.getElementById('j-question-box').innerText = "Game is beginning...";
-    document.getElementById('j-question-box').className = "big-tv";
     speak("Welcome to the Academy Live Jeopardy. Let the games begin.");
 });
 
@@ -527,7 +521,6 @@ socket.on('golden_alert', () => {
 socket.on('new_question', (qData) => {
     document.getElementById('j-question-box').innerText = qData.question;
     speak(qData.question); 
-    document.getElementById('buzzer-status').innerText = "BUZZ IN!";
     const btn = document.getElementById('buzzer-btn');
     btn.className = "buzzer-ready"; btn.innerText = "BUZZ!";
     document.getElementById('j-options-box').style.display = "none";
@@ -553,7 +546,7 @@ socket.on('player_buzzed', (data) => {
             const obtn = document.createElement('button');
             obtn.className = 'option-btn';
             obtn.innerText = opt;
-            obtn.onclick = () => { masterUnlockAudio(); socket.emit('submit_answer', { name: currentUser, answer: opt }); };
+            obtn.onclick = () => { masterUnlockAudio(); submitJeopardyAnswer(opt); };
             optionsBox.appendChild(obtn);
         });
     } else {
@@ -587,11 +580,7 @@ socket.on('game_over', (finalScores) => {
                 <span style="font-size:24px;">${medal} ${s.name}</span>
                 <span style="font-size:24px; color:var(--gold);">${s.score} pts</span>
             </div>
-            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
-                <span>🎯 Accuracy: ${acc}%</span>
-                <span>⏱️ Avg Buzz: ${avgTime}s</span>
-                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
-            </div>
+            <div style="font-size:12px; color:#aaa; margin-top:5px;">Accuracy: ${acc}% | Avg Buzz: ${avgTime}s | Max Streak: ${s.maxStreak || 0}</div>
         </div>`;
     });
     document.getElementById('podium-results').innerHTML = html;
@@ -622,15 +611,12 @@ function openStudyLibrary(mode, diff) {
 // 10. FIXED BEGIN BUTTON & QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
-    masterUnlockAudio(); // KEYPRESS WAKEUP
+    masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     activeQuestions = [...quizData[currentPath][currentDiff]];
+    if (currentPath !== 'adults') activeQuestions.sort(() => Math.random() - 0.5);
     
-    if (currentPath !== 'adults') {
-        activeQuestions.sort(() => Math.random() - 0.5);
-    }
-    
-    switchScreen('quiz-screen'); // EXPLICIT TRANSITION
+    switchScreen('quiz-screen');
     document.getElementById('live-points').innerText = "0";
     loadQuestion();
 }
@@ -664,7 +650,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        quizBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
         sfx.wrong();
     }
     setTimeout(() => {
@@ -686,7 +672,7 @@ function showResults() {
 // 11. NAVIGATION & CHAT
 // ---------------------------------------------------------
 function returnToMenu() {
-    window.speechSynthesis.cancel();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     switchScreen('home-screen');
 }
