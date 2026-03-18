@@ -1,0 +1,16 @@
+{
+  "name": "academy-knowledge-portal",
+  "version": "4.2.0",
+  "description": "Multiplayer Jeopardy and Study Portal",
+  "main": "app_server.js",
+  "scripts": {
+    "start": "node app_server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
