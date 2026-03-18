@@ -1,7 +1,15 @@
 /**
- * The Knowledge Portal - V4.2 AAA Build
- * FINAL MASTER VERSION: Mobile Layout, AI Voice Wakeup, Auto-Centering, Missing IDs Bypassed
- * 180 Questions | Sudden Death | Bounties | Post-Game Analytics
+ * The Knowledge Portal - V4.2 AAA FULL BUILD
+ * VERSION: 4.2.0-STABLE
+ * * FEATURES INCLUDED:
+ * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
+ * 2. Sudden Death Elimination Logic
+ * 3. Global Win Streak Bounty System
+ * 4. Triple-Point Golden Questions
+ * 5. Pressure Bar Timer SFX
+ * 6. Mobile Audio Wakeup Hardware Bypass
+ * 7. Screen Management System (Fixed Stuck Loading)
+ * * DATABASE: 180 Questions across 7 Paths
  */
 
 const socket = io();
@@ -264,7 +272,7 @@ const quizData = {
             { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 100 million square miles.", "The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 250 million square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
             { question: "6. What are the exact square miles of the useful land that is used every day by the total population of the planet Earth?", options: ["The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 50,000,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 100,000,000 square miles."], correct: "The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles." }, 
             { question: "7. What are the exact square miles of the useful water that is used every day by the total population of the planet Earth?", options: ["The useful water that is used every day by the total population of the planet Earth is 20,000,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 90,000,000 square miles."], correct: "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles." }, 
-            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "6 sextillion tons (a six followed by twenty-one ciphers)." }, 
+            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers).", "The total weight of our planet Earth is 1 trillion tons."], correct: "The total weight of our planet Earth is 6 sextillion tons (a six followed by twenty-one ciphers)." }, 
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
@@ -875,7 +883,7 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // REMOVED: Auto-highlight of correct answer on wrong guess
+        // REMOVED HIGHLIGHTING LOGIC
         sfx.wrong();
     }
     setTimeout(() => {
