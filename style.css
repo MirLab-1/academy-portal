@@ -144,36 +144,48 @@ header h1 { color: var(--gold); letter-spacing: 2px; text-transform: uppercase; 
 .progress { font-size: 13px; color: #888; text-align: center; margin-top: 10px; font-weight: bold; }
 .text-center { text-align: center; }
 
-/* --- MOBILE FIXES --- */
+/* --- MOBILE RESPONSIVE FIX --- */
 @media (max-width: 800px) {
-    /* Stacks the Jeopardy screen elements vertically */
-    #jeopardy-screen > div > div {
-        flex-direction: column !important;
+    .jeopardy-flex-container {
+        flex-direction: column !important; /* Forces Scores to sit UNDER the buzzer on mobile */
     }
     
-    /* Makes the live scores sit nicely on mobile */
-    #j-live-scores {
-        margin-top: 20px;
-        max-height: 200px;
-        overflow-y: auto;
+    #jeopardy-screen > div > div {
+        flex-direction: column !important;
     }
 
     .quiz-container, .study-container {
         padding: 20px;
+        width: 95%;
     }
 
     .big-tv {
-        font-size: 20px !important;
+        font-size: 18px !important;
         padding: 15px !important;
+        min-height: 100px !important;
     }
 
     #buzzer-btn {
-        width: 140px !important;
-        height: 140px !important;
-        font-size: 24px !important;
+        width: 150px !important;
+        height: 150px !important;
+        font-size: 30px !important;
     }
 
     .pioneer-card {
-        width: 100%; /* Single column cards on tiny screens */
+        width: 100% !important; /* Stack cards in a single column */
+        max-width: 320px;
+    }
+
+    .user-profile {
+        padding: 15px;
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    #j-live-scores {
+        margin-top: 20px;
+        max-height: 300px;
+        overflow-y: auto;
     }
 }
