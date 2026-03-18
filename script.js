@@ -1,11 +1,12 @@
 /**
  * The Knowledge Portal - V4.2 AAA Build
- * Additions: Post-Game Analytics, Sudden Death, Bounties, Pressure Bar
- * Reverted: Removed Interactive Grid, restoring 100% fast-paced randomizer.
+ * FIX: Mobile Audio Wake-up, Responsive Layout Support, and 180-Question Database
  */
 
 const socket = io();
 let currentUser = "";
+let audioCtx = null;
+let voiceUnlocked = false;
 
 // ---------------------------------------------------------
 // 1. FULL MASSIVE QUESTION DATABASE (180 Questions)
@@ -98,7 +99,7 @@ const quizData = {
             { question: "What does F.O.I. stand for?", options: ["Force of Intelligence", "Fruit of Islam", "Foundation of Islam"], correct: "Fruit of Islam" }, 
             { question: "What does M.G.T. & G.C.C. stand for?", options: ["Muslim Girls Training & General Civilization Class", "Mothers Guiding Teens & Girls Class", "Muslim Group Training"], correct: "Muslim Girls Training & General Civilization Class" }, 
             { question: "What color is the official M.G.T. uniform often seen in?", options: ["White", "Red", "Black"], correct: "White" }, 
-            { question: "What is the primary duty of the F.O.I.?", options: ["To travel the world", "To protect the Nation and uphold the laws of Islam", "To work in factories"], correct: "To protect the Nation and uphold the laws of Islam" }, 
+            { question: "What is the primary duty of the F.O.I.?", options: ["To protect the Nation and uphold the laws of Islam", "To travel the world", "To work in factories"], correct: "To protect the Nation and uphold the laws of Islam" }, 
             { question: "What are the men in the Nation of Islam trained to respect and protect above all else?", options: ["Money", "The Black Woman", "Cars"], correct: "The Black Woman" },
             { question: "What day of the week is F.O.I. class?", options: ["Monday", "Wednesday", "Friday"], correct: "Monday" },
             { question: "What day of the week is M.G.T. class?", options: ["Tuesday", "Thursday", "Saturday"], correct: "Thursday" },
@@ -270,7 +271,7 @@ const quizData = {
 };
 
 // ---------------------------------------------------------
-// 3. SYSTEM STATE & ACCOUNTS
+// 2. SYSTEM STATE
 // ---------------------------------------------------------
 let currentPoints = 0;
 let currentPath = "";
@@ -281,6 +282,61 @@ let pointsThisSession = 0;
 let pointMultiplier = 100;
 let activeQuestions = []; 
 let usedJeopardyQuestions = [];
+
+// ---------------------------------------------------------
+// 3. IMPROVED MOBILE AUDIO ENGINE
+// ---------------------------------------------------------
+function unlockMobileVoice() {
+    if (voiceUnlocked) return;
+    
+    // Wake up Web Audio
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+
+    // Wake up Speech Synthesis
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    voiceUnlocked = true;
+    console.log("Audio Unlocked for Mobile");
+}
+
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(text);
+        
+        // Use standard pitch/rate that works on mobile
+        msg.lang = 'en-US';
+        msg.rate = 0.9; 
+        msg.pitch = 1.0;
+        msg.volume = 1.0;
+
+        // Try to pick a Google voice, otherwise use default
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Samantha')));
+        if (preferredVoice) msg.voice = preferredVoice;
+
+        window.speechSynthesis.speak(msg);
+    }
+}
+
+// Ensure voices are loaded for mobile browsers
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+    };
+}
+
+// Wake up engine on first interaction
+document.addEventListener('touchstart', unlockMobileVoice, { once: true });
+document.addEventListener('mousedown', unlockMobileVoice, { once: true });
 
 // ---------------------------------------------------------
 // 4. RANK BADGES, AVATARS & BOUNTY RENDERER
@@ -309,10 +365,8 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 5. WORKING SFX ENGINE
 // ---------------------------------------------------------
-let audioCtx = null;
-
 const sfx = {
     playTone: (freq, type, duration) => {
         try {
@@ -344,23 +398,6 @@ const sfx = {
     }
 };
 
-function speak(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(text);
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-        if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.95; 
-        window.speechSynthesis.speak(msg);
-    }
-}
-
-document.addEventListener('click', () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}, { once: true });
-
 // ---------------------------------------------------------
 // 6. INITIALIZATION 
 // ---------------------------------------------------------
@@ -379,6 +416,7 @@ window.onload = () => {
 };
 
 function registerUser() {
+    unlockMobileVoice(); // Unlocks audio for mobile
     const nameInput = document.getElementById('username-input').value.trim();
     if (nameInput === "") return alert("Please enter a name to begin.");
     currentUser = nameInput;
@@ -396,6 +434,7 @@ function registerUser() {
 // 7. PRO JEOPARDY LOGIC 
 // ---------------------------------------------------------
 function startJeopardy() {
+    unlockMobileVoice();
     document.getElementById('home-screen').classList.remove('active');
     document.getElementById('jeopardy-screen').classList.add('active');
     document.getElementById('j-lobby-view').style.display = 'block';
@@ -407,6 +446,7 @@ function startJeopardy() {
 }
 
 function sendReady() {
+    unlockMobileVoice();
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
     rBtn.style.background = '#555'; rBtn.style.color = 'white'; rBtn.innerText = "WAITING FOR OTHERS..."; rBtn.disabled = true;
@@ -445,6 +485,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
+    usedJeopardyQuestions = [];
     document.getElementById('j-lobby-view').style.display = 'none';
     document.getElementById('j-game-view').style.display = 'block';
     document.getElementById('j-question-box').innerText = "Game is beginning...";
@@ -456,7 +497,6 @@ socket.on('round_update', (data) => {
     document.getElementById('j-round-display').innerText = `${data.round}/${data.max}`;
 });
 
-// RESTORED: FAST PACED RANDOM SELECTOR 
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
@@ -478,7 +518,6 @@ socket.on('request_question', (data) => {
     }
 });
 
-// GOLDEN ALERTS & CATEGORIES
 socket.on('golden_alert', () => {
     sfx.siren();
     document.getElementById('j-question-box').className = "big-tv golden-tv";
@@ -532,6 +571,7 @@ socket.on('new_question', (qData) => {
 });
 
 function sendBuzz() {
+    unlockMobileVoice();
     if(document.getElementById('buzzer-btn').className.includes('buzzer-ready')){
         socket.emit('buzz', { name: currentUser });
     }
@@ -575,6 +615,7 @@ socket.on('player_buzzed', (data) => {
 });
 
 function submitJeopardyAnswer(selectedAnswer) {
+    unlockMobileVoice();
     const btns = document.getElementById('j-options-box').querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
     socket.emit('submit_answer', { name: currentUser, answer: selectedAnswer });
@@ -674,6 +715,7 @@ function openStudyLibrary(mode, diff) {
 // 9. ORIGINAL QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
+    unlockMobileVoice();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     document.getElementById('live-points').innerText = "0";
     activeQuestions = [...quizData[currentPath][currentDiff]];
@@ -717,6 +759,7 @@ function loadQuestion() {
 }
 
 function checkAnswer(selected, btn, correct) {
+    unlockMobileVoice();
     const quizBtns = document.getElementById('options').querySelectorAll('.option-btn');
     quizBtns.forEach(b => b.disabled = true);
     
@@ -757,6 +800,7 @@ function showResults() {
 }
 
 function showLeaderboard() {
+    unlockMobileVoice();
     document.getElementById('home-screen').classList.remove('active');
     document.getElementById('leaderboard-screen').classList.add('active');
     socket.emit('get_leaderboard');
