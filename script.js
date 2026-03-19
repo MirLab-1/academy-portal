@@ -1,12 +1,12 @@
 /**
  * The Knowledge Portal - V4.3 AAA FULL BUILD
- * VERSION: 4.3.0-GAUNTLET
+ * VERSION: 4.3.0-ARENA
  * FEATURES: 
  * 1. Post-Game Analytics & Bounties
  * 2. Sudden Death Elimination Logic
  * 3. Mobile Hover Killer & Clean Focus Blur
  * 4. Schwartzian Transform Randomizer
- * 5. OVERHAULED DATABASE (300+ UNIQUE NOI DEEP CUTS)
+ * 5. UNIQUE OVERHAULED DATABASE (Fact-Checked NOI Teachings)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. THE ARENA ADDED (High Stakes Wager Duel)
  * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
@@ -20,7 +20,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (300+ Unique Questions)
+// 1. FULL MASSIVE QUESTION DATABASE (No Duplicates)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -137,7 +137,7 @@ const quizData = {
             { question: "What is the primary duty of the F.O.I.?", options: ["To protect the Nation and uphold the laws of Islam", "To travel the world", "To work in factories"], correct: "To protect the Nation and uphold the laws of Islam" }, 
             { question: "What are the men in the Nation of Islam trained to respect and protect above all else?", options: ["Money", "The Black Woman", "Cars"], correct: "The Black Woman" },
             { question: "What day of the week is F.O.I. class?", options: ["Monday", "Wednesday", "Friday"], correct: "Monday" },
-            { question: "What day of the week is M.G.T. class?", options: ["Tuesday", "Thursday", "Saturday"], correct: "Saturday" }, /* 🚨 FACT CHECKED CORRECT 🚨 */
+            { question: "What day of the week is M.G.T. class?", options: ["Tuesday", "Thursday", "Saturday"], correct: "Saturday" }, 
             { question: "What color are the F.O.I. uniforms usually?", options: ["White suits", "Navy Blue / Dark suits", "Khaki suits"], correct: "Navy Blue / Dark suits" },
             { question: "Who are the F.O.I. trained to obey?", options: ["Themselves", "Those in authority over them", "The military"], correct: "Those in authority over them" },
             { question: "What is the key element of F.O.I. and M.G.T. training?", options: ["Physical strength", "Strict Discipline", "Financial wealth"], correct: "Strict Discipline" }
@@ -350,6 +350,40 @@ const quizData = {
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
+    },
+    jeopardyVault: {
+        title: "The Vault",
+        studyText: "Classified files exclusive to Jeopardy.",
+        easy: [
+            { question: "What is the name of the holy day of fasting and prayer observed by Muslims in the 9th month?", options: ["Ramadan", "Saviours' Day", "Atonement"], correct: "Ramadan" },
+            { question: "Which prominent Nation of Islam building is located at 7351 South Stony Island Avenue?", options: ["Mosque Maryam", "The National House", "The Salaam Restaurant"], correct: "Mosque Maryam" },
+            { question: "The Nation of Islam teaches that God is a ___, not a spirit.", options: ["Man", "Ghost", "Force of Nature"], correct: "Man" },
+            { question: "What is the primary color of the M.G.T. uniform?", options: ["White", "Red", "Gold"], correct: "White" },
+            { question: "Which day of the week is traditionally the main public meeting day at the Mosque?", options: ["Sunday", "Friday", "Wednesday"], correct: "Sunday" }
+        ],
+        medium: [
+            { question: "What year was the Million Family March held?", options: ["2000", "1995", "2005"], correct: "2000" },
+            { question: "What does the 'M' in M.G.T. stand for?", options: ["Muslim", "Mothers", "Mighty"], correct: "Muslim" },
+            { question: "Who was the legendary Supreme Captain of the F.O.I. that helped secure the Nation of Islam during its rapid growth?", options: ["Brother Raymond Sharrieff", "Brother John Ali", "Brother Jabril Muhammad"], correct: "Brother Raymond Sharrieff" },
+            { question: "What is the acronym for the General Civilization Class?", options: ["G.C.C.", "G.C.A.", "G.C.M."], correct: "G.C.C." },
+            { question: "Who is the wife of the Honorable Minister Louis Farrakhan?", options: ["Mother Khadijah Farrakhan", "Mother Clara Muhammad", "Mother Tynnetta Muhammad"], correct: "Mother Khadijah Farrakhan" },
+            { question: "What famous boxer famously refused the Vietnam draft citing his Muslim beliefs?", options: ["Muhammad Ali", "Joe Frazier", "Mike Tyson"], correct: "Muhammad Ali" }
+        ],
+        hard: [
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the Original Man have?", options: ["7.5 ounces", "6 ounces", "8 ounces"], correct: "7.5 ounces" },
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the grafted man have?", options: ["6 ounces", "7.5 ounces", "5 ounces"], correct: "6 ounces" },
+            { question: "What was the original title of the Nation of Islam's first official publication?", options: ["The Islamic News", "Muhammad Speaks", "The Final Call"], correct: "The Islamic News" },
+            { question: "What year did the Honorable Elijah Muhammad first establish the Fruit of Islam?", options: ["1933", "1930", "1940"], correct: "1933" },
+            { question: "Who was the pioneering woman who established the University of Islam schools?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Ava Muhammad"], correct: "Mother Clara Muhammad" }
+        ],
+        extreme: [
+            { question: "According to the 1-40 Lessons, what is the exact diameter of the Sun?", options: ["853,000 miles", "93,000,000 miles", "24,896 miles"], correct: "853,000 miles" },
+            { question: "How long does it take for the Earth to make a complete rotation around the Sun according to the lessons?", options: ["365 and 1/4 days", "365 days", "360 days"], correct: "365 and 1/4 days" },
+            { question: "What was the specific street address of the first Temple of Islam in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Avenue", "7351 South Stony Island"], correct: "3159 Hastings Street" },
+            { question: "Which of the following was a renowned musical composition/play created by Minister Louis Farrakhan?", options: ["Orgena", "The Awakening", "The Divine Light"], correct: "Orgena" },
+            { question: "What was the overarching theme of the 10th Anniversary of the Million Man March in 2005?", options: ["The Millions More Movement", "Justice Or Else", "Day of Atonement"], correct: "The Millions More Movement" },
+            { question: "In what year did Minister Farrakhan complete his grueling World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" }
+        ]
     }
 };
 
@@ -573,7 +607,6 @@ socket.on('arena_wager_phase', () => {
     document.getElementById('a-lobby-view').style.display = 'none';
     document.getElementById('a-wager-view').style.display = 'block';
     
-    // Give them a fighting chance if they are broke
     let displayPoints = currentPoints;
     if (displayPoints < 10) displayPoints = 10;
     
@@ -586,6 +619,16 @@ socket.on('arena_wager_phase', () => {
     
     speak("Place your bets.");
 });
+
+function setWager(type) {
+    masterUnlockAudio();
+    const input = document.getElementById('arena-wager-input');
+    let displayPoints = currentPoints < 10 ? 10 : currentPoints;
+    
+    if (type === 'min') input.value = 10;
+    if (type === 'half') input.value = Math.max(10, Math.floor(displayPoints / 2));
+    if (type === 'max') input.value = displayPoints;
+}
 
 function submitArenaWager() {
     masterUnlockAudio();
@@ -611,15 +654,10 @@ socket.on('arena_start_question', (data) => {
     document.getElementById('a-wager-view').style.display = 'none';
     document.getElementById('a-game-view').style.display = 'block';
     
-    // Set UI
     document.getElementById('a-p1-name').innerText = data.p1Name;
     document.getElementById('a-p1-bet').innerText = data.p1Wager;
     document.getElementById('a-p2-name').innerText = data.p2Name;
     document.getElementById('a-p2-bet').innerText = data.p2Wager;
-    
-    // Pick an Extreme or Hard question locally (to prevent dupes easily)
-    // Actually, letting one client pick and broadcast is safer, but for speed, 
-    // we'll just grab a random hard/extreme from the list.
     
     let deepCuts = [];
     for (let path in quizData) {
@@ -678,7 +716,6 @@ function submitArenaAnswer(selected, btn, correct) {
     
     document.getElementById('a-waiting-answer').style.display = 'block';
     
-    // Tell the server we answered
     socket.emit('arena_answer', { correct: selected === correct });
 }
 
@@ -690,7 +727,6 @@ socket.on('arena_game_over', (data) => {
     const wText = document.getElementById('a-winner-text');
     const subText = document.getElementById('a-results-subtext');
     
-    // Determine what happened to YOU
     let myResult = data.p1Name === currentUser ? data.p1Result : data.p2Result;
     
     if (myResult > 0) {
@@ -713,12 +749,12 @@ socket.on('arena_game_over', (data) => {
         subText.innerHTML = `${data.message}<br><br><span style="color: #aaa;">0 Points Lost</span>`;
     }
     
-    // Update local points
     currentPoints += myResult;
-    if (currentPoints < 0) currentPoints = 0; // Prevent negative balances locally
+    if (currentPoints < 0) currentPoints = 0; 
     
     localStorage.setItem('noi_points', currentPoints);
     document.getElementById('display-points').innerText = currentPoints;
+    socket.emit('update_global_score', { name: currentUser, points: currentPoints });
 });
 
 
