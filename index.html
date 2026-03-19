@@ -52,7 +52,6 @@
             <h2 class="heading-font gold-text" style="font-size: 28px; margin-bottom: 30px;">Select Your Path</h2>
 
             <div class="bento-grid">
-                
                 <div class="bento-card" onclick="showDifficulty('kids')">
                     <img src="fard.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Junior'">
                     <div class="bento-content">
@@ -135,98 +134,6 @@
                         <span class="bento-badge" style="background: var(--accent-blue); color: #fff;">Multiplayer Arena</span>
                     </div>
                 </div>
-
-                <div class="bento-card" onclick="openSquaresLobbyMenu()" style="grid-column: 1 / -1; height: 300px; border: 2px solid #06b6d4; box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); background: radial-gradient(circle at center, #083344 0%, #000 100%);">
-                    <div class="bento-tag" style="background: #06b6d4; color: #000;">REMOTE FAMILY GAME</div>
-                    <img src="motherplane_cockpit.png" style="opacity: 0.3; filter: hue-rotate(180deg);" onerror="this.src='https://via.placeholder.com/1000x300/083344/06b6d4?text=THE+4+SQUARES'">
-                    <div class="bento-content" style="background: linear-gradient(to top, #000 40%, transparent 100%);">
-                        <h3 style="color: #fff; font-size: 32px; font-style: italic;">The 4 Squares</h3>
-                        <p style="color: #67e8f9; margin: 0; font-weight: bold; text-shadow: 0 0 10px #22d3ee;">Visual Deduction. Connect the 4 clues to crack the answer.</p>
-                        <span class="bento-badge" style="background: rgba(6, 182, 212, 0.2); color: #fff; margin-top: 10px; border: 1px solid rgba(6, 182, 212, 0.5);">3 - 8 Players</span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="squares-game-screen" class="screen">
-        <div class="main-container text-center" style="max-width: 800px;">
-            
-            <div id="sq-lobby-view" style="width: 100%; display: none;">
-                <h1 class="heading-font mb-20" style="color: #22d3ee; font-size: 36px; text-shadow: 0 0 15px #0891b2;">The 4 Squares</h1>
-                
-                <div class="glass-panel mb-20 text-left" style="border-color: #06b6d4;">
-                    <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-size: 20px;">How To Play</h3>
-                    <ul style="color: var(--text-muted); font-size: 15px; line-height: 1.6; padding-left: 0; list-style: none; margin-bottom: 20px; text-align: center;">
-                        <li class="mb-10"><strong style="color: white;">1. The Grid:</strong> A 2x2 grid of cinematic images and text will appear.</li>
-                        <li class="mb-10"><strong style="color: white;">2. The Debate:</strong> You have 20 seconds to look at the clues and debate over FaceTime.</li>
-                        <li class="mb-10"><strong style="color: var(--accent-green);">3. The Answer:</strong> Figure out which Supreme Wisdom answer connects all 4 clues.</li>
-                        <li><strong style="color: var(--primary-gold);">4. Win:</strong> 1000 Points for correct answers. The highest score after 5 rounds wins the pot!</li>
-                    </ul>
-                    
-                    <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px;">
-                        <h2 style="color: white; margin-bottom: 5px; font-size: 16px; text-transform: uppercase;">Room Code: <strong style="color: #22d3ee; font-size: 22px; letter-spacing: 2px;" id="sq-room-code-display">XXXX</strong></h2>
-                        <div id="sq-lobby-players" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px;">
-                            </div>
-                        <button id="sq-host-start-btn" class="btn-primary mt-20" style="display:none; background: linear-gradient(135deg, #0891b2, #083344); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); margin-left: auto; margin-right: auto;" onclick="hostStartSquaresGame()">START GAME</button>
-                        <div id="sq-wait-msg" class="muted-text mt-20" style="font-weight: bold; font-style: italic;">Waiting for Host to start...</div>
-                    </div>
-                </div>
-                <button class="btn-secondary" onclick="leaveSquaresRoom()">Leave Lobby</button>
-            </div>
-
-            <div id="sq-game-view" style="width: 100%; display: none;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid var(--border-heavy); padding-bottom: 15px;">
-                    <h1 class="heading-font" style="color: #22d3ee; margin: 0; font-size: 24px;" id="sq-round-display">ROUND 1/5</h1>
-                    <div id="sq-timer-display" style="background: var(--bg-input); padding: 5px 15px; border-radius: 20px; color: var(--accent-red); font-weight: bold; font-size: 18px;">20s</div>
-                </div>
-                
-                <div class="progress-bar-container"><div id="sq-pressure-bar" style="background: #06b6d4;"></div></div>
-                
-                <div id="sq-grid" class="fs-grid">
-                    </div>
-
-                <div id="sq-options-box" class="options-grid mb-20">
-                    </div>
-                
-                <p id="sq-waiting-msg" style="color: var(--text-muted); font-style: italic; display: none; margin-bottom: 20px;">Answer locked. Waiting for family...</p>
-                
-                <button class="btn-action" style="margin: 0 auto; color: var(--accent-red);" onclick="leaveSquaresRoom()">Quit Match</button>
-            </div>
-
-            <div id="sq-results-view" style="width: 100%; display: none;">
-                <div class="glass-panel text-center mb-20 accent-border" style="padding: 40px; border-color: #06b6d4;">
-                    <h1 class="heading-font mb-20" style="color: #22d3ee;">MATCH OVER</h1>
-                    <div id="sq-reveal-avatar-container" class="mb-15" style="display: flex; justify-content: center;"></div>
-                    <h1 id="sq-winner-name" class="gold-text heading-font" style="font-size: 42px; margin: 0; text-shadow: 0 0 20px var(--primary-gold);">???</h1>
-                    <p class="muted-text mt-10">The Ultimate Detective.</p>
-                </div>
-
-                <div class="glass-panel mb-20">
-                    <h3 class="cyan-text heading-font text-center mb-20" style="color: #22d3ee;">FINAL SCORES</h3>
-                    <div id="sq-scores-list" style="display: flex; flex-direction: column; gap: 10px;">
-                        </div>
-                </div>
-
-                <div style="display:flex; justify-content:center;">
-                    <button class="btn-primary" style="background: linear-gradient(135deg, #0891b2, #083344);" onclick="leaveSquaresRoom()">Return Home</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div id="squares-join-modal" class="modal">
-        <div class="modal-content accent-border" style="border-color: #06b6d4 !important;">
-            <h2 class="heading-font text-center mb-20" style="color: #22d3ee;">The 4 Squares</h2>
-            <p class="muted-text text-center mb-10">Create a room or enter a family code to join the deduction board.</p>
-            <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
-                <button class="btn-primary" style="background:linear-gradient(135deg, #06b6d4, #083344); box-shadow:0 4px 15px rgba(6, 182, 212, 0.3); color: white;" onclick="hostSquaresGame()">CREATE NEW BOARD</button>
-                <div style="color: #555; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 10px 0;">or</div>
-                <input type="text" id="squares-room-input" class="modern-input" maxlength="4" placeholder="CODE" style="border-color:#06b6d4; text-transform:uppercase;">
-                <button class="btn-secondary" style="border-color:#06b6d4; color:#22d3ee;" onclick="joinSquaresGame()">JOIN BOARD</button>
-                <button class="btn-action mt-20" onclick="closeSquaresLobbyMenu()">Cancel</button>
             </div>
         </div>
     </div>
