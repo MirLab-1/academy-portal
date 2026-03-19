@@ -8,60 +8,33 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* PERFECT MOBILE CENTERING FIX (UNTOUCHED) */
-        * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent; }
+        /* PERFECT MOBILE CENTERING & NATIVE HIGHLIGHT KILLER */
+        * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent !important; }
         body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; }
+        
+        /* Strips native iOS grey button styling */
+        button { -webkit-appearance: none; appearance: none; outline: none !important; }
         
         .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh; }
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         
-        /* 🚨 ABSOLUTE YELLOW HIGHLIGHT KILLER FOR MOBILE (REVERTED TO THE ONE THAT WORKED) 🚨 */
-        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; outline: none !important; transition: transform 0.1s ease; }
+        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; transition: transform 0.1s ease; }
         
-        /* Base Desktop Hover */
-        .option-btn:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
-        .option-btn:active { transform: scale(0.98); border-color: var(--gold); }
-
-        /* Mobile Hover Nuke */
-        @media (max-width: 1024px) {
-            /* This completely destroys the yellow hover and focus states on mobile */
-            .options-grid .option-btn:hover, 
-            .options-grid .option-btn:focus {
-                border-color: #333 !important;
-                background-color: transparent !important;
-                color: white !important;
-                box-shadow: none !important;
-                outline: none !important;
-            }
-            
-            /* Only allow a slight shrink effect when tapping so it feels responsive */
-            .options-grid .option-btn:active {
-                transform: scale(0.96) !important;
-            }
-            
-            /* Make sure correct (green) and wrong (red) states bypass the nuke */
-            .options-grid .option-btn.correct,
-            .options-grid .option-btn.correct:hover,
-            .options-grid .option-btn.correct:focus,
-            .options-grid .option-btn.correct:active { 
-                border-color: #10b981 !important; 
-                background: rgba(16, 185, 129, 0.2) !important; 
-                color: #10b981 !important; 
-            }
-            
-            .options-grid .option-btn.wrong,
-            .options-grid .option-btn.wrong:hover,
-            .options-grid .option-btn.wrong:focus,
-            .options-grid .option-btn.wrong:active { 
-                border-color: #ef4444 !important; 
-                background: rgba(239, 68, 68, 0.2) !important; 
-                color: #ef4444 !important; 
-            }
+        /* DESKTOP ONLY: Safe yellow hover for computers with a mouse */
+        @media (hover: hover) and (pointer: fine) {
+            .option-btn:hover { border-color: var(--gold) !important; background-color: rgba(212, 175, 55, 0.1) !important; }
         }
-
-        /* Ensure correct/wrong colors work on Desktop too */
-        .option-btn.correct { border-color: #10b981 !important; background: rgba(16, 185, 129, 0.2) !important; color: #10b981 !important; }
-        .option-btn.wrong { border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; }
+        
+        /* Universal active click shrink */
+        .option-btn:active { transform: scale(0.96) !important; }
+        
+        /* Protected Color States */
+        .option-btn.correct, .option-btn.correct:hover, .option-btn.correct:active { 
+            border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.2) !important; color: #10b981 !important; 
+        }
+        .option-btn.wrong, .option-btn.wrong:hover, .option-btn.wrong:active { 
+            border-color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; 
+        }
 
         .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
         .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
@@ -99,7 +72,7 @@
             <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
+            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
             <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); max-width: 300px;">ENTER ACADEMY</button>
         </div>
     </div>
@@ -248,6 +221,7 @@
             <div id="progress-text" style="color: #aaa; font-weight: bold; text-align: left; width: 100%; margin-bottom: 5px;">Question 1</div>
             <div class="progress-bar-container" style="width: 100%;"><div id="progress-bar"></div></div>
             <div id="question" class="question" style="width: 100%; text-align: center;">...</div>
+            
             <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
             
             <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
