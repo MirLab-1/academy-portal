@@ -4,7 +4,7 @@
  * FEATURES: 
  * 1. Post-Game Analytics & Bounties
  * 2. Sudden Death Elimination Logic
- * 3. Intense Press Animation (Zero Color Bleed / Fixed Mobile Tap)
+ * 3. Modernized UX/UI (Phase 1/4)
  * 4. Schwartzian Transform Randomizer
  * 5. UNIQUE OVERHAULED DATABASE (Fact-Checked NOI Teachings, 0 Duplicates)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
@@ -370,6 +370,7 @@ const quizData = {
 // 2. SYSTEM STATE & ACCOUNTS
 // ---------------------------------------------------------
 let currentPoints = 0;
+let currentStreak = 1;
 let currentPath = "";
 let currentDiff = "";
 let currentIdx = 0;
@@ -418,19 +419,22 @@ function getRankBadge(points) {
 }
 
 function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const colors = ['var(--accent-red)', 'var(--accent-blue)', 'var(--accent-green)', 'var(--accent-yellow)', '#8b5cf6', '#ec4899'];
     const color = colors[name.length % colors.length];
     const initial = name.charAt(0).toUpperCase();
     const fireClass = isOnFire ? "on-fire-avatar" : "";
     const rank = getRankBadge(points || 0);
-    const bountyStyle = hasBounty ? 'color: #ef4444; text-shadow: 0 0 5px #ef4444;' : '';
+    const bountyStyle = hasBounty ? 'color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);' : '';
     const bountyIcon = hasBounty ? '🎯' : '';
     
     return `<div style="display:flex; align-items:center;">
-        <div class="${fireClass}" style="width:32px; height:32px; min-width:32px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; border:2px solid var(--gold); margin-right:10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+        <div class="${fireClass}" style="width:36px; height:36px; min-width:36px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:18px; border:2px solid var(--primary-gold); margin-right:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
             ${isOnFire ? '🔥' : initial}
         </div>
-        <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+        <div style="display:flex; flex-direction:column; align-items:flex-start;">
+            <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${name}</span>
+            <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+        </div>
     </div>`;
 }
 
@@ -511,13 +515,17 @@ function speak(text) {
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
     const savedPoints = localStorage.getItem('noi_points');
+    const savedStreak = localStorage.getItem('noi_streak');
+    
     if (savedUser) {
         currentUser = savedUser;
         currentPoints = savedPoints ? parseInt(savedPoints) : 0;
-        const dName = document.getElementById('display-name');
-        const dPts = document.getElementById('display-points');
-        if (dName) dName.innerText = currentUser;
-        if (dPts) dPts.innerText = currentPoints;
+        currentStreak = savedStreak ? parseInt(savedStreak) : 1;
+        
+        document.getElementById('display-points').innerText = currentPoints;
+        document.getElementById('display-streak').innerText = currentStreak;
+        document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+        
         socket.emit('join_game', { name: currentUser, points: currentPoints });
         switchScreen('home-screen');
     } else {
@@ -534,18 +542,20 @@ function registerUser() {
     
     currentUser = nameVal;
     currentPoints = 0;
+    currentStreak = 1;
+    
     localStorage.setItem('noi_user', currentUser);
     localStorage.setItem('noi_points', currentPoints);
+    localStorage.setItem('noi_streak', currentStreak);
+    
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
-    const dName = document.getElementById('display-name');
-    const dPts = document.getElementById('display-points');
-    if (dName) dName.innerText = currentUser;
-    if (dPts) dPts.innerText = currentPoints;
+    document.getElementById('display-points').innerText = currentPoints;
+    document.getElementById('display-streak').innerText = currentStreak;
+    document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
     
     switchScreen('home-screen');
 }
-
 
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
@@ -710,8 +720,8 @@ socket.on('arena_game_over', (data) => {
     
     if (myResult > 0) {
         wText.innerText = "VICTORY!";
-        wText.style.color = "#10b981"; 
-        subText.innerHTML = `${data.message}<br><br><span style="color: var(--gold);">+${myResult} Points</span>`;
+        wText.style.color = "var(--accent-green)"; 
+        subText.innerHTML = `${data.message}<br><br><span style="color: var(--primary-gold);">+${myResult} Points</span>`;
         speak("You have crushed your opponent.");
         
         if (typeof confetti !== 'undefined') {
@@ -719,13 +729,13 @@ socket.on('arena_game_over', (data) => {
         }
     } else if (myResult < 0) {
         wText.innerText = "DEFEAT";
-        wText.style.color = "#ef4444"; 
-        subText.innerHTML = `${data.message}<br><br><span style="color: #ef4444;">${myResult} Points</span>`;
+        wText.style.color = "var(--accent-red)"; 
+        subText.innerHTML = `${data.message}<br><br><span style="color: var(--accent-red);">${myResult} Points</span>`;
         speak("You have lost your wager.");
     } else {
         wText.innerText = "STALEMATE";
-        wText.style.color = "#aaa"; 
-        subText.innerHTML = `${data.message}<br><br><span style="color: #aaa;">0 Points Lost</span>`;
+        wText.style.color = "var(--text-muted)"; 
+        subText.innerHTML = `${data.message}<br><br><span style="color: var(--text-muted);">0 Points Lost</span>`;
     }
     
     currentPoints += myResult;
@@ -733,9 +743,9 @@ socket.on('arena_game_over', (data) => {
     
     localStorage.setItem('noi_points', currentPoints);
     document.getElementById('display-points').innerText = currentPoints;
+    document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
 });
-
 
 // ---------------------------------------------------------
 // 8. TUG OF WAR MULTIPLAYER LOGIC
@@ -873,7 +883,7 @@ socket.on('tug_game_over', (data) => {
     
     if (data.winner === currentUser) {
         wText.innerText = "VICTORY!";
-        wText.style.color = "#10b981"; 
+        wText.style.color = "var(--accent-green)"; 
         
         if (data.reason === "forfeit" || data.reason === "disconnect") {
             subText.innerText = "Your opponent fled the battlefield! You win by default.";
@@ -894,12 +904,11 @@ socket.on('tug_game_over', (data) => {
         
     } else {
         wText.innerText = "DEFEAT";
-        wText.style.color = "#ef4444"; 
+        wText.style.color = "var(--accent-red)"; 
         subText.innerText = "Your opponent overpowered you.";
         speak("Your opponent has won the war.");
     }
 });
-
 
 // ---------------------------------------------------------
 // 9. PRO JEOPARDY LOGIC (21 ROUNDS NO DUPLICATES)
@@ -947,7 +956,7 @@ socket.on('score_update', (scores) => {
     list.innerHTML = "";
     scores.forEach((p, idx) => {
         const isMe = p.name === currentUser;
-        const color = isMe ? "var(--gold)" : "white";
+        const color = isMe ? "var(--primary-gold)" : "white";
         const isOnFire = p.streak >= 3;
         const isEliminated = p.eliminated;
         const hasBounty = p.globalWinStreak >= 2;
@@ -955,15 +964,14 @@ socket.on('score_update', (scores) => {
         let rowClass = "lb-row";
         if (isEliminated) rowClass += " eliminated";
 
-        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px; border-bottom:1px solid #333;">
+        list.innerHTML += `<div class="${rowClass}" style="display:flex; align-items:center; justify-content:space-between; color:${color}; font-weight:${isMe?'bold':'normal'}; padding: 10px 5px;">
             <div style="display:flex; align-items:center;">
                 ${getAvatar(p.name, p.globalPoints, isOnFire, hasBounty)}
-                <span class="${hasBounty ? 'bounty-target' : ''}" style="margin-left: 5px;">${idx+1}. ${p.name}</span>
             </div>
             <div style="text-align: right;">
-                <span style="font-size:18px;">${p.score}</span>
-                ${isOnFire ? '<br><span style="font-size:10px; color:#ef4444; font-weight:bold;">ON FIRE 🔥</span>' : ''}
-                ${isEliminated ? '<br><span style="font-size:10px; color:#555; font-weight:bold;">ELIMINATED 💀</span>' : ''}
+                <span style="font-size:18px; font-weight: bold;">${p.score}</span>
+                ${isOnFire ? '<br><span style="font-size:10px; color:var(--accent-red); font-weight:bold;">ON FIRE 🔥</span>' : ''}
+                ${isEliminated ? '<br><span style="font-size:10px; color:var(--text-muted); font-weight:bold;">ELIMINATED 💀</span>' : ''}
             </div>
         </div>`;
     });
@@ -1018,7 +1026,7 @@ socket.on('golden_alert', () => {
     const qBox = document.getElementById('j-question-box');
     if (qBox) {
         qBox.className = "big-tv golden-tv";
-        qBox.innerHTML = "<span style='color: white; font-size:36px;'>🚨 THE GOLDEN QUESTION 🚨<br><span style='font-size:20px; color:#fbbf24;'>Triple Points on the Line</span></span>";
+        qBox.innerHTML = "<span style='color: white; font-size:36px;'>🚨 THE GOLDEN QUESTION 🚨<br><span style='font-size:20px; color:var(--accent-yellow); font-family:var(--font-body);'>Triple Points on the Line</span></span>";
     }
     speak("Alert. This is the Golden Question. Triple points are on the line.");
 });
@@ -1031,7 +1039,7 @@ socket.on('announce_category', (data) => {
     const qBox = document.getElementById('j-question-box');
     if (qBox) {
         if (!data.isGolden) qBox.className = "big-tv";
-        qBox.innerHTML = `<span style="font-size:20px; color:var(--gold); display:block; margin-bottom:10px; text-transform:uppercase;">Category</span>${data.categoryTitle}`;
+        qBox.innerHTML = `<span style="font-size:16px; color:var(--primary-gold); font-family:var(--font-body); display:block; margin-bottom:10px; text-transform:uppercase;">Category</span>${data.categoryTitle}`;
     }
     speak(`The category is... ${data.categoryTitle}. Here is the question.`);
 });
@@ -1047,14 +1055,14 @@ socket.on('timer_update', (data) => {
         bar.style.width = percentage + "%";
         
         if (percentage > 50) {
-            bar.style.background = "var(--gold)"; 
-            if (t) t.style.color = "var(--gold)";
+            bar.style.background = "var(--primary-gold)"; 
+            if (t) t.style.color = "var(--primary-gold)";
         } else if (percentage > 25) {
             bar.style.background = "#f97316"; 
             if (t) t.style.color = "#f97316";
         } else {
-            bar.style.background = "#ef4444"; 
-            if (t) t.style.color = "#ef4444";
+            bar.style.background = "var(--accent-red)"; 
+            if (t) t.style.color = "var(--accent-red)";
             sfx.heartbeat();
         }
     }
@@ -1075,7 +1083,7 @@ socket.on('new_question', (qData) => {
     
     if (bStatus) {
         bStatus.innerText = "BUZZ IN!";
-        bStatus.style.color = "#10b981"; 
+        bStatus.style.color = "var(--accent-green)"; 
     }
     if (btn) {
         btn.className = "buzzer-ready";
@@ -1102,7 +1110,7 @@ socket.on('player_eliminated', () => {
     }
     if (bStatus) {
         bStatus.innerText = "YOU ARE ELIMINATED.";
-        bStatus.style.color = "#ef4444";
+        bStatus.style.color = "var(--accent-red)";
     }
 });
 
@@ -1123,7 +1131,7 @@ socket.on('player_buzzed', (data) => {
     if (isMe) {
         if (bStatus) bStatus.innerText = "YOU BUZZED IN!";
         if (optBox) {
-            optBox.style.display = "grid";
+            optBox.style.display = "flex";
             optBox.innerHTML = "";
             let shuffled = trueShuffle(window.currentJeopardyOptions); 
             shuffled.forEach(opt => {
@@ -1179,11 +1187,11 @@ socket.on('reset_buzzer', () => {
     }
     if (bStatus) {
         bStatus.innerText = "Preparing next question...";
-        bStatus.style.color = "#aaa";
+        bStatus.style.color = "var(--text-muted)";
     }
     if (pBar) {
         pBar.style.width = "100%";
-        pBar.style.background = "var(--gold)";
+        pBar.style.background = "var(--primary-gold)";
     }
 });
 
@@ -1201,22 +1209,21 @@ socket.on('game_over', (finalScores) => {
         let acc = s.stats.buzzes > 0 ? Math.round((s.stats.correct / s.stats.buzzes) * 100) : 0;
         let avgTime = s.stats.buzzes > 0 ? (s.stats.responseTimeSum / s.stats.buzzes).toFixed(1) : 0;
 
-        html += `<div style="margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+        html += `<div style="margin-bottom:20px; border-bottom:1px solid var(--border-heavy); padding-bottom:15px;">
             <div style="display:flex; align-items:center;">
                 <span style="font-size:32px; margin-right:15px;">${medal}</span>
                 ${getAvatar(s.name, s.globalPoints)}
-                <span style="font-size:28px; color:${i===0?'var(--gold)':'white'}; font-weight:bold; margin-left:10px;">${s.name}</span>
-                <span style="margin-left:auto; font-size:28px; color:#10b981;">${s.score} pts</span>
+                <span style="margin-left:auto; font-size:24px; font-weight:bold; color:var(--accent-green);">${s.score} pts</span>
             </div>
-            <div style="display:flex; justify-content:space-around; font-size:14px; color:#aaa; margin-top:10px;">
-                <span>🎯 Accuracy: ${acc}%</span>
-                <span>⏱️ Avg Buzz: ${avgTime}s</span>
-                <span>🔥 Max Streak: ${s.maxStreak || 0}</span>
+            <div style="display:flex; justify-content:space-around; font-size:14px; color:var(--text-muted); margin-top:15px; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;">
+                <span>🎯 Acc: ${acc}%</span>
+                <span>⏱️ Speed: ${avgTime}s</span>
+                <span>🔥 Streak: ${s.maxStreak || 0}</span>
             </div>
         </div>`;
         
         if (i === 0 && s.bountyCollected) {
-            html += `<div style="text-align:center; color:#ef4444; font-weight:bold; font-size:18px; margin-bottom:10px;">🎯 BOUNTY COLLECTED! +5,000 Global Points!</div>`;
+            html += `<div style="text-align:center; color:var(--accent-red); font-weight:800; font-size:16px; margin-bottom:10px;">🎯 BOUNTY COLLECTED! +5,000 Global Points!</div>`;
         }
     });
     
@@ -1406,6 +1413,7 @@ function showResults() {
     
     localStorage.setItem('noi_points', currentPoints);
     if (dPts) dPts.innerText = currentPoints;
+    document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
 }
 
@@ -1423,13 +1431,13 @@ socket.on('leaderboard_data', (data) => {
     data.forEach((user, index) => {
         const isMe = user.name === currentUser;
         const row = document.createElement('div');
-        row.className = `lb-row ${index === 0 ? 'first' : ''} ${isMe ? 'me' : ''}`;
+        row.className = `lb-row ${isMe ? 'me' : ''}`;
         row.innerHTML = `
             <div style="display:flex; align-items:center;">
+                <span style="font-size: 20px; font-weight: bold; color: var(--text-muted); margin-right: 15px;">#${index + 1}</span>
                 ${getAvatar(user.name, user.points)}
-                <span style="margin-left:5px;">#${index + 1} ${user.name} ${isMe ? "(You)" : ""}</span>
             </div>
-            <span>${user.points.toLocaleString()} pts</span>
+            <span style="font-weight: bold; font-size: 18px; color: var(--primary-gold);">${user.points.toLocaleString()} pts</span>
         `;
         listDiv.appendChild(row);
     });
@@ -1470,18 +1478,18 @@ socket.on('receive_chat', (data) => {
     if (isSystem) {
         msgDiv.style.textAlign = "center";
         msgDiv.style.margin = "10px 0";
-        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:12px; font-size:11px; color:#aaa;">${data.message}</span>`;
+        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:12px; font-size:12px; color:var(--text-muted);">${data.message}</span>`;
     } else {
         msgDiv.style.display = "flex";
         msgDiv.style.margin = "10px 0";
         msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
         
-        let bubble = `<div style="background:${isMe ? 'rgba(212,175,55,0.15)' : '#222'}; border:1px solid #333; padding:10px 15px; border-radius:12px; max-width:80%;">
-            <div style="font-size:11px; font-weight:bold; color:var(--gold); margin-bottom:4px; text-transform:uppercase;">${data.name}</div>
+        let bubble = `<div style="background:${isMe ? 'var(--primary-gold-glow)' : 'var(--bg-card)'}; border:1px solid var(--border-light); padding:10px 15px; border-radius:12px; max-width:80%;">
+            <div style="font-size:11px; font-weight:800; color:var(--primary-gold); margin-bottom:4px; text-transform:uppercase; font-family:var(--font-heading);">${data.name}</div>
             <div style="color:white; font-size:14px; line-height:1.4; word-break:break-word;">${data.message}</div>
         </div>`;
         
-        msgDiv.innerHTML = isMe ? bubble + getAvatar(data.name, data.globalPoints) : getAvatar(data.name, data.globalPoints) + bubble;
+        msgDiv.innerHTML = isMe ? bubble : getAvatar(data.name, data.globalPoints) + bubble;
     }
 
     box.appendChild(msgDiv);
