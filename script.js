@@ -580,6 +580,8 @@ window.onload = () => {
             socket.emit('join_game', { name: currentUser, points: currentPoints });
             checkDailyStreak(); 
             switchScreen('home-screen');
+            // Fetch updated leaderboard from server DB
+            socket.emit('get_leaderboard');
         } else {
             switchScreen('login-screen');
         }
@@ -691,6 +693,15 @@ socket.on('sq_lobby_update', (players) => {
     updateSqLobbyPlayers(players);
 });
 
+// 🚨 SAFETY NET: KICK EVERYONE IF HOST LEAVES 🚨
+socket.on('sq_host_left', () => {
+    clearInterval(sqTimerInt);
+    alert("🚨 The Host has left the game. The investigation is closed.");
+    sqIsHost = false;
+    sqRoomCode = "";
+    switchScreen('home-screen');
+});
+
 function updateSqLobbyPlayers(players) {
     const list = document.getElementById('sq-lobby-players');
     if(!list) return;
@@ -728,19 +739,26 @@ socket.on('sq_start_round', (data) => {
     document.getElementById('sq-round-display').innerText = `ROUND ${data.round}/${data.maxRounds}`;
     document.getElementById('sq-waiting-msg').style.display = 'none';
     
-    // Render the Grid
+    // Render the Grid with Animations
     const grid = document.getElementById('sq-grid');
     grid.innerHTML = "";
-    data.clues.forEach(clue => {
+    data.clues.forEach((clue, index) => {
+        let content = '';
         if (clue.startsWith("IMG:")) {
             const prompt = clue.replace("IMG:", "");
-            // Fast, live generative AI image endpoint
             const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=400&nologo=true`;
-            grid.innerHTML += `<div class="fs-clue-box"><img src="${url}" alt="clue" onerror="this.style.display='none'"></div>`;
+            content = `<img src="${url}" alt="clue" onerror="this.style.display='none'">`;
         } else if (clue.startsWith("TEXT:")) {
             const txt = clue.replace("TEXT:", "");
-            grid.innerHTML += `<div class="fs-clue-box"><span class="fs-clue-text">${txt}</span></div>`;
+            content = `<span class="fs-clue-text">${txt}</span>`;
         }
+        
+        grid.innerHTML += `
+            <div class="fs-clue-wrapper" style="animation-delay: ${index * 0.2}s">
+                <div class="fs-clue-badge">EVIDENCE 0${index + 1}</div>
+                <div class="fs-clue-box">${content}</div>
+            </div>
+        `;
     });
     
     // Render the Options
@@ -832,7 +850,7 @@ socket.on('sq_game_over', (data) => {
             if(currentPoints < 0) currentPoints = 0;
             
             // Winner gets a global bonus!
-            if(s.name === data.winnerName) {
+            if(s.name === data.winnerName && data.winnerName !== "Nobody") {
                 currentPoints += 5000;
                 showToast("🏆 You won the match! +5000 Bonus Points!");
                 if (typeof confetti !== 'undefined') confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
