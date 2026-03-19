@@ -845,8 +845,6 @@ socket.on('request_question', (data) => {
             if (available.length > 0) {
                 randomQ = available[Math.floor(Math.random() * available.length)];
                 randomQ.categoryTitle = quizData[randomCat].title;
-            } else {
-                // If this specific category/difficulty is empty, the loop will just run again
             }
         }
         
