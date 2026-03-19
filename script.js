@@ -384,7 +384,7 @@ function trueShuffle(array) {
 }
 
 // ---------------------------------------------------------
-// 4. MASTER SCREEN MANAGEMENT
+// 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen'];
@@ -399,6 +399,21 @@ function switchScreen(screenId) {
     }
 }
 
+function showToast(msg) {
+    masterUnlockAudio();
+    sfx.correct(); 
+    const toast = document.getElementById('toast-notification');
+    const toastMsg = document.getElementById('toast-msg');
+    if(toast && toastMsg) {
+        toastMsg.innerHTML = msg;
+        toast.classList.add('show');
+        if (typeof confetti !== 'undefined' && msg.includes('earned')) {
+            confetti({ particleCount: 60, spread: 70, origin: { y: 0.2 }, zIndex: 10000 });
+        }
+        setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+}
+
 // ---------------------------------------------------------
 // 5. RANK BADGES & AVATARS
 // ---------------------------------------------------------
@@ -409,9 +424,7 @@ function getRankBadge(points) {
 }
 
 function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    // Safety check just in case name is undefined or empty
     const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "Student";
-    
     const colors = ['var(--accent-red)', 'var(--accent-blue)', 'var(--accent-green)', 'var(--accent-yellow)', '#8b5cf6', '#ec4899'];
     const color = colors[safeName.length % colors.length];
     const initial = safeName.charAt(0).toUpperCase();
@@ -503,8 +516,69 @@ function speak(text) {
 }
 
 // ---------------------------------------------------------
-// 🚨 7. BULLETPROOF INITIALIZATION & LOGIN 🚨
+// 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & STREAK LOGIC 🚨
 // ---------------------------------------------------------
+function checkDailyStreak() {
+    const today = new Date().toLocaleDateString('en-CA'); // Safely grabs "YYYY-MM-DD" local time
+    const lastDate = localStorage.getItem('noi_last_date');
+
+    if (!lastDate) {
+        // First time running the streak engine
+        localStorage.setItem('noi_last_date', today);
+        return;
+    }
+
+    if (today === lastDate) {
+        // Already logged in today. Do nothing.
+        return;
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+
+    if (lastDate === yesterdayStr) {
+        // Streak Continues!
+        currentStreak++;
+        let bonus = 100;
+        let msg = `Welcome Back!<br><span style="color:var(--primary-gold);">Daily Streak: ${currentStreak} 🔥</span><br>You earned +100 points!`;
+        
+        if (currentStreak % 7 === 0) {
+            bonus = 500;
+            msg = `7-DAY STREAK ACHIEVED! 🔥<br><span style="color:var(--accent-green);">You earned a massive +500 points!</span>`;
+        }
+        
+        currentPoints += bonus;
+        
+        try {
+            localStorage.setItem('noi_streak', currentStreak);
+            localStorage.setItem('noi_points', currentPoints);
+            localStorage.setItem('noi_last_date', today);
+        } catch(e) {}
+        
+        document.getElementById('display-points').innerText = currentPoints;
+        document.getElementById('display-streak').innerText = currentStreak;
+        document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+        
+        // Slight delay so the screen transition finishes first
+        setTimeout(() => { showToast(msg); }, 1000);
+        
+    } else {
+        // Streak Broken
+        currentStreak = 1;
+        try {
+            localStorage.setItem('noi_streak', currentStreak);
+            localStorage.setItem('noi_last_date', today);
+        } catch(e) {}
+        
+        document.getElementById('display-streak').innerText = currentStreak;
+        
+        setTimeout(() => { 
+            showToast(`Welcome Back!<br><span style="color:var(--text-muted); font-size:12px;">Your streak reset to 1. Come back tomorrow to build it up!</span>`); 
+        }, 1000);
+    }
+}
+
 window.onload = () => {
     try {
         const savedUser = localStorage.getItem('noi_user');
@@ -521,6 +595,8 @@ window.onload = () => {
             document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
             
             socket.emit('join_game', { name: currentUser, points: currentPoints });
+            
+            checkDailyStreak(); // Process daily rewards
             switchScreen('home-screen');
         } else {
             switchScreen('login-screen');
@@ -541,12 +617,14 @@ function registerUser() {
     currentUser = nameVal;
     currentPoints = 0;
     currentStreak = 1;
+    const today = new Date().toLocaleDateString('en-CA');
     
     try {
         localStorage.setItem('noi_user', currentUser);
         localStorage.setItem('noi_points', currentPoints);
         localStorage.setItem('noi_streak', currentStreak);
-    } catch(e) { console.warn("Could not save to localStorage. Running in temporary session mode."); }
+        localStorage.setItem('noi_last_date', today); // Start tracking
+    } catch(e) { console.warn("Could not save to localStorage."); }
     
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
