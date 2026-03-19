@@ -1,17 +1,15 @@
 /**
  * The Knowledge Portal - V4.3 AAA FULL BUILD
- * VERSION: 4.3.0-EXTREME
- * * FEATURES INCLUDED:
- * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
+ * VERSION: 4.3.0-GAUNTLET
+ * FEATURES: 
+ * 1. Post-Game Analytics & Bounties
  * 2. Sudden Death Elimination Logic
- * 3. Global Win Streak Bounty System
- * 4. Triple-Point Golden Questions
- * 5. Pressure Bar Timer SFX
- * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Schwartzian Transform Randomizer (Fixes Middle-Option Bug)
- * 8. EXTREME MODE ADDED (60 New Deep-Cut Questions + 1000pt Multiplier)
- * 9. TUG OF WAR MODE ADDED (1v1 Live Sync Race with Sabotage)
- * * DATABASE: 240 Total Questions across 7 Paths
+ * 3. Mobile Hover Killer & Clean Focus Blur
+ * 4. Schwartzian Transform Randomizer
+ * 5. EXTREME MODE (240 Questions)
+ * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
+ * 7. Correct Answer Green Highlight Restored
+ * 8. Fixed Back/Quit Buttons globally
  */
 
 const socket = io();
@@ -365,6 +363,8 @@ let pointsThisSession = 0;
 let pointMultiplier = 100;
 let activeQuestions = []; 
 let usedJeopardyQuestions = [];
+let tugActiveQs = [];
+let tugIdx = 0;
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -533,9 +533,6 @@ function registerUser() {
 // ---------------------------------------------------------
 // 8. TUG OF WAR MULTIPLAYER LOGIC
 // ---------------------------------------------------------
-let tugActiveQs = [];
-let tugIdx = 0;
-
 function startTugOfWar() {
     masterUnlockAudio();
     switchScreen('tug-screen');
@@ -600,7 +597,11 @@ function loadTugQuestion() {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.innerText = opt;
-        btn.onclick = () => submitTugAnswer(opt, btn, q.correct);
+        btn.onclick = function(e) {
+            e.preventDefault();
+            this.blur();
+            submitTugAnswer(opt, this, q.correct);
+        };
         optBox.appendChild(btn);
     });
 }
@@ -609,14 +610,22 @@ function submitTugAnswer(selected, btn, correct) {
     masterUnlockAudio();
     const optBox = document.getElementById('t-options-box');
     optBox.classList.add('locked');
+    
     if (document.activeElement) document.activeElement.blur();
+    
+    const quizBtns = optBox.querySelectorAll('.option-btn');
+    quizBtns.forEach(b => {
+        b.disabled = true;
+        b.blur();
+    });
     
     if (selected === correct) {
         btn.classList.add('correct');
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        optBox.querySelectorAll('.option-btn').forEach(b => {
+        // REVEALS CORRECT ANSWER GREEN
+        quizBtns.forEach(b => {
             if (b.innerText === correct) b.classList.add('correct');
         });
         sfx.wrong();
@@ -631,7 +640,6 @@ function submitTugAnswer(selected, btn, correct) {
 }
 
 socket.on('tug_update', (data) => {
-    // ropePosition goes from 0 (P1 Win) to 100 (P2 Win)
     document.getElementById('tug-flag').style.left = `${data.ropePosition}%`;
     document.getElementById('t-streak-p1').innerText = data.p1Streak;
     document.getElementById('t-streak-p2').innerText = data.p2Streak;
@@ -1071,7 +1079,6 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Destroys the container to kill ghost touches
     optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
@@ -1107,6 +1114,8 @@ function checkAnswer(selected, btn, correct) {
         });
     }
     
+    if (document.activeElement) document.activeElement.blur();
+    
     if (selected === correct) {
         correctAnswers++; pointsThisSession += pointMultiplier;
         const lp = document.getElementById('live-points');
@@ -1116,7 +1125,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // This ensures the correct answer glows green when user gets it wrong
+        // REVEALS CORRECT ANSWER GREEN
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
@@ -1193,7 +1202,17 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 13. MODERN LOBBY CHAT LOGIC
+// 13. MASTER NAVIGATION
+// ---------------------------------------------------------
+function returnToMenu() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    socket.emit('leave_jeopardy');
+    socket.emit('leave_tug');
+    switchScreen('home-screen');
+}
+
+// ---------------------------------------------------------
+// 14. MODERN LOBBY CHAT LOGIC
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
