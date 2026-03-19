@@ -1,5 +1,5 @@
 /**
- * The Knowledge Portal - V4.2 AAA FULL BUILD (EXTREME UPDATE)
+ * The Knowledge Portal - V4.3 AAA FULL BUILD (EXTREME + CONNECTION UPDATE)
  * VERSION: 4.3.0-EXTREME
  * * FEATURES INCLUDED:
  * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
@@ -10,6 +10,7 @@
  * 6. Mobile Audio Wakeup Hardware Bypass
  * 7. Schwartzian Transform Randomizer (Fixes Middle-Option Bug)
  * 8. EXTREME MODE ADDED (60 New Deep-Cut Questions + 1000pt Multiplier)
+ * 9. THE CONNECTION MODE ADDED (Memory Match from entire database)
  * * DATABASE: 240 Total Questions across 7 Paths
  */
 
@@ -265,7 +266,7 @@ const quizData = {
             { question: "Which Book number of 'How to Eat to Live' was published first?", options: ["Book 1 (1967)", "Book 2 (1972)", "Book 3 (1980)"], correct: "Book 1 (1967)" },
             { question: "What is the ruling on eating wild game like rabbit or squirrel?", options: ["It is highly recommended", "It is strictly forbidden", "Only in winter"], correct: "It is strictly forbidden" },
             { question: "What does the Honorable Elijah Muhammad say about sweet potatoes vs. white potatoes?", options: ["White potatoes are better", "Sweet potatoes are better", "Both are forbidden"], correct: "Sweet potatoes are better" },
-            { question: "What temperature should water be when you drink it?", options: ["Ice cold", "Boiling hot", "Room temperature or warm"], correct: "Room temperature or warm" },
+            { question: "What temperature should be when you drink it?", options: ["Ice cold", "Boiling hot", "Room temperature or warm"], correct: "Room temperature or warm" },
             { question: "Why are peas (other than the navy bean) generally discouraged?", options: ["They are hard to digest for the original man", "They are too expensive", "They cause sleepiness"], correct: "They are hard to digest for the original man" },
             { question: "What is the maximum frequency you should eat meat?", options: ["Every day", "Never", "No more than 2 or 3 times a week"], correct: "No more than 2 or 3 times a week" }
         ],
@@ -364,24 +365,24 @@ let pointsThisSession = 0;
 let pointMultiplier = 100;
 let activeQuestions = []; 
 let usedJeopardyQuestions = [];
+let memoryFlippedCards = [];
+let memoryMatches = 0;
 
 // ---------------------------------------------------------
-// 3. TRUE UNBIASED RANDOMIZER (Fixes middle-option bias)
+// 3. TRUE UNBIASED RANDOMIZER
 // ---------------------------------------------------------
 function trueShuffle(array) {
-    let newArr = [...array];
-    // Schwartzian Transform algorithm for 100% true randomization
-    return newArr
+    return [...array]
         .map(value => ({ value, sort: Math.random() }))
         .sort((a, b) => a.sort - b.sort)
         .map(({ value }) => value);
 }
 
 // ---------------------------------------------------------
-// 4. MASTER SCREEN MANAGEMENT 
+// 4. MASTER SCREEN MANAGEMENT
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'connection-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -420,7 +421,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 6. RESTORED WORKING AUDIO ENGINE 
+// 6. AUDIO ENGINE
 // ---------------------------------------------------------
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
@@ -532,7 +533,120 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 8. PRO JEOPARDY LOGIC
+// 8. THE CONNECTION (MEMORY MATCH) LOGIC
+// ---------------------------------------------------------
+function startConnectionGame() {
+    masterUnlockAudio();
+    switchScreen('connection-screen');
+    
+    let allQs = [];
+    for (let path in quizData) {
+        if (path === 'adults') continue; 
+        for (let diff in quizData[path]) {
+            if (Array.isArray(quizData[path][diff])) {
+                allQs = allQs.concat(quizData[path][diff]);
+            }
+        }
+    }
+    
+    allQs = trueShuffle(allQs).slice(0, 6);
+    
+    let deck = [];
+    allQs.forEach((q, index) => {
+        deck.push({ id: index, type: 'q', text: q.question });
+        deck.push({ id: index, type: 'a', text: q.correct });
+    });
+    
+    deck = trueShuffle(deck);
+    
+    const grid = document.getElementById('memory-grid');
+    grid.innerHTML = "";
+    memoryFlippedCards = [];
+    memoryMatches = 0;
+    document.getElementById('match-count').innerText = `0/6`;
+    document.getElementById('connection-status').innerText = "Find the matching questions and answers!";
+    document.getElementById('connection-status').style.color = "#aaa";
+    
+    deck.forEach((card, domIdx) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'memory-card';
+        cardEl.dataset.id = card.id;
+        cardEl.dataset.type = card.type;
+        
+        let displayText = card.text;
+        if(displayText.length > 70) displayText = displayText.substring(0, 67) + "...";
+        
+        cardEl.innerHTML = `<span>${displayText}</span>`;
+        cardEl.onclick = () => flipMemoryCard(cardEl);
+        grid.appendChild(cardEl);
+    });
+}
+
+function flipMemoryCard(cardEl) {
+    if (memoryFlippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+    
+    sfx.tick();
+    cardEl.classList.add('flipped');
+    memoryFlippedCards.push(cardEl);
+    
+    if (memoryFlippedCards.length === 2) {
+        checkMemoryMatch();
+    }
+}
+
+function checkMemoryMatch() {
+    const [card1, card2] = memoryFlippedCards;
+    const id1 = card1.dataset.id;
+    const id2 = card2.dataset.id;
+    const type1 = card1.dataset.type;
+    const type2 = card2.dataset.type;
+    
+    if (id1 === id2 && type1 !== type2) {
+        setTimeout(() => {
+            sfx.correct();
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            memoryMatches++;
+            document.getElementById('match-count').innerText = `${memoryMatches}/6`;
+            memoryFlippedCards = [];
+            
+            if (memoryMatches === 6) {
+                endConnectionGame();
+            }
+        }, 500);
+    } else {
+        setTimeout(() => {
+            sfx.wrong();
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            memoryFlippedCards = [];
+        }, 1200);
+    }
+}
+
+function endConnectionGame() {
+    sfx.correct();
+    document.getElementById('connection-status').innerText = "ALL MATCHED! +1000 Points";
+    document.getElementById('connection-status').style.color = "#10b981";
+    
+    currentPoints += 1000;
+    localStorage.setItem('noi_points', currentPoints);
+    document.getElementById('display-points').innerText = currentPoints;
+    socket.emit('update_global_score', { name: currentUser, points: currentPoints });
+    
+    if (typeof confetti !== 'undefined') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#a855f7', '#d8b4fe', '#ffffff'] });
+    }
+    
+    setTimeout(() => {
+        returnToMenu();
+    }, 3000);
+}
+
+// ---------------------------------------------------------
+// 9. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -709,7 +823,7 @@ socket.on('new_question', (qData) => {
         btn.innerText = "BUZZ!";
     }
     if (optBox) optBox.style.display = "none";
-    window.currentJeopardyOptions = trueShuffle(qData.options); // Unbiased Jeopardy Shuffle
+    window.currentJeopardyOptions = trueShuffle(qData.options);
 });
 
 function sendBuzz() {
@@ -769,7 +883,6 @@ socket.on('player_buzzed', (data) => {
 function submitJeopardyAnswer(selectedAnswer) {
     const box = document.getElementById('j-options-box');
     if (box) {
-        // Stop hovering immediately
         box.classList.add('locked');
         const btns = box.querySelectorAll('.option-btn');
         btns.forEach(b => b.disabled = true);
@@ -863,7 +976,7 @@ socket.on('game_over', (finalScores) => {
 });
 
 // ---------------------------------------------------------
-// 9. EXTREME DIFFICULTY & STUDY LOGIC
+// 10. STUDY & DIFFICULTY LOGIC
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { 
@@ -897,7 +1010,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 10. ORIGINAL QUIZ LOGIC (FIXED SCHWARTZIAN SHUFFLE & HOVER STATE)
+// 11. MAIN QUIZ LOGIC (FIXED MOBILE TAPS & GREEN HIGHLIGHTS)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -940,7 +1053,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Remove the lock and completely rebuild HTML so mobile phones drop focus
+    // Completely destroy old buttons to guarantee no hover/focus states carry over
     optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
@@ -954,8 +1067,11 @@ function loadQuestion() {
         btn.className = 'option-btn'; 
         btn.innerText = opt;
         
-        btn.onclick = () => { 
-            checkAnswer(opt, btn, q.correct); 
+        // Mobile tap fix built-in
+        btn.onclick = function(e) { 
+            e.preventDefault();
+            this.blur();
+            checkAnswer(opt, this, q.correct); 
         };
         optionsDiv.appendChild(btn);
     });
@@ -966,7 +1082,7 @@ function checkAnswer(selected, btn, correct) {
     const optionsDiv = document.getElementById('options');
     
     if (optionsDiv) {
-        // This physically blocks any remaining hover interactions
+        // Physically locks container to block ghost taps
         optionsDiv.classList.add('locked');
         
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
@@ -984,7 +1100,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // This turns the correct answer green if they guess wrong
+        // This ensures the correct answer glows green when user gets it wrong
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
@@ -1007,7 +1123,7 @@ function checkAnswer(selected, btn, correct) {
 }
 
 // ---------------------------------------------------------
-// 11. REAL-TIME GLOBAL LEADERBOARD
+// 12. END GAME & LEADERBOARD
 // ---------------------------------------------------------
 function showResults() {
     switchScreen('result-screen');
@@ -1060,9 +1176,6 @@ socket.on('leaderboard_data', (data) => {
     });
 });
 
-// ---------------------------------------------------------
-// 12. MASTER NAVIGATION
-// ---------------------------------------------------------
 function returnToMenu() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
@@ -1070,7 +1183,7 @@ function returnToMenu() {
 }
 
 // ---------------------------------------------------------
-// 13. MODERN LOBBY CHAT LOGIC
+// 13. MODERN LOBBY CHAT
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
