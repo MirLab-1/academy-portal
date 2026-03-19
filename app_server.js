@@ -12,7 +12,7 @@ const fs = require('fs');
 
 app.use(express.static(path.join(__dirname, '/')));
 
-// --- PERSISTENT DATABASE LOGIC ---
+// --- PERSISTENT DATABASE LOGIC FOR RAILWAY ---
 const DB_FILE = path.join(__dirname, 'database.json');
 let globalScores = {}; 
 let globalWinStreaks = {}; 
@@ -40,7 +40,6 @@ function saveDatabase() {
 
 // Load it when server starts
 loadDatabase();
-
 
 // --- MASTER DATA ---
 let jeopardyPlayers = [];
@@ -175,7 +174,7 @@ const fourSquaresData = [
 ];
 
 // ---------------------------------------------------------
-// FULL MASSIVE QUESTION DATABASE (FOR SERVER-SIDE DRAWS)
+// FULL MASSIVE QUESTION DATABASE (MANDATORY FOR SERVER LOGIC)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -432,15 +431,80 @@ const quizData = {
             { question: "What meat is described as being 'divinely prohibited' besides swine?", options: ["Lamb", "Scavenger birds like crow and buzzard", "Chicken"], correct: "Scavenger birds like crow and buzzard" },
             { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" }
         ]
+    },
+    adults: { 
+        title: "Registration Track", 
+        exact: [ 
+            { question: "Who is the original man?", options: ["The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, God of the universe."], correct: "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe." }, 
+            { question: "Who is the colored man?", options: ["The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth.", "The colored man is the Caucasian white man or Yacub’s grafted devil.", "The colored man is the Caucasian white man, the Skunk of the planet Earth."], correct: "The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth." }, 
+            { question: "What is the population of the original nation in the wilderness of North America and all over the planet Earth?", options: ["The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 17,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 19,000,000; all over the planet Earth 4,000,000,000."], correct: "The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000." }, 
+            { question: "What is the population of the colored people in the wilderness of North America and all over the planet Earth?", options: ["The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000.", "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 4,000,000,000.", "The population of the colored people in the wilderness of North America is 100,000,000; all over the planet Earth 400,000,000."], correct: "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000." }, 
+            { question: "What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 196,940,000.", "The square mileage of the planet Earth is 139,685,000 square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
+            { question: "What is the exact square miles of useful land that’s used every day by the total population of the planet Earth?", options: ["The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 23,000,000 square miles."], correct: "The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles." }, 
+            { question: "How much useful land is used by the original man?", options: ["The original man uses 23,000,000 square miles.", "The original man uses 29,000,000 square miles.", "The original man uses 57,255,000 square miles."], correct: "The original man uses 23,000,000 square miles." }, 
+            { question: "How much useful land is used by the colored man?", options: ["The colored man uses 6,000,000 square miles.", "The colored man uses 23,000,000 square miles.", "The colored man uses 29,000,000 square miles."], correct: "The colored man uses 6,000,000 square miles." }, 
+            { question: "What is the said birth record of the Nation of Islam?", options: ["The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars.", "The Nation of Islam has no said birth record; it is older than the sun, moon and stars.", "The Nation of Islam has no beginning or ending; it is older than the sun, moon and stars."], correct: "The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars." }, 
+            { question: "What is the said birth record of nations other than Islam?", options: ["Buddhism is 35,000 years old and Christianity is 551 years old.", "Buddhism is 35,000 years old and Christianity is 550 years old.", "Buddhism is 35,000 years old and Christianity is 555 years old."], correct: "Buddhism is 35,000 years old and Christianity is 551 years old." } 
+        ] 
+    },
+    actualfacts: { 
+        title: "Actual Facts", 
+        exact: [ 
+            { question: "What is the total area of the land and water of the planet Earth?", options: ["196,940,000 square miles.", "139,685,000 square miles.", "57,255,000 square miles."], correct: "196,940,000 square miles." },
+            { question: "What is the circumference of the planet Earth?", options: ["24,896 miles.", "25,000 miles.", "7,926 miles."], correct: "24,896 miles." },
+            { question: "What is the diameter of the Earth?", options: ["7,926 miles.", "8,000 miles.", "24,896 miles."], correct: "7,926 miles." },
+            { question: "What is the area of the Land?", options: ["57,255,000 square miles.", "29,000,000 square miles.", "139,685,000 square miles."], correct: "57,255,000 square miles." },
+            { question: "What is the area of the Water?", options: ["139,685,000 square miles.", "196,940,000 square miles.", "57,255,000 square miles."], correct: "139,685,000 square miles." },
+            { question: "How many square miles does the Pacific Ocean cover?", options: ["68,634,000 square miles.", "41,321,000 square miles.", "29,430,000 square miles."], correct: "68,634,000 square miles." },
+            { question: "How many square miles does the Atlantic Ocean cover?", options: ["41,321,000 square miles.", "68,634,000 square miles.", "29,430,000 square miles."], correct: "41,321,000 square miles." },
+            { question: "How many square miles does the Indian Ocean cover?", options: ["29,430,000 square miles.", "41,321,000 square miles.", "68,634,000 square miles."], correct: "29,430,000 square miles." },
+            { question: "How many square miles do the Lakes and Rivers cover?", options: ["1,000,000 square miles.", "1,910,000 square miles.", "4,861,000 square miles."], correct: "1,000,000 square miles." },
+            { question: "How many square miles do the Hills and Mountains cover?", options: ["14,000,000 square miles.", "29,000,000 square miles.", "1,910,000 square miles."], correct: "14,000,000 square miles." },
+            { question: "How many square miles are the Islands?", options: ["1,910,000 square miles.", "1,000,000 square miles.", "4,861,000 square miles."], correct: "1,910,000 square miles." },
+            { question: "How many square miles are the Deserts?", options: ["4,861,000 square miles.", "14,000,000 square miles.", "1,910,000 square miles."], correct: "4,861,000 square miles." },
+            { question: "How high is Mount Everest?", options: ["29,141 feet high.", "25,000 feet high.", "14,000 feet high."], correct: "29,141 feet high." },
+            { question: "What is the area of the Producing Land?", options: ["29,000,000 square miles.", "57,255,000 square miles.", "23,000,000 square miles."], correct: "29,000,000 square miles." },
+            { question: "How much does the Earth weigh?", options: ["Six sextillion tons - (a unit followed by 21 ciphers).", "Ten billion tons.", "One trillion tons."], correct: "Six sextillion tons - (a unit followed by 21 ciphers)." },
+            { question: "How far is the Earth from the Sun?", options: ["93,000,000 miles.", "50,000,000 miles.", "186,000 miles."], correct: "93,000,000 miles." },
+            { question: "How fast does the Earth travel?", options: ["At the rate of 1,037 1/3 miles per hour.", "At the rate of 1,120 feet per second.", "At the rate of 186,000 miles per second."], correct: "At the rate of 1,037 1/3 miles per hour." },
+            { question: "How fast does Light travel?", options: ["At the rate of 186,000 miles per second.", "At the rate of 1,120 feet per second.", "At the rate of 1,037 1/3 miles per hour."], correct: "At the rate of 186,000 miles per second." },
+            { question: "How fast does Sound travel?", options: ["At the rate of 1,120 feet per second.", "At the rate of 186,000 miles per second.", "At the rate of 1,037 1/3 miles per hour."], correct: "At the rate of 1,120 feet per second." },
+            { question: "What is the diameter of the Sun?", options: ["853,000 miles.", "93,000,000 miles.", "24,896 miles."], correct: "853,000 miles." }
+        ] 
+    },
+    jeopardyVault: {
+        title: "The Vault",
+        easy: [
+            { question: "What is the name of the holy day of fasting and prayer observed by Muslims in the 9th month?", options: ["Ramadan", "Saviours' Day", "Atonement"], correct: "Ramadan" },
+            { question: "Which prominent Nation of Islam building is located at 7351 South Stony Island Avenue?", options: ["Mosque Maryam", "The National House", "The Salaam Restaurant"], correct: "Mosque Maryam" },
+            { question: "The Nation of Islam teaches that God is a ___, not a spirit.", options: ["Man", "Ghost", "Force of Nature"], correct: "Man" },
+            { question: "What is the primary color of the M.G.T. uniform?", options: ["White", "Red", "Gold"], correct: "White" },
+            { question: "Which day of the week is traditionally the main public meeting day at the Mosque?", options: ["Sunday", "Friday", "Wednesday"], correct: "Sunday" }
+        ],
+        medium: [
+            { question: "What year was the Million Family March held?", options: ["2000", "1995", "2005"], correct: "2000" },
+            { question: "What does the 'M' in M.G.T. stand for?", options: ["Muslim", "Mothers", "Mighty"], correct: "Muslim" },
+            { question: "Who was the legendary Supreme Captain of the F.O.I. that helped secure the Nation of Islam during its rapid growth?", options: ["Brother Raymond Sharrieff", "Brother John Ali", "Brother Jabril Muhammad"], correct: "Brother Raymond Sharrieff" },
+            { question: "What is the acronym for the General Civilization Class?", options: ["G.C.C.", "G.C.A.", "G.C.M."], correct: "G.C.C." },
+            { question: "Who is the wife of the Honorable Minister Louis Farrakhan?", options: ["Mother Khadijah Farrakhan", "Mother Clara Muhammad", "Mother Tynnetta Muhammad"], correct: "Mother Khadijah Farrakhan" }
+        ],
+        hard: [
+            { question: "What year did the Honorable Elijah Muhammad first establish the Fruit of Islam?", options: ["1933", "1930", "1940"], correct: "1933" },
+            { question: "Who was the pioneering woman who established the University of Islam schools?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Ava Muhammad"], correct: "Mother Clara Muhammad" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March in 2015?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "Which legendary figure was often referred to as the 'Saviour' in the early days of the Nation of Islam?", options: ["Master Fard Muhammad", "Elijah Muhammad", "Marcus Garvey"], correct: "Master Fard Muhammad" },
+            { question: "What is the specific age range for the Junior Vanguard?", options: ["Ages 5 to 12", "Ages 13 to 19", "Ages 4 to 10"], correct: "Ages 5 to 12" }
+        ],
+        extreme: [
+            { question: "What was the overarching theme of the 10th Anniversary of the Million Man March in 2005?", options: ["The Millions More Movement", "Justice Or Else", "Day of Atonement"], correct: "The Millions More Movement" },
+            { question: "In what year did Minister Farrakhan complete his grueling World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" },
+            { question: "Which of the following was a renowned musical composition/play created by Minister Louis Farrakhan?", options: ["Orgena", "The Awakening", "The Divine Light"], correct: "Orgena" },
+            { question: "What year was the Million Woman March held?", options: ["1997", "1995", "2000"], correct: "1997" },
+            { question: "What was the exact date the Honorable Elijah Muhammad departed this timeline?", options: ["February 25, 1975", "February 26, 1970", "October 7, 1975"], correct: "February 25, 1975" },
+            { question: "What was the exact date Master Fard Muhammad arrived in Detroit?", options: ["July 4, 1930", "February 26, 1930", "October 10, 1931"], correct: "July 4, 1930" }
+        ]
     }
 };
-
-function trueShuffle(array) {
-    return [...array]
-        .map(value => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
-}
 
 io.on('connection', (socket) => {
     console.log('User connected: ' + socket.id);
@@ -450,7 +514,6 @@ io.on('connection', (socket) => {
     // ==========================================
     socket.on('join_game', (data) => {
         socket.userName = data.name;
-        // Keep the highest score to prevent accidental overwrites
         globalScores[data.name] = Math.max((globalScores[data.name] || 0), data.points || 0);
         if (!globalWinStreaks[data.name]) globalWinStreaks[data.name] = 0;
         saveDatabase();
@@ -479,7 +542,7 @@ io.on('connection', (socket) => {
         
         if (!roomID) {
             roomID = "arena_" + socket.id;
-            arenaRooms[roomID] = { players: [], question: null };
+            arenaRooms[roomID] = { players: [], question: null, timer: null };
         }
 
         arenaRooms[roomID].players.push({
@@ -514,13 +577,14 @@ io.on('connection', (socket) => {
         if (player) player.wager = data.wager;
 
         if (room.players.every(p => p.wager > 0)) {
-            // Pick ONE exact question for the arena server-side so both see the same
             let deepCuts = [];
             for (let path in quizData) {
-                if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
-                if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
+                if (path !== 'adults' && path !== 'actualfacts') {
+                    if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
+                    if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
+                }
             }
-            if (deepCuts.length === 0) deepCuts = quizData['kids']['easy']; // Fallback safety
+            if (deepCuts.length === 0) deepCuts = quizData['kids']['easy']; 
             deepCuts = trueShuffle(deepCuts);
             room.question = deepCuts[0];
 
@@ -529,6 +593,12 @@ io.on('connection', (socket) => {
                 p2Name: room.players[1].name, p2Wager: room.players[1].wager,
                 question: room.question
             });
+
+            room.timer = setTimeout(() => {
+                if (arenaRooms[socket.currentArenaRoom]) {
+                    processArenaResults(socket.currentArenaRoom);
+                }
+            }, 16000); 
         }
     });
 
@@ -540,37 +610,47 @@ io.on('connection', (socket) => {
         const player = room.players.find(p => p.id === socket.id);
         if (player) player.answer = data.correct; 
 
-        // If both have answered, calculate the payout!
         if (room.players[0].answer !== null && room.players[1].answer !== null) {
-            let p1 = room.players[0];
-            let p2 = room.players[1];
-            
-            let resultData = { p1Name: p1.name, p2Name: p2.name, p1Result: 0, p2Result: 0, message: "" };
-
-            if (p1.answer && !p2.answer) {
-                resultData.p1Result = p2.wager;
-                resultData.p2Result = -p2.wager;
-                resultData.message = `${p1.name} crushed ${p2.name} and stole their wager!`;
-            } else if (p2.answer && !p1.answer) {
-                resultData.p2Result = p1.wager;
-                resultData.p1Result = -p1.wager;
-                resultData.message = `${p2.name} crushed ${p1.name} and stole their wager!`;
-            } else if (p1.answer && p2.answer) {
-                resultData.message = "STALEMATE! Both warriors survived. No points lost.";
-            } else {
-                resultData.p1Result = -p1.wager;
-                resultData.p2Result = -p2.wager;
-                resultData.message = "DOUBLE KO! Both were incorrect and lost their bets.";
-            }
-
-            globalScores[p1.name] = Math.max(0, (globalScores[p1.name] || 0) + resultData.p1Result);
-            globalScores[p2.name] = Math.max(0, (globalScores[p2.name] || 0) + resultData.p2Result);
-            saveDatabase();
-
-            io.to(roomID).emit('arena_game_over', resultData);
-            delete arenaRooms[roomID];
+            clearTimeout(room.timer);
+            processArenaResults(roomID);
         }
     });
+
+    function processArenaResults(roomID) {
+        const room = arenaRooms[roomID];
+        if (!room || room.players.length < 2) return;
+
+        if (room.players[0].answer === null) room.players[0].answer = false;
+        if (room.players[1].answer === null) room.players[1].answer = false;
+
+        let p1 = room.players[0];
+        let p2 = room.players[1];
+        
+        let resultData = { p1Name: p1.name, p2Name: p2.name, p1Result: 0, p2Result: 0, message: "" };
+
+        if (p1.answer && !p2.answer) {
+            resultData.p1Result = p2.wager;
+            resultData.p2Result = -p2.wager;
+            resultData.message = `${p1.name} crushed ${p2.name} and stole their wager!`;
+        } else if (p2.answer && !p1.answer) {
+            resultData.p2Result = p1.wager;
+            resultData.p1Result = -p1.wager;
+            resultData.message = `${p2.name} crushed ${p1.name} and stole their wager!`;
+        } else if (p1.answer && p2.answer) {
+            resultData.message = "STALEMATE! Both warriors survived. No points lost.";
+        } else {
+            resultData.p1Result = -p1.wager;
+            resultData.p2Result = -p2.wager;
+            resultData.message = "DOUBLE KO! Both were incorrect and lost their bets.";
+        }
+
+        globalScores[p1.name] = Math.max(0, (globalScores[p1.name] || 0) + resultData.p1Result);
+        globalScores[p2.name] = Math.max(0, (globalScores[p2.name] || 0) + resultData.p2Result);
+        saveDatabase();
+
+        io.to(roomID).emit('arena_game_over', resultData);
+        delete arenaRooms[roomID];
+    }
 
     socket.on('leave_arena', () => {
         if (socket.currentArenaRoom && arenaRooms[socket.currentArenaRoom]) {
@@ -580,15 +660,18 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 3. TUG OF WAR (1v1) SERVER LOGIC
+    // 3. TUG OF WAR (1v1) - SYNCED LOGIC
     // ==========================================
     socket.on('join_tug', (data) => {
         let roomID = Object.keys(tugRooms).find(id => tugRooms[id].players.length === 1);
         if (!roomID) {
             roomID = "tug_" + socket.id;
-            tugRooms[roomID] = { players: [], ropePosition: 50 };
+            tugRooms[roomID] = { 
+                players: [], ropePosition: 50, 
+                currentQuestion: null, activeQuestions: [] 
+            };
         }
-        tugRooms[roomID].players.push({ id: socket.id, name: data.name, ready: false, streak: 0 });
+        tugRooms[roomID].players.push({ id: socket.id, name: data.name, ready: false, streak: 0, answer: null });
         socket.join(roomID);
         socket.currentTugRoom = roomID;
         io.to(roomID).emit('tug_lobby_update', { ready: tugRooms[roomID].players.length });
@@ -601,40 +684,75 @@ io.on('connection', (socket) => {
         if (player) player.ready = true;
 
         if (room.players.length === 2 && room.players.every(p => p.ready)) {
-            const dummyQs = new Array(30).fill(true); 
-            room.players.forEach(p => {
-                const opponent = room.players.find(opp => opp.id !== p.id);
-                io.to(p.id).emit('tug_start', { questions: dummyQs, opponentName: opponent.name });
-            });
+            let allQs = [];
+            for (let path in quizData) {
+                if (path !== 'adults' && path !== 'actualfacts') {
+                    for (let diff in quizData[path]) {
+                        if (Array.isArray(quizData[path][diff])) {
+                            allQs = allQs.concat(quizData[path][diff]);
+                        }
+                    }
+                }
+            }
+            if (allQs.length === 0) allQs = quizData['kids']['easy']; 
+            room.activeQuestions = trueShuffle(allQs);
+            
+            startTugRound(room, true);
         }
     });
 
+    function startTugRound(room, isFirst) {
+        if (room.activeQuestions.length === 0) return;
+        room.currentQuestion = room.activeQuestions.pop();
+        room.players.forEach(p => p.answer = null);
+
+        room.players.forEach(p => {
+            const opponent = room.players.find(opp => opp.id !== p.id);
+            io.to(p.id).emit('tug_start_round', { 
+                question: room.currentQuestion, 
+                opponentName: opponent.name,
+                isFirst: isFirst 
+            });
+        });
+    }
+
     socket.on('tug_answer', (data) => {
-        const room = tugRooms[socket.currentTugRoom];
+        const roomID = socket.currentTugRoom;
+        const room = tugRooms[roomID];
         if (!room || room.players.length < 2) return;
 
-        const p1 = room.players[0];
-        const p2 = room.players[1];
-        const isP1 = p1.id === socket.id;
+        const player = room.players.find(p => p.id === socket.id);
+        if (player) player.answer = data.correct;
 
-        if (data.correct) {
-            if (isP1) {
+        if (room.players[0].answer !== null && room.players[1].answer !== null) {
+            let p1 = room.players[0];
+            let p2 = room.players[1];
+
+            if (p1.answer) {
                 p1.streak++; p2.streak = 0; room.ropePosition -= 5;
                 if (p1.streak >= 3) { io.to(p2.id).emit('tug_muddy'); p1.streak = 0; }
             } else {
+                p1.streak = 0;
+            }
+
+            if (p2.answer) {
                 p2.streak++; p1.streak = 0; room.ropePosition += 5;
                 if (p2.streak >= 3) { io.to(p1.id).emit('tug_muddy'); p2.streak = 0; }
+            } else {
+                p2.streak = 0;
             }
-        } else {
-            if (isP1) p1.streak = 0; else p2.streak = 0;
-        }
 
-        io.to(socket.currentTugRoom).emit('tug_update', { ropePosition: room.ropePosition, p1Streak: p1.streak, p2Streak: p2.streak });
+            io.to(roomID).emit('tug_update', { ropePosition: room.ropePosition, p1Streak: p1.streak, p2Streak: p2.streak });
 
-        if (room.ropePosition <= 0 || room.ropePosition >= 100) {
-            const winner = room.ropePosition <= 0 ? p1.name : p2.name;
-            io.to(socket.currentTugRoom).emit('tug_game_over', { winner: winner, reason: "win" });
-            delete tugRooms[socket.currentTugRoom];
+            if (room.ropePosition <= 0 || room.ropePosition >= 100) {
+                const winner = room.ropePosition <= 0 ? p1.name : p2.name;
+                io.to(roomID).emit('tug_game_over', { winner: winner, reason: "win" });
+                delete tugRooms[roomID];
+            } else {
+                setTimeout(() => {
+                    if (tugRooms[roomID]) startTugRound(room, false);
+                }, 1500);
+            }
         }
     });
 
@@ -709,7 +827,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 🚀 5. THE 4 SQUARES LOGIC (HOST SAFETY NET INCLUDED)
+    // 🚀 5. THE 4 SQUARES LOGIC
     // ==========================================
     
     socket.on('sq_create_room', (data) => {
@@ -834,7 +952,6 @@ io.on('connection', (socket) => {
             room.players = room.players.filter(p => p.id !== s.id);
             
             if (room.host === s.id) {
-                // 🚨 HOST LEFT - DESTROY ROOM & KICK EVERYONE OUT OF FREEZE 🚨
                 io.to(s.currentSqRoom).emit('sq_host_left');
                 delete sqRooms[s.currentSqRoom];
             } else if (room.players.length === 0) {
@@ -908,7 +1025,6 @@ function nextRound() {
     io.emit('reset_buzzer');
     io.emit('round_update', { round: currentRound, max: MAX_ROUNDS });
     
-    // 🚨 FIXED: JEOPARDY QUESTION IS NOW GENERATED ENTIRELY SERVER-SIDE 🚨
     const categories = ['kids', 'teens', 'training', 'lessons', 'health']; 
     const diffs = ['easy', 'medium', 'hard', 'extreme'];
     
@@ -916,7 +1032,7 @@ function nextRound() {
     const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
     
     let questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : quizData['kids']['easy'];
-    if (!questions) questions = quizData['kids']['easy']; // safety fallback
+    if (!questions) questions = quizData['kids']['easy']; 
 
     let randomQ = questions[Math.floor(Math.random() * questions.length)];
     randomQ.categoryTitle = randomCat.toUpperCase();
@@ -1005,7 +1121,7 @@ function handleGameOver() {
         if (p.id === winner.id) globalWinStreaks[p.name] = (globalWinStreaks[p.name] || 0) + 1; else globalWinStreaks[p.name] = 0;
     });
     
-    saveDatabase(); // Save results to disk
+    saveDatabase(); 
     io.emit('game_over', jeopardyPlayers);
 }
 
