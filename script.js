@@ -2,10 +2,10 @@
  * The Knowledge Portal - V4.3 AAA FULL BUILD
  */
 
-// 🚨 FORCED WEBSOCKETS TO KILL INFINITE BROWSER LOADING SPINNER 🚨
+// 🚨 BULLETPROOF RAILWAY WEBSOCKET INITIALIZATION 🚨
 let socket;
 try {
-    socket = (typeof io !== 'undefined') ? io({ transports: ['websocket'], upgrade: false }) : { emit: () => {}, on: () => {}, id: 'offline' };
+    socket = (typeof io !== 'undefined') ? io({ transports: ['websocket', 'polling'] }) : { emit: () => {}, on: () => {}, id: 'offline' };
 } catch(e) {
     console.warn("Socket.io offline. Loading single-player elements only.");
     socket = { emit: () => {}, on: () => {}, id: 'offline' };
@@ -565,7 +565,7 @@ function checkDailyStreak() {
     }
 }
 
-// REMOVED: try-catch block from window.onload so it actually works properly.
+// 🚨 REMOVED TRY/CATCH TO ENSURE LOGIN MEMORY RUNS 🚨
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
     const savedPoints = localStorage.getItem('noi_points');
@@ -1108,6 +1108,7 @@ socket.on('tug_lobby_update', (data) => {
     if (rc) rc.innerText = data.ready;
 });
 
+// 🚨 FIXED: TUG OF WAR QUESTION DB LOAD 🚨
 socket.on('tug_start', (data) => {
     tugIdx = 0;
     
@@ -1124,7 +1125,16 @@ socket.on('tug_start', (data) => {
     speak("The Tug of War has begun.");
     
     let allQs = [];
-    for (let path in quizData) if (path !== 'adults' && path !== 'actualfacts') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
+    for (let path in quizData) {
+        if (path !== 'adults' && path !== 'actualfacts') {
+            for (let diff in quizData[path]) {
+                if (Array.isArray(quizData[path][diff])) {
+                    allQs = allQs.concat(quizData[path][diff]);
+                }
+            }
+        }
+    }
+    if (allQs.length === 0) allQs = quizData['kids']['easy']; // Fallback
     tugActiveQs = trueShuffle(allQs);
     
     loadTugQuestion();
