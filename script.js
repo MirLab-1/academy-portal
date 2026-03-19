@@ -1,5 +1,5 @@
 /**
- * The Knowledge Portal - V4.3 AAA FULL BUILD (EXTREME + CONNECTION UPDATE)
+ * The Knowledge Portal - V4.3 AAA FULL BUILD
  * VERSION: 4.3.0-EXTREME
  * * FEATURES INCLUDED:
  * 1. Post-Game Analytics (Accuracy, Avg Buzz Speed, Max Streak)
@@ -10,7 +10,7 @@
  * 6. Mobile Audio Wakeup Hardware Bypass
  * 7. Schwartzian Transform Randomizer (Fixes Middle-Option Bug)
  * 8. EXTREME MODE ADDED (60 New Deep-Cut Questions + 1000pt Multiplier)
- * 9. THE CONNECTION MODE ADDED (Memory Match from entire database)
+ * 9. TUG OF WAR MODE ADDED (1v1 Live Sync Race with Sabotage)
  * * DATABASE: 240 Total Questions across 7 Paths
  */
 
@@ -266,7 +266,7 @@ const quizData = {
             { question: "Which Book number of 'How to Eat to Live' was published first?", options: ["Book 1 (1967)", "Book 2 (1972)", "Book 3 (1980)"], correct: "Book 1 (1967)" },
             { question: "What is the ruling on eating wild game like rabbit or squirrel?", options: ["It is highly recommended", "It is strictly forbidden", "Only in winter"], correct: "It is strictly forbidden" },
             { question: "What does the Honorable Elijah Muhammad say about sweet potatoes vs. white potatoes?", options: ["White potatoes are better", "Sweet potatoes are better", "Both are forbidden"], correct: "Sweet potatoes are better" },
-            { question: "What temperature should be when you drink it?", options: ["Ice cold", "Boiling hot", "Room temperature or warm"], correct: "Room temperature or warm" },
+            { question: "What temperature should water be when you drink it?", options: ["Ice cold", "Boiling hot", "Room temperature or warm"], correct: "Room temperature or warm" },
             { question: "Why are peas (other than the navy bean) generally discouraged?", options: ["They are hard to digest for the original man", "They are too expensive", "They cause sleepiness"], correct: "They are hard to digest for the original man" },
             { question: "What is the maximum frequency you should eat meat?", options: ["Every day", "Never", "No more than 2 or 3 times a week"], correct: "No more than 2 or 3 times a week" }
         ],
@@ -365,8 +365,6 @@ let pointsThisSession = 0;
 let pointMultiplier = 100;
 let activeQuestions = []; 
 let usedJeopardyQuestions = [];
-let memoryFlippedCards = [];
-let memoryMatches = 0;
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -382,7 +380,7 @@ function trueShuffle(array) {
 // 4. MASTER SCREEN MANAGEMENT
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'connection-screen'];
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -533,117 +531,137 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 8. THE CONNECTION (MEMORY MATCH) LOGIC
+// 8. TUG OF WAR MULTIPLAYER LOGIC
 // ---------------------------------------------------------
-function startConnectionGame() {
+let tugActiveQs = [];
+let tugIdx = 0;
+
+function startTugOfWar() {
     masterUnlockAudio();
-    switchScreen('connection-screen');
+    switchScreen('tug-screen');
+    document.getElementById('t-lobby-view').style.display = 'block';
+    document.getElementById('t-game-view').style.display = 'none';
+    document.getElementById('t-results-view').style.display = 'none';
     
-    let allQs = [];
-    for (let path in quizData) {
-        if (path === 'adults') continue; 
-        for (let diff in quizData[path]) {
-            if (Array.isArray(quizData[path][diff])) {
-                allQs = allQs.concat(quizData[path][diff]);
-            }
-        }
-    }
+    const rBtn = document.getElementById('t-ready-btn');
+    rBtn.style.background = '#eab308'; 
+    rBtn.style.color = 'black'; 
+    rBtn.innerText = "I'M READY"; 
+    rBtn.disabled = false;
     
-    allQs = trueShuffle(allQs).slice(0, 6);
+    socket.emit('join_tug', { name: currentUser });
+}
+
+function sendTugReady() {
+    masterUnlockAudio();
+    socket.emit('tug_ready');
+    const rBtn = document.getElementById('t-ready-btn');
+    rBtn.style.background = '#555'; 
+    rBtn.style.color = 'white'; 
+    rBtn.innerText = "WAITING..."; 
+    rBtn.disabled = true;
+}
+
+socket.on('tug_lobby_update', (data) => {
+    const rc = document.getElementById('t-lobby-count');
+    if (rc) rc.innerText = data.ready;
+});
+
+socket.on('tug_start', (data) => {
+    tugActiveQs = data.questions;
+    tugIdx = 0;
     
-    let deck = [];
-    allQs.forEach((q, index) => {
-        deck.push({ id: index, type: 'q', text: q.question });
-        deck.push({ id: index, type: 'a', text: q.correct });
-    });
+    document.getElementById('t-p1-name').innerText = currentUser;
+    document.getElementById('t-p2-name').innerText = data.opponentName;
+    document.getElementById('tug-flag').style.left = "50%";
     
-    deck = trueShuffle(deck);
+    document.getElementById('t-streak-p1').innerText = "0";
+    document.getElementById('t-streak-p2').innerText = "0";
+
+    document.getElementById('t-lobby-view').style.display = 'none';
+    document.getElementById('t-game-view').style.display = 'block';
     
-    const grid = document.getElementById('memory-grid');
-    grid.innerHTML = "";
-    memoryFlippedCards = [];
-    memoryMatches = 0;
-    document.getElementById('match-count').innerText = `0/6`;
-    document.getElementById('connection-status').innerText = "Find the matching questions and answers!";
-    document.getElementById('connection-status').style.color = "#aaa";
+    speak("The Tug of War has begun.");
+    loadTugQuestion();
+});
+
+function loadTugQuestion() {
+    if (tugIdx >= tugActiveQs.length) return;
     
-    deck.forEach((card, domIdx) => {
-        const cardEl = document.createElement('div');
-        cardEl.className = 'memory-card';
-        cardEl.dataset.id = card.id;
-        cardEl.dataset.type = card.type;
-        
-        let displayText = card.text;
-        if(displayText.length > 70) displayText = displayText.substring(0, 67) + "...";
-        
-        cardEl.innerHTML = `<span>${displayText}</span>`;
-        cardEl.onclick = () => flipMemoryCard(cardEl);
-        grid.appendChild(cardEl);
+    const q = tugActiveQs[tugIdx];
+    document.getElementById('t-question-box').innerText = q.question;
+    
+    const optBox = document.getElementById('t-options-box');
+    optBox.innerHTML = "";
+    optBox.classList.remove('locked');
+    
+    let options = trueShuffle(q.options);
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => submitTugAnswer(opt, btn, q.correct);
+        optBox.appendChild(btn);
     });
 }
 
-function flipMemoryCard(cardEl) {
-    if (memoryFlippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+function submitTugAnswer(selected, btn, correct) {
+    masterUnlockAudio();
+    const optBox = document.getElementById('t-options-box');
+    optBox.classList.add('locked');
+    if (document.activeElement) document.activeElement.blur();
     
-    sfx.tick();
-    cardEl.classList.add('flipped');
-    memoryFlippedCards.push(cardEl);
-    
-    if (memoryFlippedCards.length === 2) {
-        checkMemoryMatch();
-    }
-}
-
-function checkMemoryMatch() {
-    const [card1, card2] = memoryFlippedCards;
-    const id1 = card1.dataset.id;
-    const id2 = card2.dataset.id;
-    const type1 = card1.dataset.type;
-    const type2 = card2.dataset.type;
-    
-    if (id1 === id2 && type1 !== type2) {
-        setTimeout(() => {
-            sfx.correct();
-            card1.classList.remove('flipped');
-            card2.classList.remove('flipped');
-            card1.classList.add('matched');
-            card2.classList.add('matched');
-            memoryMatches++;
-            document.getElementById('match-count').innerText = `${memoryMatches}/6`;
-            memoryFlippedCards = [];
-            
-            if (memoryMatches === 6) {
-                endConnectionGame();
-            }
-        }, 500);
+    if (selected === correct) {
+        btn.classList.add('correct');
+        sfx.correct();
     } else {
-        setTimeout(() => {
-            sfx.wrong();
-            card1.classList.remove('flipped');
-            card2.classList.remove('flipped');
-            memoryFlippedCards = [];
-        }, 1200);
+        btn.classList.add('wrong');
+        optBox.querySelectorAll('.option-btn').forEach(b => {
+            if (b.innerText === correct) b.classList.add('correct');
+        });
+        sfx.wrong();
     }
-}
-
-function endConnectionGame() {
-    sfx.correct();
-    document.getElementById('connection-status').innerText = "ALL MATCHED! +1000 Points";
-    document.getElementById('connection-status').style.color = "#10b981";
     
-    currentPoints += 1000;
-    localStorage.setItem('noi_points', currentPoints);
-    document.getElementById('display-points').innerText = currentPoints;
-    socket.emit('update_global_score', { name: currentUser, points: currentPoints });
-    
-    if (typeof confetti !== 'undefined') {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#a855f7', '#d8b4fe', '#ffffff'] });
-    }
+    socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
     
     setTimeout(() => {
-        returnToMenu();
-    }, 3000);
+        tugIdx++;
+        loadTugQuestion();
+    }, 1500);
 }
+
+socket.on('tug_update', (data) => {
+    // ropePosition goes from 0 (P1 Win) to 100 (P2 Win)
+    document.getElementById('tug-flag').style.left = `${data.ropePosition}%`;
+    document.getElementById('t-streak-p1').innerText = data.p1Streak;
+    document.getElementById('t-streak-p2').innerText = data.p2Streak;
+});
+
+socket.on('tug_muddy', () => {
+    const overlay = document.getElementById('muddy-overlay');
+    overlay.style.display = 'flex';
+    sfx.wrong();
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 3000);
+});
+
+socket.on('tug_game_over', (data) => {
+    document.getElementById('t-game-view').style.display = 'none';
+    document.getElementById('t-results-view').style.display = 'block';
+    
+    const wText = document.getElementById('t-winner-text');
+    if (data.winner === currentUser) {
+        wText.innerText = "YOU WIN!";
+        wText.style.color = "#10b981";
+        speak("You have captured the flag.");
+    } else {
+        wText.innerText = "YOU LOST";
+        wText.style.color = "#ef4444";
+        speak("Your opponent has won the war.");
+    }
+});
+
 
 // ---------------------------------------------------------
 // 9. PRO JEOPARDY LOGIC
@@ -1010,7 +1028,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 11. MAIN QUIZ LOGIC (FIXED MOBILE TAPS & GREEN HIGHLIGHTS)
+// 11. MAIN QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -1053,7 +1071,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Completely destroy old buttons to guarantee no hover/focus states carry over
+    // Destroys the container to kill ghost touches
     optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
@@ -1067,7 +1085,6 @@ function loadQuestion() {
         btn.className = 'option-btn'; 
         btn.innerText = opt;
         
-        // Mobile tap fix built-in
         btn.onclick = function(e) { 
             e.preventDefault();
             this.blur();
@@ -1082,12 +1099,11 @@ function checkAnswer(selected, btn, correct) {
     const optionsDiv = document.getElementById('options');
     
     if (optionsDiv) {
-        // Physically locks container to block ghost taps
         optionsDiv.classList.add('locked');
-        
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
+            b.blur();
         });
     }
     
@@ -1176,14 +1192,8 @@ socket.on('leaderboard_data', (data) => {
     });
 });
 
-function returnToMenu() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    socket.emit('leave_jeopardy');
-    switchScreen('home-screen');
-}
-
 // ---------------------------------------------------------
-// 13. MODERN LOBBY CHAT
+// 13. MODERN LOBBY CHAT LOGIC
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
