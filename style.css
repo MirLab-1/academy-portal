@@ -189,6 +189,12 @@ button {
     color: var(--accent-red) !important; transform: scale(1) !important;
 }
 
+.option-btn.selected {
+    border-color: #06b6d4 !important;
+    background-color: rgba(6, 182, 212, 0.2) !important;
+    color: #fff !important;
+}
+
 .modern-input {
     width: 100%; max-width: 300px; padding: 16px; border-radius: 12px;
     border: 1px solid var(--border-heavy); background: var(--bg-input);
@@ -209,6 +215,7 @@ button {
 .mb-20 { margin-bottom: 20px; }
 .gold-text { color: var(--primary-gold); }
 .muted-text { color: var(--text-muted); }
+.cyan-text { color: #06b6d4; }
 .red-text { color: var(--accent-red); }
 .white-text { color: white; }
 
@@ -275,44 +282,56 @@ button {
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
-/* 🚀 BLUEPRINT COLLECTION (CARDS) STYLING 🚀 */
-.bp-player-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 8px 12px; border: 1px solid var(--border-heavy); }
-.bp-player-row.ready { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
-
-.bp-set-counter { font-size: 28px; font-weight: 900; font-family: var(--font-heading); border: 2px solid; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto; background: var(--bg-input); box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
-
-.playing-card {
-    width: 80px; height: 115px; min-width: 80px;
-    background: #fff; border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    color: #000; display: flex; flex-direction: column;
-    justify-content: space-between; padding: 6px;
-    font-size: 10px; font-weight: 800; text-align: center;
-    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-    border: 3px solid #333; position: relative; overflow: hidden;
+/* 🚀 THE 4 SQUARES (FAMILY GAME) STYLING 🚀 */
+.fs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 25px;
 }
-.playing-card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.8); z-index: 10; }
-.playing-card:active { transform: scale(0.95); }
+.fs-clue-box {
+    background: #000;
+    border: 2px solid #06b6d4;
+    border-radius: 12px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(6, 182, 212, 0.3);
+}
+.fs-clue-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.8) contrast(1.2);
+}
+.fs-clue-text {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px;
+    text-shadow: 0 0 15px #06b6d4;
+}
 
-/* Card Types */
-.card-wisdom { border-color: var(--primary-gold); background: linear-gradient(to bottom, #fff, #fef08a); }
-.card-health { border-color: var(--accent-blue); background: linear-gradient(to bottom, #fff, #bfdbfe); }
-.card-facts { border-color: var(--accent-green); background: linear-gradient(to bottom, #fff, #bbf7d0); }
+.sq-player-row {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #06b6d4;
+    border-radius: 8px;
+    padding: 8px 12px;
+    width: 45%;
+    min-width: 150px;
+}
 
-.card-thief { border-color: var(--accent-red); background: linear-gradient(to bottom, #fff, #fecaca); color: var(--accent-red); }
-.card-tax { border-color: #a855f7; background: linear-gradient(to bottom, #fff, #e9d5ff); color: #a855f7; }
-.card-shield { border-color: #475569; background: linear-gradient(to bottom, #fff, #cbd5e1); color: #334155; }
-
-.card-icon { font-size: 24px; display: block; margin: auto 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-.card-title { font-size: 9px; line-height: 1.1; text-transform: uppercase; font-family: var(--font-heading); }
-
-/* Target Selection List */
-.bp-target-btn { display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); border: 1px solid var(--border-heavy); padding: 12px; border-radius: 8px; width: 100%; transition: all 0.2s; cursor: pointer; }
-.bp-target-btn:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); }
-
-.bp-opp-board { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; min-width: 80px; border: 1px solid var(--border-heavy); }
-.bp-opp-dots { display: flex; gap: 4px; margin-top: 5px; }
-.bp-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); background: #333; }
-.bp-dot.wisdom { background: var(--primary-gold); box-shadow: 0 0 5px var(--primary-gold); }
-.bp-dot.health { background: var(--accent-blue); box-shadow: 0 0 5px var(--accent-blue); }
-.bp-dot.facts { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); }
+.sq-score-row {
+    display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-heavy);
+}
+.sq-score-row:last-child { border-bottom: none; }
