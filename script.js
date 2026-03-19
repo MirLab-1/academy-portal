@@ -385,6 +385,7 @@ let votingTimerInt = null;
 let hasLockedTriviaVote = false;
 let hasLockedAccuseVote = false;
 let currentPhase = ""; 
+let serverConnectionTimeout = null; // 🚨 Added to fix the freeze bug
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -550,7 +551,7 @@ function speak(text) {
 }
 
 // ---------------------------------------------------------
-// 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & STREAK LOGIC 🚨
+// 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & DATA RECOVERY 🚨
 // ---------------------------------------------------------
 function checkDailyStreak() {
     const today = new Date().toLocaleDateString('en-CA'); 
@@ -614,10 +615,31 @@ function registerUser() {
     if (!nameInput) return;
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
-    currentUser = nameVal; currentPoints = 0; currentStreak = 1;
+    
+    // 🚨 DATA RECOVERY PROTOCOL 🚨
+    // Checks if the user is re-entering their old name to prevent wiping their points to 0.
+    const savedUser = localStorage.getItem('noi_user');
+    if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
+        currentUser = savedUser;
+        currentPoints = parseInt(localStorage.getItem('noi_points')) || 0;
+        currentStreak = parseInt(localStorage.getItem('noi_streak')) || 1;
+        setTimeout(() => { showToast("Profile Recovered! Your points are safe."); }, 500);
+    } else {
+        currentUser = nameVal; 
+        currentPoints = 0; 
+        currentStreak = 1;
+    }
+    
     const today = new Date().toLocaleDateString('en-CA');
-    try { localStorage.setItem('noi_user', currentUser); localStorage.setItem('noi_points', currentPoints); localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_last_date', today); } catch(e) {}
+    try { 
+        localStorage.setItem('noi_user', currentUser); 
+        localStorage.setItem('noi_points', currentPoints); 
+        localStorage.setItem('noi_streak', currentStreak); 
+        localStorage.setItem('noi_last_date', today); 
+    } catch(e) {}
+    
     socket.emit('join_game', { name: currentUser, points: currentPoints });
+    
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('display-streak').innerText = currentStreak;
     document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
@@ -647,7 +669,16 @@ function hostFamilyGame() {
     masterUnlockAudio();
     closeFamilyLobbyMenu();
     isHost = true;
+    
+    showToast("Connecting to Server...");
     socket.emit('create_family_room', { name: currentUser });
+
+    // 🚨 SERVER MISMATCH SAFETY TIMEOUT 🚨
+    serverConnectionTimeout = setTimeout(() => {
+        alert("🚨 SERVER MISMATCH 🚨\n\nThe frontend is sending the command, but your backend server is ignoring it. You must update your server.js file to handle the new Mother Plane logic!");
+        isHost = false;
+        switchScreen('home-screen');
+    }, 4000);
 }
 
 function joinFamilyGame() {
@@ -656,10 +687,20 @@ function joinFamilyGame() {
     if(code.length !== 4) return alert("Enter a valid 4-digit code.");
     closeFamilyLobbyMenu();
     isHost = false;
+    
+    showToast("Connecting to Server...");
     socket.emit('join_family_room', { name: currentUser, code: code });
+    
+    // 🚨 SERVER MISMATCH SAFETY TIMEOUT 🚨
+    serverConnectionTimeout = setTimeout(() => {
+        alert("🚨 SERVER MISMATCH 🚨\n\nThe frontend is sending the command, but your backend server is ignoring it. You must update your server.js file to handle the new Mother Plane logic!");
+        isHost = false;
+        switchScreen('home-screen');
+    }, 4000);
 }
 
 socket.on('family_room_created', (code) => {
+    clearTimeout(serverConnectionTimeout); // Server responded, cancel the error
     familyRoomCode = code;
     switchScreen('family-game-screen');
     switchFamilyView('p-lobby-view');
@@ -670,6 +711,7 @@ socket.on('family_room_created', (code) => {
 });
 
 socket.on('family_joined_successfully', (data) => {
+    clearTimeout(serverConnectionTimeout); // Server responded, cancel the error
     familyRoomCode = data.code;
     switchScreen('family-game-screen');
     switchFamilyView('p-lobby-view');
@@ -679,6 +721,7 @@ socket.on('family_joined_successfully', (data) => {
 });
 
 socket.on('family_join_error', (msg) => {
+    clearTimeout(serverConnectionTimeout);
     alert(msg);
     openFamilyLobbyMenu();
 });
