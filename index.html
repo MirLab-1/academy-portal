@@ -52,6 +52,17 @@
             <h2 class="heading-font gold-text" style="font-size: 28px; margin-bottom: 30px;">Select Your Path</h2>
 
             <div class="bento-grid">
+                
+                <div class="bento-card" onclick="openBlueprintLobbyMenu()" style="grid-column: 1 / -1; height: 300px; border: 2px solid #a855f7; box-shadow: 0 0 30px rgba(168, 85, 247, 0.2); background: radial-gradient(circle at center, #1e1b4b 0%, #000 100%);">
+                    <div class="bento-tag" style="background: #a855f7; color: #fff;">REMOTE FAMILY GAME</div>
+                    <img src="motherplane_cockpit.png" style="opacity: 0.3; filter: hue-rotate(250deg);" onerror="this.src='https://via.placeholder.com/1000x300/1e1b4b/a855f7?text=THE+BLUEPRINT+COLLECTION'">
+                    <div class="bento-content" style="background: linear-gradient(to top, #000 40%, transparent 100%);">
+                        <h3 style="color: #fff; font-size: 32px; font-style: italic;">The Blueprint Collection</h3>
+                        <p style="color: #c084fc; margin: 0; font-weight: bold; text-shadow: 0 0 10px #c084fc;">Trivia meets Monopoly Deal. Collect sets, steal cards, and ruin friendships.</p>
+                        <span class="bento-badge" style="background: rgba(168, 85, 247, 0.2); color: #fff; margin-top: 10px; border: 1px solid rgba(168, 85, 247, 0.5);">3 - 8 Players</span>
+                    </div>
+                </div>
+
                 <div class="bento-card" onclick="showDifficulty('kids')">
                     <img src="fard.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Junior'">
                     <div class="bento-content">
@@ -135,159 +146,122 @@
                     </div>
                 </div>
 
-                <div class="bento-card" onclick="openFamilyLobbyMenu()" style="grid-column: 1 / -1; height: 300px; border: 2px solid var(--plane-cyan); box-shadow: 0 0 30px rgba(0,255,255,0.2); background: radial-gradient(circle at center, #111 0%, #000 100%);">
-                    <div class="bento-tag" style="background: var(--plane-cyan); color: #000;">REMOTE FAMILY GAME</div>
-                    <img src="motherplane_cockpit.png" style="opacity: 0.6; filter: hue-rotate(180deg);" onerror="this.src='https://via.placeholder.com/1000x300/040710/00ffff?text=MOTHER+PLANE+SHOWDOWN'">
-                    <div class="bento-content" style="background: linear-gradient(to top, #000 30%, transparent 100%);">
-                        <h3 style="color: #fff; font-size: 32px; font-style: italic;">The 85er on Board</h3>
-                        <p style="color: var(--plane-cyan); margin: 0; font-weight: bold; text-shadow: 0 0 10px var(--plane-cyan);">Trivia, Deception, and Betrayal inside the Wheel.</p>
-                        <span class="bento-badge" style="background: rgba(0,255,255,0.1); color: #fff; margin-top: 10px; border: 1px solid rgba(0,255,255,0.3);">3 - 8 Players</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <div id="family-game-screen" class="screen plane-bg">
-        <div class="main-container plane-container">
+    <div id="blueprint-game-screen" class="screen">
+        <div class="main-container text-center" style="max-width: 1000px;">
             
-            <div id="p-lobby-view" class="plane-view active">
-                <div class="plane-header">
-                    <span class="cyan-text">SYSTEM:</span> DECEPTION PROTOCOL
-                    <div class="plane-timer-box">LOBBY</div>
-                </div>
-
-                <div class="plane-bento-grid">
-                    <div class="plane-glass-card" style="grid-column: span 2;">
-                        <h3 class="cyan-text heading-font mb-15">CREW STATUS</h3>
-                        <div id="p-lobby-players" class="plane-player-list">
-                            </div>
-                        <div class="plane-divider mt-20 mb-20"></div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="muted-text">Room Code: <strong class="white-text" style="font-size: 18px; letter-spacing: 1px;">XXXX</strong></span>
-                            <button id="p-host-start-btn" class="btn-plane-start" style="display:none;" onclick="hostStartFamilyGame()">ENGAGE</button>
-                            <div id="p-wait-msg" class="cyan-text plane-pulse" style="font-weight: bold; font-size: 14px;">Waiting for Host...</div>
+            <div id="bp-lobby-view" style="width: 100%; display: none;">
+                <h1 class="heading-font mb-20" style="color: #c084fc; font-size: 36px; text-shadow: 0 0 15px #a855f7;">The Blueprint Collection</h1>
+                
+                <div class="glass-panel mb-20 text-left" style="border-color: #a855f7;">
+                    <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-size: 20px;">How To Play</h3>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
+                        <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; width: 30%; min-width: 200px; border-top: 3px solid var(--accent-green);">
+                            <h4 class="gold-text mb-5" style="margin-top: 0;">1. Answer to Draw</h4>
+                            <p class="muted-text" style="font-size: 13px;">A trivia question appears for everyone. Answer correctly to draw a card into your hand.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; width: 30%; min-width: 200px; border-top: 3px solid var(--accent-blue);">
+                            <h4 class="gold-text mb-5" style="margin-top: 0;">2. Build Sets</h4>
+                            <p class="muted-text" style="font-size: 13px;">Play Blueprint Cards to your board. Collect 3 Wisdom, 3 Health, and 3 Facts to WIN.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; width: 30%; min-width: 200px; border-top: 3px solid var(--accent-red);">
+                            <h4 class="gold-text mb-5" style="margin-top: 0;">3. Sabotage</h4>
+                            <p class="muted-text" style="font-size: 13px;">Play Thief cards to steal Blueprints from your family, or Shield cards to protect yourself.</p>
                         </div>
                     </div>
-
-                    <div class="plane-glass-card" style="grid-column: span 2;">
-                        <h3 class="gold-text heading-font mb-20 text-center">MISSION OBJECTIVE</h3>
-                        
-                        <div class="howto-row">
-                            <div class="howto-icon cyanglow">1</div>
-                            <div class="howto-content">
-                                <strong>Identify roles secretly.</strong> <br>Most are <span class="cyan-text">VANGUARD</span>. One is the <span class="red-text">INFILTRATOR</span> (an 85er).
-                            </div>
-                        </div>
-                        <div class="howto-divider"></div>
-                        <div class="howto-row">
-                            <div class="howto-icon goldglow">2</div>
-                            <div class="howto-content">
-                                <strong>Trivia Discussion (FaceTime).</strong><br><span class="cyan-text">Vanguard</span> see the real hard question. <span class="red-text">Infiltrator</span> sees a BLANK screen.
-                            </div>
-                        </div>
-                        <div class="howto-divider"></div>
-                        <div class="howto-row">
-                            <div class="howto-icon redglow">3</div>
-                            <div class="howto-content">
-                                <strong>Deception Phase.</strong><br><span class="red-text">Infiltrator</span> must listen, smooth-talk, and pretend they know the question to trick the family into picking a WRONG answer.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn-plane-secondary mt-20" onclick="leaveFamilyRoom()">Leave Station</button>
-            </div>
-
-            <div id="p-role-view" class="plane-view">
-                <div class="plane-header">
-                    <span class="red-text">ALERT:</span> SCANNING NEURAL PATTERNS
-                </div>
-                <div class="plane-central-scanner">
-                    <div id="p-role-icon" class="scanner-icon">?</div>
-                    <div id="p-role-text" class="plane-big-text muted-text">Analyzing...</div>
-                    <p id="p-role-subtext" class="muted-text mt-10">You are on FaceTime, do not react.</p>
-                </div>
-            </div>
-
-            <div id="p-game-view" class="plane-view">
-                <div class="plane-header">
-                    <span class="cyan-text">PHASE:</span> DISCUSSION (FACETIME ACTIVE)
-                    <div id="p-discussion-timer" class="plane-timer-box">0:60</div>
-                </div>
-
-                <div class="plane-glass-card text-center mb-20">
-                    <div class="cyan-text muted-text mb-10" style="text-transform: uppercase; font-weight: bold; font-size: 12px; letter-spacing: 1px;">Mission Query</div>
                     
-                    <div id="p-vanguard-q" style="display:none;">
-                        <p id="p-actual-question" class="plane-question-text">Loading...</p>
-                        <div class="plane-options-grid locked mt-20" id="p-vanguard-options">
+                    <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px;">
+                        <h2 style="color: white; margin-bottom: 5px; font-size: 16px; text-transform: uppercase;">Room Code: <strong style="color: #c084fc; font-size: 22px; letter-spacing: 2px;" id="bp-room-code-display">XXXX</strong></h2>
+                        <div id="bp-lobby-players" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px;">
                             </div>
-                    </div>
-
-                    <div id="p-infiltrator-q" style="display:none;" class="plane-malfunction">
-                        <div class="red-text heading-font plane-pulse" style="font-size: 40px; margin-bottom: 10px;">DATA CORRUPTED</div>
-                        <p class="muted-text" style="font-size: 16px;">The system has failed. You cannot see the question or the specific answers.</p>
-                        <div class="plane-options-grid mt-20 locked">
-                            <button class="plane-opt-fake">A</button>
-                            <button class="plane-opt-fake">B</button>
-                            <button class="plane-opt-fake">C</button>
-                            <button class="plane-opt-fake">D</button>
-                        </div>
+                        <button id="bp-host-start-btn" class="btn-primary mt-20" style="display:none; background: linear-gradient(135deg, #a855f7, #581c87); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); margin-left: auto; margin-right: auto;" onclick="hostStartBlueprintGame()">START GAME</button>
+                        <div id="bp-wait-msg" class="muted-text mt-20" style="font-weight: bold; font-style: italic;">Waiting for Host to start...</div>
                     </div>
                 </div>
-
-                <div id="p-instruction-card" class="plane-glass-card text-center accent-border">
-                    </div>
+                <button class="btn-secondary" onclick="leaveBlueprintRoom()">Leave Lobby</button>
             </div>
 
-            <div id="p-voting-view" class="plane-view">
-                <div class="plane-header">
-                    <span class="red-text">ALERT:</span> INPUT FINAL DECISIONS
-                    <div id="p-voting-timer" class="plane-timer-box">0:20</div>
-                </div>
-
-                <div class="plane-voting-grid">
-                    <div id="p-trivia-vote-card" class="plane-glass-card accent-border-gold">
-                        <h3 class="gold-text heading-font text-center mb-15">1. ANSWER QUERY</h3>
-                        <p id="p-trivia-vote-msg" class="muted-text text-center mb-15" style="font-size: 13px;"></p>
-                        <div id="p-vote-options-box" class="plane-options-grid">
-                            </div>
-                        <div id="p-trivia-voted-msg" class="plane-voted-msg plane-pulse" style="display:none;">Decision Locked</div>
-                    </div>
-
-                    <div class="plane-glass-card accent-border-red">
-                        <h3 class="red-text heading-font text-center mb-15">2. IDENTIFY 85ER</h3>
-                        <p id="p-traitor-vote-msg" class="muted-text text-center mb-15" style="font-size: 13px;"></p>
-                        <div id="p-accuse-options-box" class="plane-player-vote-list">
-                            </div>
-                        <div id="p-accuse-voted-msg" class="plane-voted-msg plane-pulse" style="display:none;">Decision Locked</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="p-results-view" class="plane-view">
-                <div class="plane-header">
-                    <span class="cyan-text">SYSTEM:</span> DECRYPTION COMPLETE
+            <div id="bp-trivia-view" style="width: 100%; display: none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid var(--border-heavy); padding-bottom: 15px;">
+                    <h1 class="heading-font" style="color: #c084fc; margin: 0; font-size: 24px;">TRIVIA PHASE</h1>
+                    <div id="bp-trivia-timer" style="background: var(--bg-input); padding: 5px 15px; border-radius: 20px; color: var(--accent-red); font-weight: bold; font-size: 18px;">15s</div>
                 </div>
                 
-                <div class="plane-glass-card text-center mb-20 accent-border" style="padding: 40px;">
-                    <div class="muted-text mb-10" style="text-transform: uppercase;">The 85er on Board was</div>
-                    <div id="p-reveal-avatar-container" class="mb-15" style="display: flex; justify-content: center;"></div>
-                    <h1 id="p-reveal-name" class="red-text heading-font plane-shake" style="font-size: 42px; margin: 0; text-shadow: 0 0 20px var(--accent-red);">???</h1>
+                <div class="progress-bar-container"><div id="bp-pressure-bar" style="background: #a855f7;"></div></div>
+                <div id="bp-question-box" class="big-tv" style="border-color: #a855f7 !important; box-shadow: 0 0 30px rgba(168, 85, 247, 0.2) !important;">Loading Question...</div>
+                <div id="bp-options-box" class="options-grid mb-20"></div>
+                <p id="bp-waiting-trivia-msg" style="color: var(--text-muted); font-style: italic; display: none;">Answer locked. Waiting for family...</p>
+            </div>
+
+            <div id="bp-board-view" style="width: 100%; display: none; text-align: left;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <h1 class="heading-font" style="color: #c084fc; margin: 0; font-size: 20px;">ACTION PHASE</h1>
+                    <button class="btn-action" style="color: var(--accent-red);" onclick="leaveBlueprintRoom()">Quit Match</button>
                 </div>
 
-                <div class="plane-glass-card mb-20">
-                    <h3 class="cyan-text heading-font text-center mb-20">ROUND SCORES</h3>
-                    <div id="p-round-scores-list">
+                <div class="glass-panel mb-20" style="padding: 15px; border-color: #333;">
+                    <h4 class="muted-text" style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase;">Family Boards</h4>
+                    <div id="bp-opponents-area" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
                         </div>
                 </div>
 
-                <div style="display:flex; gap:15px; justify-content:center;">
-                    <button id="p-host-next-btn" class="btn-plane-start" style="display:none; width: auto;" onclick="socket.emit('family_next_round')">Next Round</button>
-                    <button class="btn-plane-secondary" style="width: auto;" onclick="leaveFamilyRoom()">End Game</button>
+                <div class="glass-panel mb-20" style="padding: 20px; border-color: var(--primary-gold); background: rgba(212, 175, 55, 0.05);">
+                    <h4 class="gold-text heading-font" style="margin: 0 0 15px 0; font-size: 16px; text-transform: uppercase;">My Blueprint Sets (First to 3 of each wins)</h4>
+                    <div style="display: flex; justify-content: space-around; text-align: center;">
+                        <div>
+                            <div class="bp-set-counter" style="color: var(--primary-gold); border-color: var(--primary-gold);"><span id="bp-my-wisdom">0</span>/3</div>
+                            <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: var(--text-muted);">WISDOM</div>
+                        </div>
+                        <div>
+                            <div class="bp-set-counter" style="color: var(--accent-blue); border-color: var(--accent-blue);"><span id="bp-my-health">0</span>/3</div>
+                            <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: var(--text-muted);">HEALTH</div>
+                        </div>
+                        <div>
+                            <div class="bp-set-counter" style="color: var(--accent-green); border-color: var(--accent-green);"><span id="bp-my-facts">0</span>/3</div>
+                            <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: var(--text-muted);">FACTS</div>
+                        </div>
+                    </div>
                 </div>
+
+                <div style="background: rgba(0,0,0,0.8); border-top: 2px solid #555; padding: 20px; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.8);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; max-width: 1000px; margin-left: auto; margin-right: auto;">
+                        <h4 class="white-text" style="margin: 0; font-size: 14px; text-transform: uppercase;">Your Hand <span id="bp-hand-count" style="color: #c084fc;">(0)</span></h4>
+                        <button id="bp-skip-turn-btn" class="btn-secondary" style="padding: 8px 15px; font-size: 12px; width: auto;" onclick="skipBlueprintTurn()">Skip Turn</button>
+                    </div>
+                    <div id="bp-my-hand-container" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; max-width: 1000px; margin-left: auto; margin-right: auto; min-height: 140px;">
+                        <p class="muted-text" style="width: 100%; text-align: center; margin-top: 40px; font-style: italic;">Answer trivia correctly to draw cards.</p>
+                    </div>
+                </div>
+                <div style="height: 180px;"></div>
             </div>
 
+        </div>
+    </div>
+
+    <div id="bp-target-modal" class="modal">
+        <div class="modal-content accent-border" style="border-color: var(--accent-red) !important;">
+            <h2 class="heading-font red-text text-center mb-20">SABOTAGE</h2>
+            <p class="muted-text text-center mb-10">Select a family member to target with your Action Card.</p>
+            <div id="bp-target-list" style="display:flex; flex-direction:column; gap:10px; align-items:stretch; max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                </div>
+            <button class="btn-action mt-20" style="margin: 0 auto;" onclick="closeBlueprintTargetModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="blueprint-join-modal" class="modal">
+        <div class="modal-content accent-border" style="border-color: #a855f7 !important;">
+            <h2 class="heading-font text-center mb-20" style="color: #c084fc;">The Blueprint Collection</h2>
+            <p class="muted-text text-center mb-10">Create a room or enter a family code to join the table.</p>
+            <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
+                <button class="btn-primary" style="background:linear-gradient(135deg, #a855f7, #581c87); box-shadow:0 4px 15px rgba(168,85,247,0.3); color: white;" onclick="hostBlueprintGame()">CREATE NEW TABLE</button>
+                <div style="color: #555; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 10px 0;">or</div>
+                <input type="text" id="blueprint-room-input" class="modern-input" maxlength="4" placeholder="CODE" style="border-color:#a855f7; text-transform:uppercase;">
+                <button class="btn-secondary" style="border-color:#a855f7; color:#c084fc;" onclick="joinBlueprintGame()">JOIN TABLE</button>
+                <button class="btn-action mt-20" onclick="closeBlueprintLobbyMenu()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -523,20 +497,6 @@
                 <div id="leaderboard-list" style="width: 100%;"></div>
             </div>
             <button class="btn-secondary mt-20" onclick="returnToMenu()">Back</button>
-        </div>
-    </div>
-
-    <div id="family-join-modal" class="modal">
-        <div class="modal-content accent-border" style="border-color: var(--plane-cyan) !important;">
-            <h2 class="heading-font cyan-text text-center mb-20">Mother Plane Comms</h2>
-            <p class="muted-text text-center mb-10">Start a new crew or input an existing code to join the matrix.</p>
-            <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
-                <button class="btn-primary" style="background:linear-gradient(135deg, var(--plane-cyan), #0c4a6e); box-shadow:0 4px 15px rgba(0,255,255,0.3); color: white;" onclick="hostFamilyGame()">CREATE NEW CREW</button>
-                <div class="plane-divider">or</div>
-                <input type="text" id="family-room-input" class="modern-input" maxlength="4" placeholder="CODE" style="border-color:var(--plane-cyan); text-transform:uppercase;">
-                <button class="btn-secondary" style="border-color:var(--plane-cyan); color:var(--plane-cyan);" onclick="joinFamilyGame()">JOIN CREW</button>
-                <button class="btn-action mt-20" onclick="closeFamilyLobbyMenu()">Cancel</button>
-            </div>
         </div>
     </div>
     
