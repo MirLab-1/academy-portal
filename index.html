@@ -126,11 +126,6 @@
                     <h3>How to Eat to Live</h3>
                     <p class="badge">Health & Law</p>
                 </div>
-                <div class="pioneer-card new-mode" onclick="showDifficulty('history')">
-                    <img src="history.png" alt="History" onerror="this.src='https://via.placeholder.com/250x200/451a03/d4af37?text=Our+History'">
-                    <h3>Our History</h3>
-                    <p class="badge">The Timeline</p>
-                </div>
                 
                 <div class="pioneer-card new-mode" onclick="startTugOfWar()" style="border: 2px solid #eab308; background: linear-gradient(to bottom, #1a1a1a, #713f12);">
                     <div style="position: absolute; top: 10px; right: 10px; background: #eab308; color: black; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">1V1</div>
@@ -151,6 +146,7 @@
 
     <div id="tug-screen" class="screen">
         <div class="quiz-container text-center" style="max-width: 800px; width: 100%;">
+            
             <div id="t-lobby-view" style="width: 100%;">
                 <h1 style="color: #eab308; font-size: 40px; margin-bottom: 20px; text-transform: uppercase;">Tug of War Lobby</h1>
                 <div style="background: #111; border: 2px solid #333; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
@@ -188,8 +184,8 @@
             </div>
 
             <div id="t-results-view" style="display: none; padding: 40px 0; width: 100%;">
-                <h1 id="t-winner-text" style="color: #eab308; font-size: 50px; margin-bottom: 10px;">WINNER!</h1>
-                <p style="color: #aaa; margin-bottom: 30px;">The flag has been captured.</p>
+                <h1 id="t-winner-text" style="color: #eab308; font-size: 55px; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);">WINNER!</h1>
+                <p id="t-results-subtext" style="color: #aaa; margin-bottom: 30px; font-size: 18px; font-weight: bold;">The flag has been captured.</p>
                 <button class="option-btn" onclick="returnToMenu()" style="background: #eab308; color: black; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto;">Return Dashboard</button>
             </div>
         </div>
