@@ -10,6 +10,7 @@
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. Correct Answer Green Highlight Restored
  * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
+ * 9. Victory Confetti & Dynamic Forfeit Handlers Added
  */
 
 const socket = io();
@@ -365,7 +366,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 let tugActiveQs = [];
 let tugIdx = 0;
-let sessionCancelToken = 0; // 🚨 FIXES THE GHOST QUIT BUG 🚨
+let sessionCancelToken = 0;
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -535,7 +536,7 @@ function registerUser() {
 // 8. TUG OF WAR MULTIPLAYER LOGIC
 // ---------------------------------------------------------
 function startTugOfWar() {
-    sessionCancelToken++; // Kills any pending solo quiz timeouts
+    sessionCancelToken++;
     masterUnlockAudio();
     switchScreen('tug-screen');
     document.getElementById('t-lobby-view').style.display = 'block';
@@ -567,7 +568,6 @@ socket.on('tug_lobby_update', (data) => {
 });
 
 socket.on('tug_start', (data) => {
-    tugActiveQs = data.questions;
     tugIdx = 0;
     
     document.getElementById('t-p1-name').innerText = currentUser;
@@ -582,7 +582,6 @@ socket.on('tug_start', (data) => {
     
     speak("The Tug of War has begun.");
     
-    // We get a fresh shuffle of all path questions for the war locally
     let allQs = [];
     for (let path in quizData) if (path !== 'adults') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
     tugActiveQs = trueShuffle(allQs);
@@ -632,7 +631,6 @@ function submitTugAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
-        // REVEALS CORRECT ANSWER GREEN
         quizBtns.forEach(b => {
             if (b.innerText === correct) b.classList.add('correct');
         });
@@ -641,9 +639,9 @@ function submitTugAnswer(selected, btn, correct) {
     
     socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
     
-    let currentToken = sessionCancelToken; // Locks in current session
+    let currentToken = sessionCancelToken;
     setTimeout(() => {
-        if (currentToken !== sessionCancelToken) return; // Kills ghost timers
+        if (currentToken !== sessionCancelToken) return;
         tugIdx++;
         loadTugQuestion();
     }, 1500);
@@ -664,19 +662,41 @@ socket.on('tug_muddy', () => {
     }, 3000);
 });
 
+// 🚨 THE VICTORY FIX 🚨
 socket.on('tug_game_over', (data) => {
     sessionCancelToken++;
     document.getElementById('t-game-view').style.display = 'none';
     document.getElementById('t-results-view').style.display = 'block';
     
     const wText = document.getElementById('t-winner-text');
+    const subText = document.getElementById('t-results-subtext');
+    
     if (data.winner === currentUser) {
-        wText.innerText = "YOU WIN!";
-        wText.style.color = "#10b981";
-        speak("You have captured the flag.");
+        wText.innerText = "VICTORY!";
+        wText.style.color = "#10b981"; // Green win
+        
+        if (data.reason === "forfeit" || data.reason === "disconnect") {
+            subText.innerText = "Your opponent fled the battlefield! You win by default.";
+            speak("Your opponent has forfeited. You win the war.");
+        } else {
+            subText.innerText = "You pulled the flag to your side!";
+            speak("You have captured the flag. Outstanding victory.");
+        }
+        
+        // Massive Confetti Explosion for the Winner!
+        if (typeof confetti !== 'undefined') {
+            var end = Date.now() + 3000;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#eab308', '#ffffff', '#3b82f6'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#eab308', '#ffffff', '#3b82f6'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+        
     } else {
-        wText.innerText = "YOU LOST";
-        wText.style.color = "#ef4444";
+        wText.innerText = "DEFEAT";
+        wText.style.color = "#ef4444"; // Red loss
+        subText.innerText = "Your opponent overpowered you.";
         speak("Your opponent has won the war.");
     }
 });
@@ -1138,7 +1158,6 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // REVEALS CORRECT ANSWER GREEN
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
@@ -1150,9 +1169,9 @@ function checkAnswer(selected, btn, correct) {
         sfx.wrong();
     }
     
-    let currentToken = sessionCancelToken; // Lock in current session
+    let currentToken = sessionCancelToken; 
     setTimeout(() => {
-        if (currentToken !== sessionCancelToken) return; // Kills ghost timers
+        if (currentToken !== sessionCancelToken) return; 
         currentIdx++;
         if (currentIdx < activeQuestions.length) {
             loadQuestion(); 
@@ -1220,7 +1239,7 @@ socket.on('leaderboard_data', (data) => {
 // 13. MASTER NAVIGATION & GLOBAL QUIT FIX
 // ---------------------------------------------------------
 function returnToMenu() {
-    sessionCancelToken++; // Instantly kills all pending ghost timers in the background!
+    sessionCancelToken++; 
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     socket.emit('leave_tug');
