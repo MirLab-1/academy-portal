@@ -9,7 +9,9 @@
  * 5. EXTREME MODE (240 Questions)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. Correct Answer Green Highlight Restored
- * 8. Fixed Back/Quit Buttons globally
+ * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
+ * 9. Victory Confetti & Dynamic Forfeit Handlers Added
+ * 10. 21 NEW JEOPARDY EXCLUSIVE QUESTIONS ADDED (Total: 261 Questions)
  */
 
 const socket = io();
@@ -18,7 +20,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (EXTREME ADDED)
+// 1. FULL MASSIVE QUESTION DATABASE (261 Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -348,6 +350,40 @@ const quizData = {
             { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun.", "The planet Earth is 93,000,000 miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
             { question: "10. How fast does light travel?", options: ["Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
         ] 
+    },
+    jeopardyVault: {
+        title: "The Vault",
+        studyText: "Classified files exclusive to Jeopardy.",
+        easy: [
+            { question: "What is the literal translation of the word 'Quran'?", options: ["That which is to be read", "The Holy Book", "The Divine Law"], correct: "That which is to be read" },
+            { question: "Which color on the Flag of Islam represents the Sun?", options: ["Red", "White", "Gold"], correct: "Red" },
+            { question: "What is the primary color of the F.O.I. uniform?", options: ["Navy Blue / Dark Colors", "White", "Khaki"], correct: "Navy Blue / Dark Colors" },
+            { question: "What is the name of the Nation of Islam's flagship farm?", options: ["Muhammad Farms", "Farrakhan Farms", "The Crescent Farm"], correct: "Muhammad Farms" },
+            { question: "What type of milk does the Honorable Elijah Muhammad advise against drinking in 'How to Eat to Live'?", options: ["Cow's milk", "Almond milk", "Evaporated milk"], correct: "Cow's milk" }
+        ],
+        medium: [
+            { question: "What year was the Million Woman March held?", options: ["1997", "1995", "2000"], correct: "1997" },
+            { question: "What is the acronym for the Nation of Islam's security and defense training wing?", options: ["F.O.I.", "M.G.T.", "G.C.C."], correct: "F.O.I." },
+            { question: "Who is recognized as the mother of the Nation of Islam?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Khadijah"], correct: "Mother Clara Muhammad" },
+            { question: "According to the teachings, what is the best food to eat for long life?", options: ["Navy Bean", "Soy Bean", "Lentils"], correct: "Navy Bean" },
+            { question: "In what city did Minister Louis Farrakhan first hear the teachings of the Honorable Elijah Muhammad?", options: ["Chicago", "Boston", "New York"], correct: "Chicago" },
+            { question: "Which legendary figure was often referred to as the 'Saviour' in the early days of the Nation of Islam?", options: ["Master Fard Muhammad", "Elijah Muhammad", "Marcus Garvey"], correct: "Master Fard Muhammad" }
+        ],
+        hard: [
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the Original Man have?", options: ["7.5 ounces", "6 ounces", "8 ounces"], correct: "7.5 ounces" },
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the grafted man have?", options: ["6 ounces", "7.5 ounces", "5 ounces"], correct: "6 ounces" },
+            { question: "What was the original title of the Nation of Islam's first official publication?", options: ["The Islamic News", "Muhammad Speaks", "The Final Call"], correct: "The Islamic News" },
+            { question: "Who was the legendary Supreme Captain of the F.O.I. that helped secure the Nation of Islam during its rapid growth?", options: ["Brother Raymond Sharrieff", "Brother John Ali", "Brother Jabril Muhammad"], correct: "Brother Raymond Sharrieff" },
+            { question: "What is the specific age range for the Junior Vanguard?", options: ["Ages 5 to 12", "Ages 13 to 19", "Ages 4 to 10"], correct: "Ages 5 to 12" }
+        ],
+        extreme: [
+            { question: "According to the 1-40 Lessons, what is the diameter of the Sun?", options: ["853,000 miles", "93,000,000 miles", "24,896 miles"], correct: "853,000 miles" },
+            { question: "How long does it take for the Earth to make a complete rotation around the Sun according to the lessons?", options: ["365 and 1/4 days", "365 days", "360 days"], correct: "365 and 1/4 days" },
+            { question: "What was the name of the street where the first Temple of Islam was established in Detroit?", options: ["Hastings Street", "Woodward Avenue", "Lafayette Street"], correct: "Hastings Street" },
+            { question: "Which of the following was a renowned musical composition by Minister Louis Farrakhan?", options: ["Let Us Make Man", "The Awakening", "The Divine Light"], correct: "Let Us Make Man" },
+            { question: "What was the overarching theme of the 10th Anniversary of the Million Man March in 2005?", options: ["The Millions More Movement", "Justice Or Else", "Day of Atonement"], correct: "The Millions More Movement" },
+            { question: "In what year did Minister Farrakhan complete his World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" }
+        ]
     }
 };
 
@@ -700,7 +736,7 @@ socket.on('tug_game_over', (data) => {
 
 
 // ---------------------------------------------------------
-// 9. PRO JEOPARDY LOGIC
+// 9. PRO JEOPARDY LOGIC (21 ROUNDS + VAULT)
 // ---------------------------------------------------------
 function startJeopardy() {
     sessionCancelToken++;
@@ -793,7 +829,7 @@ socket.on('round_update', (data) => {
 
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
-        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
+        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history', 'jeopardyVault']; 
         const diffs = ['easy', 'medium', 'hard', 'extreme'];
         let randomQ = null;
         let randomCat = "";
@@ -861,6 +897,11 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
+    // Zero Duplicate Sync: Ensure all clients log this question
+    if (!usedJeopardyQuestions.includes(qData.question)) {
+        usedJeopardyQuestions.push(qData.question);
+    }
+    
     const qBox = document.getElementById('j-question-box');
     const bStatus = document.getElementById('buzzer-status');
     const btn = document.getElementById('buzzer-btn');
