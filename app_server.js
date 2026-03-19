@@ -20,7 +20,7 @@ let readyPlayers = new Set();
 // --- JEOPARDY STATE ---
 let gameActive = false;
 let currentRound = 0;
-const MAX_ROUNDS = 10;
+const MAX_ROUNDS = 21; // 🚨 CHANGED TO 21 ROUNDS 🚨
 let roundTimer = null;
 let canBuzz = false;
 let currentCorrectAnswer = "";
@@ -130,7 +130,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // THE FORFEIT FIX: It actively checks who stayed and gives them the win
     socket.on('leave_tug', () => {
         if (socket.currentTugRoom && tugRooms[socket.currentTugRoom]) {
             const room = tugRooms[socket.currentTugRoom];
@@ -251,7 +250,6 @@ io.on('connection', (socket) => {
     socket.on('leave_jeopardy', () => handleLeave(socket));
 
     function handleLeave(s) {
-        // Disconnect fix for Tug of War
         if (s.currentTugRoom && tugRooms[s.currentTugRoom]) {
             const room = tugRooms[s.currentTugRoom];
             const remainingPlayer = room.players.find(p => p.id !== s.id);
