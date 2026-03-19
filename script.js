@@ -11,7 +11,7 @@
  * 7. THE ARENA ADDED (High Stakes Wager Duel)
  * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
  * 9. Victory Confetti & Dynamic Forfeit Handlers Added
- * 10. 21 NEW JEOPARDY EXCLUSIVE QUESTIONS ADDED
+ * 10. EXACT STUDENT ENROLLMENT INCORPORATED
  */
 
 const socket = io();
@@ -283,72 +283,23 @@ const quizData = {
             { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" }
         ]
     },
-    history: { 
-        title: "Our History", 
-        studyText: "Trace the history of the Lost-Found Nation of Islam from the arrival of Master Fard Muhammad in 1930 to the leadership of the Honorable Minister Louis Farrakhan today.", 
-        easy: [ 
-            { question: "In what year was the Nation of Islam founded in North America?", options: ["1920", "1930", "1955"], correct: "1930" }, 
-            { question: "In what city did Master Fard Muhammad first make Himself known?", options: ["Chicago", "New York", "Detroit"], correct: "Detroit" }, 
-            { question: "Who was the most famous heavyweight boxing champion to join the Nation of Islam?", options: ["Joe Frazier", "Muhammad Ali", "Mike Tyson"], correct: "Muhammad Ali" }, 
-            { question: "What is the name of the official newspaper currently published by the Nation of Islam?", options: ["The Final Call", "Muhammad Speaks", "The Muslim Journal"], correct: "The Final Call" }, 
-            { question: "Who is the current National Representative of the Honorable Elijah Muhammad?", options: ["Minister Louis Farrakhan", "Malcolm X", "Imam W.D. Mohammed"], correct: "Minister Louis Farrakhan" },
-            { question: "Who founded the Nation of Islam?", options: ["Malcolm X", "Master Fard Muhammad", "Martin Luther King Jr."], correct: "Master Fard Muhammad" },
-            { question: "In what city did the Nation of Islam begin?", options: ["Detroit", "Atlanta", "Los Angeles"], correct: "Detroit" },
-            { question: "Who did Master Fard Muhammad choose to lead the NOI?", options: ["The Honorable Elijah Muhammad", "Marcus Garvey", "Noble Drew Ali"], correct: "The Honorable Elijah Muhammad" },
-            { question: "What was the name of the first school established by the NOI?", options: ["Public School 1", "University of Islam", "The Final Call School"], correct: "University of Islam" },
-            { question: "Who was the prominent Civil Rights era spokesman for the NOI before 1964?", options: ["Al Sharpton", "Malcolm X", "Jesse Jackson"], correct: "Malcolm X" }
-        ], 
-        medium: [ 
-            { question: "What was the name of the historic gathering called by Minister Farrakhan in Washington D.C. in 1995?", options: ["The Civil Rights March", "The Million Man March", "The Justice Rally"], correct: "The Million Man March" }, 
-            { question: "Who was the pioneering woman who established the University of Islam schools?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Ava Muhammad"], correct: "Mother Clara Muhammad" }, 
-            { question: "What was the original name of the newspaper published by the Honorable Elijah Muhammad in the 1960s?", options: ["The Final Call", "Muhammad Speaks", "The Islamic News"], correct: "Muhammad Speaks" }, 
-            { question: "In what year did Master Fard Muhammad physically depart and leave the Nation to Elijah Muhammad?", options: ["1934", "1950", "1975"], correct: "1934" }, 
-            { question: "What was Muhammad Ali's given 'slave name' before he received his original name?", options: ["Cassius Clay", "Joe Louis", "George Foreman"], correct: "Cassius Clay" },
-            { question: "What year did Master Fard Muhammad depart?", options: ["1934", "1950", "1975"], correct: "1934" },
-            { question: "What major event did Minister Farrakhan organize in 1995?", options: ["The Million Man March", "The March on Washington", "The Freedom Riders"], correct: "The Million Man March" },
-            { question: "What was the primary economic focus of the NOI under Elijah Muhammad?", options: ["Buying stock in white companies", "Buying farmland and establishing independent businesses", "Relying on government assistance"], correct: "Buying farmland and establishing independent businesses" },
-            { question: "Who was the first National Secretary of the NOI?", options: ["John Ali", "Elijah Muhammad", "Malcolm X"], correct: "John Ali" },
-            { question: "What was the name of the airplane purchased by the NOI?", options: ["The Final Call Jet", "The Jet of Islam", "A Lockheed Jetstar (The 'Saviour')"], correct: "A Lockheed Jetstar (The 'Saviour')" }
-        ], 
-        hard: [ 
-            { question: "In what year did the Honorable Elijah Muhammad depart (escape a death plot)?", options: ["1965", "1975", "1981"], correct: "1975" }, 
-            { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the Nation of Islam?", options: ["1977", "1981", "1995"], correct: "1977" }, 
-            { question: "What was Minister Louis Farrakhan's name before he joined the Nation of Islam?", options: ["Louis Eugene Walcott", "Louis X", "Louis Shabazz"], correct: "Louis Eugene Walcott" }, 
-            { question: "Which prominent mosque in Chicago was purchased and rebuilt to serve as the National Center?", options: ["Mosque Maryam (Mosque No. 2)", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam (Mosque No. 2)" }, 
-            { question: "What major event did Minister Farrakhan convene in 2015 to commemorate the 20th anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "The Holy Day of Atonement"], correct: "Justice Or Else" },
-            { question: "In what year did the Honorable Minister Louis Farrakhan stand up to rebuild the work of Elijah Muhammad?", options: ["1975", "1977", "1981"], correct: "1977" },
-            { question: "What is the name of the national headquarters mosque in Chicago?", options: ["Mosque Maryam", "Mosque No. 1", "Mosque No. 7"], correct: "Mosque Maryam" },
-            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
-            { question: "Who was the first female minister appointed by Minister Farrakhan to lead a mosque?", options: ["Mother Tynnetta Muhammad", "Minister Ava Muhammad", "Sister Clara Muhammad"], correct: "Minister Ava Muhammad" },
-            { question: "What was the name of the organization established by Wallace D. Fard before the Nation of Islam?", options: ["The Moorish Science Temple", "Allah's Temple of Islam", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
-        ],
-        extreme: [
-            { question: "On what date did the Honorable Elijah Muhammad depart this timeline?", options: ["February 26, 1970", "February 25, 1975", "October 7, 1975"], correct: "February 25, 1975" },
-            { question: "In what year did Master Fard Muhammad arrive in Detroit, Michigan?", options: ["July 4, 1930", "February 26, 1930", "October 10, 1931"], correct: "July 4, 1930" },
-            { question: "How many followers did Master Fard Muhammad gather during his 3.5 years in Detroit?", options: ["10,000", "25,000", "50,000"], correct: "Approximately 25,000" },
-            { question: "What was Minister Farrakhan's first assignment as a Minister?", options: ["New York, Mosque No. 7", "Boston, Mosque No. 11", "Chicago, Mosque No. 2"], correct: "Boston, Mosque No. 11" },
-            { question: "What specific vision did Minister Farrakhan receive on September 17, 1985?", options: ["The Million Man March", "The Vision on the Mother Plane in Tepotzlan, Mexico", "The rebuilding of Mosque Maryam"], correct: "The Vision on the Mother Plane in Tepotzlan, Mexico" },
-            { question: "What year was the Nation of Islam's flagship farm in Georgia purchased?", options: ["1989", "1994", "2000"], correct: "1994" },
-            { question: "Who was the founder of the Moorish Science Temple, preceding the NOI?", options: ["Marcus Garvey", "Noble Drew Ali", "Booker T. Washington"], correct: "Noble Drew Ali" },
-            { question: "What was the street address of the first Temple of Islam in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Ave", "7351 South Stony Island"], correct: "3159 Hastings Street" },
-            { question: "What year was the Million Family March held?", options: ["1995", "2000", "2005"], correct: "2000" },
-            { question: "What year was 'Message to the Blackman in America' published?", options: ["1955", "1965", "1975"], correct: "1965" }
-        ]
-    },
+    // ==========================================
+    // 🚨 100% ACCURATE STUDENT ENROLLMENT (RULES OF ISLAM) 🚨
+    // ==========================================
     adults: { 
         title: "Registration Track", 
         studyText: "The Student Enrollment. You must memorize these 10 exact questions and answers word-for-word.", 
         exact: [ 
-            { question: "1. Who is the Original man?", options: ["The Original man is the Asiatic Black man; the Maker; the Owner; the Cream of the planet Earth - Father of Civilization, God of the Universe.", "The Original Man is the people of the East who study the stars.", "The Original Man is the first man to discover electricity."], correct: "The Original man is the Asiatic Black man; the Maker; the Owner; the Cream of the planet Earth - Father of Civilization, God of the Universe." }, 
-            { question: "2. Who is the Colored man?", options: ["The Colored man is the Caucasian (white man); or Yacub's grafted devil - the Skunk of the planet Earth.", "The Colored Man is the people who live in the islands.", "The Colored Man is the descendants of the Original Man."], correct: "The Colored man is the Caucasian (white man); or Yacub's grafted devil - the Skunk of the planet Earth." }, 
-            { question: "3. What is the population of the Original nation in the wilderness of North America, and all over the planet Earth?", options: ["The population of the Original nation in the wilderness of North America is 17,000,000. With the 2,000,000 Indians, makes it 19,000,000. All over the planet Earth is 4,400,000,000.", "The population of the Original Nation in the wilderness of North America is 10 million, and 1 billion on Earth.", "The population of the Original Nation in the wilderness of North America is 50 million, and 3 billion on Earth."], correct: "The population of the Original nation in the wilderness of North America is 17,000,000. With the 2,000,000 Indians, makes it 19,000,000. All over the planet Earth is 4,400,000,000." }, 
-            { question: "4. What is the population of the Colored people in the wilderness of North America, and all over the planet Earth?", options: ["The population of the Colored people in the wilderness of North America is 103,000,000. All over the planet Earth is 400,000,000.", "The population of the Colored People in the wilderness of North America is 200 million, and 1 billion on Earth.", "The population of the Colored People in the wilderness of North America is 85 million, and 500 million on Earth."], correct: "The population of the Colored people in the wilderness of North America is 103,000,000. All over the planet Earth is 400,000,000." }, 
-            { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 100 million square miles.", "The square mileage of the planet Earth is 250 million square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
-            { question: "6. What are the exact square miles of the useful land that is used every day by the total population of the planet Earth?", options: ["The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 50,000,000 square miles.", "The useful land that is used every day by the total population of the planet Earth is 100,000,000 square miles."], correct: "The useful land that is used every day by the total population of the planet Earth is 57,255,000 square miles." }, 
-            { question: "7. What are the exact square miles of the useful water that is used every day by the total population of the planet Earth?", options: ["The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 20,000,000 square miles.", "The useful water that is used every day by the total population of the planet Earth is 90,000,000 square miles."], correct: "The useful water that is used every day by the total population of the planet Earth is 139,685,000 square miles." }, 
-            { question: "8. What is the total weight of our planet Earth?", options: ["The total weight of our planet Earth is 6 sextillion tons (a unit followed by 21 ciphers).", "The total weight of our planet Earth is 10 billion tons.", "The total weight of our planet Earth is 1 trillion tons."], correct: "The total weight of our planet Earth is 6 sextillion tons (a unit followed by 21 ciphers)." }, 
-            { question: "9. How far is the planet Earth from the Sun?", options: ["The planet Earth is 93,000,000 miles from the Sun.", "The planet Earth is 10 million miles from the Sun.", "The planet Earth is 50 million miles from the Sun."], correct: "The planet Earth is 93,000,000 miles from the Sun." }, 
-            { question: "10. How fast does light travel?", options: ["Light travels at the rate of 186,000 miles per second.", "Light travels at the rate of 100,000 miles per second.", "Light travels at the rate of 1,000 miles per hour."], correct: "Light travels at the rate of 186,000 miles per second." } 
+            { question: "1. Who is the original man?", options: ["The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, God of the universe."], correct: "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe." }, 
+            { question: "2. Who is the colored man?", options: ["The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth.", "The colored man is the Caucasian white man or Yacub’s grafted devil.", "The colored man is the Caucasian white man, the Skunk of the planet Earth."], correct: "The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth." }, 
+            { question: "3. What is the population of the original nation in the wilderness of North America and all over the planet Earth?", options: ["The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 17,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 19,000,000; all over the planet Earth 4,000,000,000."], correct: "The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000." }, 
+            { question: "4. What is the population of the colored people in the wilderness of North America and all over the planet Earth?", options: ["The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000.", "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 4,000,000,000.", "The population of the colored people in the wilderness of North America is 100,000,000; all over the planet Earth 400,000,000."], correct: "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000." }, 
+            { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 196,940,000.", "The square mileage of the planet Earth is 139,685,000 square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
+            { question: "6. What is the exact square miles of useful land that’s used every day by the total population of the planet Earth?", options: ["The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 23,000,000 square miles."], correct: "The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles." }, 
+            { question: "7. How much useful land is used by the original man?", options: ["The original man uses 23,000,000 square miles.", "The original man uses 29,000,000 square miles.", "The original man uses 57,255,000 square miles."], correct: "The original man uses 23,000,000 square miles." }, 
+            { question: "8. How much useful land is used by the colored man?", options: ["The colored man uses 6,000,000 square miles.", "The colored man uses 23,000,000 square miles.", "The colored man uses 29,000,000 square miles."], correct: "The colored man uses 6,000,000 square miles." }, 
+            { question: "9. What is the said birth record of the Nation of Islam?", options: ["The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars.", "The Nation of Islam has no said birth record; it is older than the sun, moon and stars.", "The Nation of Islam has no beginning or ending; it is older than the sun, moon and stars."], correct: "The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars." }, 
+            { question: "10. What is the said birth record of nations other than Islam?", options: ["Buddhism is 35,000 years old and Christianity is 551 years old.", "Buddhism is 35,000 years old and Christianity is 550 years old.", "Buddhism is 35,000 years old and Christianity is 555 years old."], correct: "Buddhism is 35,000 years old and Christianity is 551 years old." } 
         ] 
     },
     jeopardyVault: {
@@ -366,23 +317,22 @@ const quizData = {
             { question: "What does the 'M' in M.G.T. stand for?", options: ["Muslim", "Mothers", "Mighty"], correct: "Muslim" },
             { question: "Who was the legendary Supreme Captain of the F.O.I. that helped secure the Nation of Islam during its rapid growth?", options: ["Brother Raymond Sharrieff", "Brother John Ali", "Brother Jabril Muhammad"], correct: "Brother Raymond Sharrieff" },
             { question: "What is the acronym for the General Civilization Class?", options: ["G.C.C.", "G.C.A.", "G.C.M."], correct: "G.C.C." },
-            { question: "Who is the wife of the Honorable Minister Louis Farrakhan?", options: ["Mother Khadijah Farrakhan", "Mother Clara Muhammad", "Mother Tynnetta Muhammad"], correct: "Mother Khadijah Farrakhan" },
-            { question: "What famous boxer famously refused the Vietnam draft citing his Muslim beliefs?", options: ["Muhammad Ali", "Joe Frazier", "Mike Tyson"], correct: "Muhammad Ali" }
+            { question: "Who is the wife of the Honorable Minister Louis Farrakhan?", options: ["Mother Khadijah Farrakhan", "Mother Clara Muhammad", "Mother Tynnetta Muhammad"], correct: "Mother Khadijah Farrakhan" }
         ],
         hard: [
-            { question: "According to the Supreme Wisdom, how many ounces of brain does the Original Man have?", options: ["7.5 ounces", "6 ounces", "8 ounces"], correct: "7.5 ounces" },
-            { question: "According to the Supreme Wisdom, how many ounces of brain does the grafted man have?", options: ["6 ounces", "7.5 ounces", "5 ounces"], correct: "6 ounces" },
-            { question: "What was the original title of the Nation of Islam's first official publication?", options: ["The Islamic News", "Muhammad Speaks", "The Final Call"], correct: "The Islamic News" },
             { question: "What year did the Honorable Elijah Muhammad first establish the Fruit of Islam?", options: ["1933", "1930", "1940"], correct: "1933" },
-            { question: "Who was the pioneering woman who established the University of Islam schools?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Ava Muhammad"], correct: "Mother Clara Muhammad" }
+            { question: "Who was the pioneering woman who established the University of Islam schools?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Ava Muhammad"], correct: "Mother Clara Muhammad" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March in 2015?", options: ["Justice Or Else", "The Millions More Movement", "Day of Atonement"], correct: "Justice Or Else" },
+            { question: "Which legendary figure was often referred to as the 'Saviour' in the early days of the Nation of Islam?", options: ["Master Fard Muhammad", "Elijah Muhammad", "Marcus Garvey"], correct: "Master Fard Muhammad" },
+            { question: "What is the specific age range for the Junior Vanguard?", options: ["Ages 5 to 12", "Ages 13 to 19", "Ages 4 to 10"], correct: "Ages 5 to 12" }
         ],
         extreme: [
-            { question: "According to the 1-40 Lessons, what is the exact diameter of the Sun?", options: ["853,000 miles", "93,000,000 miles", "24,896 miles"], correct: "853,000 miles" },
-            { question: "How long does it take for the Earth to make a complete rotation around the Sun according to the lessons?", options: ["365 and 1/4 days", "365 days", "360 days"], correct: "365 and 1/4 days" },
-            { question: "What was the specific street address of the first Temple of Islam in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Avenue", "7351 South Stony Island"], correct: "3159 Hastings Street" },
-            { question: "Which of the following was a renowned musical composition/play created by Minister Louis Farrakhan?", options: ["Orgena", "The Awakening", "The Divine Light"], correct: "Orgena" },
             { question: "What was the overarching theme of the 10th Anniversary of the Million Man March in 2005?", options: ["The Millions More Movement", "Justice Or Else", "Day of Atonement"], correct: "The Millions More Movement" },
-            { question: "In what year did Minister Farrakhan complete his grueling World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" }
+            { question: "In what year did Minister Farrakhan complete his grueling World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" },
+            { question: "Which of the following was a renowned musical composition/play created by Minister Louis Farrakhan?", options: ["Orgena", "The Awakening", "The Divine Light"], correct: "Orgena" },
+            { question: "What year was the Million Woman March held?", options: ["1997", "1995", "2000"], correct: "1997" },
+            { question: "What was the exact date the Honorable Elijah Muhammad departed this timeline?", options: ["February 25, 1975", "February 26, 1970", "October 7, 1975"], correct: "February 25, 1975" },
+            { question: "What was the exact date Master Fard Muhammad arrived in Detroit?", options: ["July 4, 1930", "February 26, 1930", "October 10, 1931"], correct: "July 4, 1930" }
         ]
     }
 };
@@ -569,7 +519,7 @@ function registerUser() {
 
 
 // ---------------------------------------------------------
-// NEW: THE ARENA (High Stakes Duel) LOGIC
+// THE ARENA (High Stakes Duel) LOGIC
 // ---------------------------------------------------------
 let arenaActiveQuestion = null;
 
