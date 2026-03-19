@@ -2,10 +2,10 @@
  * The Knowledge Portal - V4.3 AAA FULL BUILD
  */
 
-// 🚨 BULLETPROOF SOCKET INITIALIZATION 🚨
+// 🚨 BULLETPROOF RAILWAY WEBSOCKET INITIALIZATION 🚨
 let socket;
 try {
-    socket = (typeof io !== 'undefined') ? io() : { emit: () => {}, on: () => {}, id: 'offline' };
+    socket = (typeof io !== 'undefined') ? io({ transports: ['websocket', 'polling'] }) : { emit: () => {}, on: () => {}, id: 'offline' };
 } catch(e) {
     console.warn("Socket.io offline. Loading single-player elements only.");
     socket = { emit: () => {}, on: () => {}, id: 'offline' };
@@ -16,7 +16,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE
+// 1. FULL MASSIVE QUESTION DATABASE (FOR STUDY & SOLO QUIZ)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -369,8 +369,6 @@ let pointsThisSession = 0;
 let pointMultiplier = 100;
 let activeQuestions = []; 
 let usedJeopardyQuestions = [];
-let tugActiveQs = [];
-let tugIdx = 0;
 let sessionCancelToken = 0;
 
 // ---------------------------------------------------------
@@ -401,7 +399,7 @@ function switchScreen(screenId) {
 
 function showToast(msg) {
     masterUnlockAudio();
-    sfx.correct(); 
+    if (sfx.correct) sfx.correct(); 
     const toast = document.getElementById('toast-notification');
     const toastMsg = document.getElementById('toast-msg');
     if(toast && toastMsg) {
@@ -519,26 +517,20 @@ function speak(text) {
 // 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & STREAK LOGIC 🚨
 // ---------------------------------------------------------
 function checkDailyStreak() {
-    const today = new Date().toLocaleDateString('en-CA'); // Safely grabs "YYYY-MM-DD" local time
+    const today = new Date().toLocaleDateString('en-CA'); 
     const lastDate = localStorage.getItem('noi_last_date');
 
     if (!lastDate) {
-        // First time running the streak engine
         localStorage.setItem('noi_last_date', today);
         return;
     }
-
-    if (today === lastDate) {
-        // Already logged in today. Do nothing.
-        return;
-    }
+    if (today === lastDate) return;
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString('en-CA');
 
     if (lastDate === yesterdayStr) {
-        // Streak Continues!
         currentStreak++;
         let bonus = 100;
         let msg = `Welcome Back!<br><span style="color:var(--primary-gold);">Daily Streak: ${currentStreak} 🔥</span><br>You earned +100 points!`;
@@ -560,11 +552,9 @@ function checkDailyStreak() {
         document.getElementById('display-streak').innerText = currentStreak;
         document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
         
-        // Slight delay so the screen transition finishes first
         setTimeout(() => { showToast(msg); }, 1000);
         
     } else {
-        // Streak Broken
         currentStreak = 1;
         try {
             localStorage.setItem('noi_streak', currentStreak);
@@ -595,8 +585,9 @@ window.onload = () => {
             document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
             
             socket.emit('join_game', { name: currentUser, points: currentPoints });
+            socket.emit('get_leaderboard');
             
-            checkDailyStreak(); // Process daily rewards
+            checkDailyStreak(); 
             switchScreen('home-screen');
         } else {
             switchScreen('login-screen');
@@ -623,10 +614,11 @@ function registerUser() {
         localStorage.setItem('noi_user', currentUser);
         localStorage.setItem('noi_points', currentPoints);
         localStorage.setItem('noi_streak', currentStreak);
-        localStorage.setItem('noi_last_date', today); // Start tracking
+        localStorage.setItem('noi_last_date', today); 
     } catch(e) { console.warn("Could not save to localStorage."); }
     
     socket.emit('join_game', { name: currentUser, points: currentPoints });
+    socket.emit('get_leaderboard');
     
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('display-streak').innerText = currentStreak;
@@ -636,10 +628,20 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
+// MASTER NAVIGATION
+// ---------------------------------------------------------
+function returnToMenu() {
+    sessionCancelToken++; 
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    socket.emit('leave_arena');
+    socket.emit('leave_jeopardy');
+    socket.emit('leave_tug');
+    switchScreen('home-screen');
+}
+
+// ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
 // ---------------------------------------------------------
-let arenaActiveQuestion = null;
-
 function startArena() {
     sessionCancelToken++;
     masterUnlockAudio();
@@ -717,6 +719,7 @@ function submitArenaWager() {
     socket.emit('arena_wager', { wager: wager });
 }
 
+// 🚨 SERVER FEEDS THE QUESTION TO PREVENT DESYNC 🚨
 socket.on('arena_start_question', (data) => {
     document.getElementById('a-wager-view').style.display = 'none';
     document.getElementById('a-game-view').style.display = 'block';
@@ -726,24 +729,14 @@ socket.on('arena_start_question', (data) => {
     document.getElementById('a-p2-name').innerText = data.p2Name;
     document.getElementById('a-p2-bet').innerText = data.p2Wager;
     
-    let deepCuts = [];
-    for (let path in quizData) {
-        if (path !== 'adults' && path !== 'actualfacts') {
-            if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
-            if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
-        }
-    }
-    deepCuts = trueShuffle(deepCuts);
-    arenaActiveQuestion = deepCuts[0];
-    
-    document.getElementById('a-question-box').innerText = arenaActiveQuestion.question;
+    document.getElementById('a-question-box').innerText = data.question.question;
     
     const optBox = document.getElementById('a-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     document.getElementById('a-waiting-answer').style.display = 'none';
     
-    let options = trueShuffle(arenaActiveQuestion.options);
+    let options = data.question.options;
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -751,7 +744,7 @@ socket.on('arena_start_question', (data) => {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitArenaAnswer(opt, this, arenaActiveQuestion.correct);
+            submitArenaAnswer(opt, this, data.question.correct);
         };
         optBox.appendChild(btn);
     });
@@ -856,39 +849,28 @@ socket.on('tug_lobby_update', (data) => {
     if (rc) rc.innerText = data.ready;
 });
 
-socket.on('tug_start', (data) => {
-    tugIdx = 0;
-    
+// 🚨 FIXED: ROUNDS ARE SYNCED SERVER-SIDE TO PREVENT DESYNC 🚨
+socket.on('tug_start_round', (data) => {
     document.getElementById('t-p1-name').innerText = currentUser;
     document.getElementById('t-p2-name').innerText = data.opponentName;
-    document.getElementById('tug-flag').style.left = "50%";
     
-    document.getElementById('t-streak-p1').innerText = "0";
-    document.getElementById('t-streak-p2').innerText = "0";
-
     document.getElementById('t-lobby-view').style.display = 'none';
     document.getElementById('t-game-view').style.display = 'block';
     
-    speak("The Tug of War has begun.");
+    if (data.isFirst) {
+        document.getElementById('tug-flag').style.left = "50%";
+        document.getElementById('t-streak-p1').innerText = "0";
+        document.getElementById('t-streak-p2').innerText = "0";
+        speak("The Tug of War has begun.");
+    }
     
-    let allQs = [];
-    for (let path in quizData) if (path !== 'adults' && path !== 'actualfacts') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
-    tugActiveQs = trueShuffle(allQs);
-    
-    loadTugQuestion();
-});
-
-function loadTugQuestion() {
-    if (tugIdx >= tugActiveQs.length) return;
-    
-    const q = tugActiveQs[tugIdx];
-    document.getElementById('t-question-box').innerText = q.question;
+    document.getElementById('t-question-box').innerText = data.question.question;
     
     const optBox = document.getElementById('t-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     
-    let options = trueShuffle(q.options);
+    let options = data.question.options;
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -896,11 +878,11 @@ function loadTugQuestion() {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitTugAnswer(opt, this, q.correct);
+            submitTugAnswer(opt, this, data.question.correct);
         };
         optBox.appendChild(btn);
     });
-}
+});
 
 function submitTugAnswer(selected, btn, correct) {
     masterUnlockAudio();
@@ -926,14 +908,7 @@ function submitTugAnswer(selected, btn, correct) {
         sfx.wrong();
     }
     
-    socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
-    
-    let currentToken = sessionCancelToken;
-    setTimeout(() => {
-        if (currentToken !== sessionCancelToken) return;
-        tugIdx++;
-        loadTugQuestion();
-    }, 1500);
+    socket.emit('tug_answer', { correct: selected === correct });
 }
 
 socket.on('tug_update', (data) => {
@@ -1056,7 +1031,6 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = []; 
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -1073,30 +1047,6 @@ socket.on('game_starting', () => {
 socket.on('round_update', (data) => {
     const rd = document.getElementById('j-round-display');
     if (rd) rd.innerText = `${data.round}/${data.max}`;
-});
-
-socket.on('request_question', (data) => {
-    if (socket.id === data.hostId) {
-        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
-        const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
-        let randomQ = null;
-        let randomCat = "";
-        
-        while (!randomQ) {
-            randomCat = categories[Math.floor(Math.random() * categories.length)];
-            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-            const questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : null;
-            if (!questions) continue;
-            
-            const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
-            if (available.length > 0) {
-                randomQ = available[Math.floor(Math.random() * available.length)];
-                randomQ.categoryTitle = quizData[randomCat].title;
-            }
-        }
-        
-        socket.emit('start_round', randomQ); 
-    }
 });
 
 socket.on('golden_alert', () => {
@@ -1147,10 +1097,6 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
-    if (!usedJeopardyQuestions.includes(qData.question)) {
-        usedJeopardyQuestions.push(qData.question);
-    }
-    
     const qBox = document.getElementById('j-question-box');
     const bStatus = document.getElementById('buzzer-status');
     const btn = document.getElementById('buzzer-btn');
@@ -1168,7 +1114,7 @@ socket.on('new_question', (qData) => {
         btn.innerText = "BUZZ!";
     }
     if (optBox) optBox.style.display = "none";
-    window.currentJeopardyOptions = trueShuffle(qData.options);
+    window.currentJeopardyOptions = qData.options;
 });
 
 function sendBuzz() {
@@ -1211,8 +1157,8 @@ socket.on('player_buzzed', (data) => {
         if (optBox) {
             optBox.style.display = "flex";
             optBox.innerHTML = "";
-            let shuffled = trueShuffle(window.currentJeopardyOptions); 
-            shuffled.forEach(opt => {
+            let options = window.currentJeopardyOptions; 
+            options.forEach(opt => {
                 const obtn = document.createElement('button');
                 obtn.className = 'option-btn';
                 obtn.innerText = opt;
@@ -1518,18 +1464,6 @@ socket.on('leaderboard_data', (data) => {
         listDiv.appendChild(row);
     });
 });
-
-// ---------------------------------------------------------
-// 13. MASTER NAVIGATION
-// ---------------------------------------------------------
-function returnToMenu() {
-    sessionCancelToken++; 
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    socket.emit('leave_arena');
-    socket.emit('leave_jeopardy');
-    socket.emit('leave_tug');
-    switchScreen('home-screen');
-}
 
 // ---------------------------------------------------------
 // 14. MODERN LOBBY CHAT LOGIC
