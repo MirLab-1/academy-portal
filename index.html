@@ -52,17 +52,6 @@
             <h2 class="heading-font gold-text" style="font-size: 28px; margin-bottom: 30px;">Select Your Path</h2>
 
             <div class="bento-grid">
-
-                <div class="bento-card" onclick="openFamilyLobbyMenu()" style="grid-column: 1 / -1; height: 300px; border: 2px solid var(--plane-cyan); box-shadow: 0 0 30px rgba(0,255,255,0.2); background: radial-gradient(circle at center, #111 0%, #000 100%);">
-                    <div class="bento-tag" style="background: var(--plane-cyan); color: #000;">REMOTE FAMILY GAME</div>
-                    <img src="motherplane_cockpit.png" style="opacity: 0.6; filter: hue-rotate(180deg);" onerror="this.src='https://via.placeholder.com/1000x300/040710/00ffff?text=MOTHER+PLANE+SHOWDOWN'">
-                    <div class="bento-content" style="background: linear-gradient(to top, #000 30%, transparent 100%);">
-                        <h3 style="color: #fff; font-size: 32px; font-style: italic;">The 85er on Board</h3>
-                        <p style="color: var(--plane-cyan); margin: 0; font-weight: bold; text-shadow: 0 0 10px var(--plane-cyan);">Trivia, Deception, and Betrayal inside the Wheel.</p>
-                        <span class="bento-badge" style="background: rgba(0,255,255,0.1); color: #fff; margin-top: 10px; border: 1px solid rgba(0,255,255,0.3);">3 - 8 Players (City-to-City)</span>
-                    </div>
-                </div>
-
                 <div class="bento-card" onclick="showDifficulty('kids')">
                     <img src="fard.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Junior'">
                     <div class="bento-content">
@@ -143,6 +132,16 @@
                     <div class="bento-content">
                         <h3 style="color: #fff;">Live Jeopardy</h3>
                         <span class="bento-badge" style="background: var(--accent-blue); color: #fff;">Multiplayer Arena</span>
+                    </div>
+                </div>
+
+                <div class="bento-card" onclick="openFamilyLobbyMenu()" style="grid-column: 1 / -1; height: 300px; border: 2px solid var(--plane-cyan); box-shadow: 0 0 30px rgba(0,255,255,0.2); background: radial-gradient(circle at center, #111 0%, #000 100%);">
+                    <div class="bento-tag" style="background: var(--plane-cyan); color: #000;">REMOTE FAMILY GAME</div>
+                    <img src="motherplane_cockpit.png" style="opacity: 0.6; filter: hue-rotate(180deg);" onerror="this.src='https://via.placeholder.com/1000x300/040710/00ffff?text=MOTHER+PLANE+SHOWDOWN'">
+                    <div class="bento-content" style="background: linear-gradient(to top, #000 30%, transparent 100%);">
+                        <h3 style="color: #fff; font-size: 32px; font-style: italic;">The 85er on Board</h3>
+                        <p style="color: var(--plane-cyan); margin: 0; font-weight: bold; text-shadow: 0 0 10px var(--plane-cyan);">Trivia, Deception, and Betrayal inside the Wheel.</p>
+                        <span class="bento-badge" style="background: rgba(0,255,255,0.1); color: #fff; margin-top: 10px; border: 1px solid rgba(0,255,255,0.3);">3 - 8 Players</span>
                     </div>
                 </div>
             </div>
@@ -248,7 +247,6 @@
                 </div>
 
                 <div class="plane-voting-grid">
-                    
                     <div id="p-trivia-vote-card" class="plane-glass-card accent-border-gold">
                         <h3 class="gold-text heading-font text-center mb-15">1. ANSWER QUERY</h3>
                         <p id="p-trivia-vote-msg" class="muted-text text-center mb-15" style="font-size: 13px;"></p>
@@ -264,7 +262,6 @@
                             </div>
                         <div id="p-accuse-voted-msg" class="plane-voted-msg plane-pulse" style="display:none;">Decision Locked</div>
                     </div>
-
                 </div>
             </div>
 
