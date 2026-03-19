@@ -9,7 +9,7 @@
  * 5. EXTREME MODE (240 Questions)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. Correct Answer Green Highlight Restored
- * 8. Fixed Back/Quit Buttons globally
+ * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
  */
 
 const socket = io();
@@ -365,6 +365,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 let tugActiveQs = [];
 let tugIdx = 0;
+let sessionCancelToken = 0; // 🚨 FIXES THE GHOST QUIT BUG 🚨
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -534,6 +535,7 @@ function registerUser() {
 // 8. TUG OF WAR MULTIPLAYER LOGIC
 // ---------------------------------------------------------
 function startTugOfWar() {
+    sessionCancelToken++; // Kills any pending solo quiz timeouts
     masterUnlockAudio();
     switchScreen('tug-screen');
     document.getElementById('t-lobby-view').style.display = 'block';
@@ -579,6 +581,12 @@ socket.on('tug_start', (data) => {
     document.getElementById('t-game-view').style.display = 'block';
     
     speak("The Tug of War has begun.");
+    
+    // We get a fresh shuffle of all path questions for the war locally
+    let allQs = [];
+    for (let path in quizData) if (path !== 'adults') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
+    tugActiveQs = trueShuffle(allQs);
+    
     loadTugQuestion();
 });
 
@@ -633,7 +641,9 @@ function submitTugAnswer(selected, btn, correct) {
     
     socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
     
+    let currentToken = sessionCancelToken; // Locks in current session
     setTimeout(() => {
+        if (currentToken !== sessionCancelToken) return; // Kills ghost timers
         tugIdx++;
         loadTugQuestion();
     }, 1500);
@@ -655,6 +665,7 @@ socket.on('tug_muddy', () => {
 });
 
 socket.on('tug_game_over', (data) => {
+    sessionCancelToken++;
     document.getElementById('t-game-view').style.display = 'none';
     document.getElementById('t-results-view').style.display = 'block';
     
@@ -675,6 +686,7 @@ socket.on('tug_game_over', (data) => {
 // 9. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
+    sessionCancelToken++;
     masterUnlockAudio();
     switchScreen('jeopardy-screen');
     
@@ -1039,6 +1051,7 @@ function openStudyLibrary(mode, diff) {
 // 11. MAIN QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
+    sessionCancelToken++; // Kills ghost timers
     masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     
@@ -1137,7 +1150,9 @@ function checkAnswer(selected, btn, correct) {
         sfx.wrong();
     }
     
+    let currentToken = sessionCancelToken; // Lock in current session
     setTimeout(() => {
+        if (currentToken !== sessionCancelToken) return; // Kills ghost timers
         currentIdx++;
         if (currentIdx < activeQuestions.length) {
             loadQuestion(); 
@@ -1202,9 +1217,10 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 13. MASTER NAVIGATION
+// 13. MASTER NAVIGATION & GLOBAL QUIT FIX
 // ---------------------------------------------------------
 function returnToMenu() {
+    sessionCancelToken++; // Instantly kills all pending ghost timers in the background!
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     socket.emit('leave_jeopardy');
     socket.emit('leave_tug');
