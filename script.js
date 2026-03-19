@@ -520,7 +520,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC
+// 7. PRO JEOPARDY LOGIC 
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -879,7 +879,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER + GREEN REVEAL)
+// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -925,7 +925,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Completely destroy old buttons to guarantee no hover/focus states carry over
+    // CRITICAL JS FIX: Instantly destroy the old container HTML to ensure the browser drops all touch tracking
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -941,11 +941,12 @@ function loadQuestion() {
         btn.className = 'option-btn'; 
         btn.innerText = opt;
         
-        btn.onclick = () => { 
-            // Forces browser to drop mobile focus target immediately
-            if (document.activeElement) document.activeElement.blur();
+        // This is a special fix that removes the hover state right before processing the click
+        btn.onclick = function(e) { 
+            e.preventDefault();
+            this.blur();
             masterUnlockAudio(); 
-            checkAnswer(opt, btn, q.correct); 
+            checkAnswer(opt, this, q.correct); 
         };
         optionsDiv.appendChild(btn);
     });
@@ -954,16 +955,13 @@ function loadQuestion() {
 function checkAnswer(selected, btn, correct) {
     masterUnlockAudio();
     const optionsDiv = document.getElementById('options');
+    
+    // Disable all buttons to stop double tapping
     if (optionsDiv) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
         });
-    }
-    
-    // Additional brute-force blur to kill mobile hover states
-    if (document.activeElement) {
-        document.activeElement.blur();
     }
     
     if (selected === correct) {
@@ -975,7 +973,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // RESTORED: This highlights the correct answer in green when you guess wrong
+        // HIGHLIGHTS CORRECT ANSWER GREEN
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
