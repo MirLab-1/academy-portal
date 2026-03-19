@@ -137,7 +137,7 @@ const quizData = {
             { question: "What is the primary duty of the F.O.I.?", options: ["To protect the Nation and uphold the laws of Islam", "To travel the world", "To work in factories"], correct: "To protect the Nation and uphold the laws of Islam" }, 
             { question: "What are the men in the Nation of Islam trained to respect and protect above all else?", options: ["Money", "The Black Woman", "Cars"], correct: "The Black Woman" },
             { question: "What day of the week is F.O.I. class?", options: ["Monday", "Wednesday", "Friday"], correct: "Monday" },
-            { question: "What day of the week is M.G.T. class?", options: ["Tuesday", "Thursday", "Saturday"], correct: "Thursday" },
+            { question: "What day of the week is M.G.T. class?", options: ["Tuesday", "Thursday", "Saturday"], correct: "Saturday" },
             { question: "What color are the F.O.I. uniforms usually?", options: ["White suits", "Navy Blue / Dark suits", "Khaki suits"], correct: "Navy Blue / Dark suits" },
             { question: "Who are the F.O.I. trained to obey?", options: ["Themselves", "Those in authority over them", "The military"], correct: "Those in authority over them" },
             { question: "What is the key element of F.O.I. and M.G.T. training?", options: ["Physical strength", "Strict Discipline", "Financial wealth"], correct: "Strict Discipline" }
