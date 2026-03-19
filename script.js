@@ -382,6 +382,7 @@ let bpTimerInt = null;
 let bpMyHand = [];
 let bpMyBoard = { wisdom: 0, health: 0, facts: 0 };
 let bpActiveCardToPlay = null; 
+let serverConnectionTimeout = null;
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -596,6 +597,7 @@ function registerUser() {
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
     
+    // 🚨 DATA RECOVERY PROTOCOL 🚨
     const savedUser = localStorage.getItem('noi_user');
     if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
         currentUser = savedUser;
@@ -654,7 +656,7 @@ function hostBlueprintGame() {
     showToast("Connecting to Server...");
     socket.emit('bp_create_room', { name: currentUser });
 
-    setTimeout(() => {
+    serverConnectionTimeout = setTimeout(() => {
         if (!bpRoomCode) {
             alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
             bpIsHost = false;
@@ -672,7 +674,7 @@ function joinBlueprintGame() {
     showToast("Connecting to Server...");
     socket.emit('bp_join_room', { name: currentUser, code: code });
     
-    setTimeout(() => {
+    serverConnectionTimeout = setTimeout(() => {
         if (!bpRoomCode) {
             alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
             bpIsHost = false;
@@ -682,6 +684,7 @@ function joinBlueprintGame() {
 }
 
 socket.on('bp_room_created', (code) => {
+    clearTimeout(serverConnectionTimeout);
     bpRoomCode = code;
     switchScreen('blueprint-game-screen');
     switchBpView('bp-lobby-view');
@@ -692,6 +695,7 @@ socket.on('bp_room_created', (code) => {
 });
 
 socket.on('bp_joined_successfully', (data) => {
+    clearTimeout(serverConnectionTimeout);
     bpRoomCode = data.code;
     switchScreen('blueprint-game-screen');
     switchBpView('bp-lobby-view');
@@ -701,6 +705,7 @@ socket.on('bp_joined_successfully', (data) => {
 });
 
 socket.on('bp_join_error', (msg) => {
+    clearTimeout(serverConnectionTimeout);
     alert(msg);
     if (!bpRoomCode) openBlueprintLobbyMenu();
 });
@@ -812,13 +817,11 @@ socket.on('bp_board_phase', (gameState) => {
     switchBpView('bp-board-view');
     renderBpBoard(gameState);
     startBpTimer('bp-hand-count', null, 25, () => {
-        // Auto skip turn if timeout
         skipBlueprintTurn();
     });
 });
 
 function renderBpBoard(state) {
-    // 1. Render Opponents
     const oppArea = document.getElementById('bp-opponents-area');
     oppArea.innerHTML = "";
     state.opponents.forEach(opp => {
@@ -836,12 +839,10 @@ function renderBpBoard(state) {
         `;
     });
 
-    // 2. Render My Board
     document.getElementById('bp-my-wisdom').innerText = state.myBoard.wisdom;
     document.getElementById('bp-my-health').innerText = state.myBoard.health;
     document.getElementById('bp-my-facts').innerText = state.myBoard.facts;
 
-    // 3. Render My Hand
     bpMyHand = state.myHand;
     document.getElementById('bp-hand-count').innerText = `(${bpMyHand.length})`;
     const handContainer = document.getElementById('bp-my-hand-container');
@@ -884,11 +885,9 @@ function createCardHTML(card) {
 function handleCardClick(cardId, type, subtype) {
     masterUnlockAudio();
     if (type === "blueprint" || subtype === "shield") {
-        // Play instantly to board
         socket.emit('bp_play_card', { cardId: cardId, targetId: null });
         document.getElementById('bp-my-hand-container').innerHTML = `<p class="gold-text" style="width: 100%; text-align: center; margin-top: 40px; font-weight: bold;">Card Played!</p>`;
     } else if (type === "action") {
-        // Needs a target
         bpActiveCardToPlay = cardId;
         openBlueprintTargetModal();
     }
@@ -897,8 +896,6 @@ function handleCardClick(cardId, type, subtype) {
 function openBlueprintTargetModal() {
     const list = document.getElementById('bp-target-list');
     list.innerHTML = "";
-    
-    // Request current opponents from server to target
     socket.emit('bp_get_targets');
     document.getElementById('bp-target-modal').classList.add('active');
 }
@@ -976,7 +973,7 @@ function startBpTimer(textId, barId, duration, onEnd) {
         timer--;
         if(tDisplay) {
             if(tDisplay.id === 'bp-trivia-timer') tDisplay.innerText = timer + "s";
-            else tDisplay.innerText = `(${timer}s)`; // For hand count label reuse
+            else tDisplay.innerText = `(${timer}s)`;
         }
         
         if(bDisplay) {
