@@ -366,7 +366,7 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT
+// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -879,7 +879,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
+// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER + GREEN REVEAL)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -925,6 +925,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
+    // Completely destroy old buttons to guarantee no hover/focus states carry over
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -941,6 +942,7 @@ function loadQuestion() {
         btn.innerText = opt;
         
         btn.onclick = () => { 
+            // Forces browser to drop mobile focus target immediately
             if (document.activeElement) document.activeElement.blur();
             masterUnlockAudio(); 
             checkAnswer(opt, btn, q.correct); 
@@ -956,8 +958,12 @@ function checkAnswer(selected, btn, correct) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
-            b.blur();
         });
+    }
+    
+    // Additional brute-force blur to kill mobile hover states
+    if (document.activeElement) {
+        document.activeElement.blur();
     }
     
     if (selected === correct) {
@@ -969,7 +975,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // RESTORED: HIGHLIGHTS THE CORRECT ANSWER IN GREEN
+        // RESTORED: This highlights the correct answer in green when you guess wrong
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
