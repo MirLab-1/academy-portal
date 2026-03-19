@@ -585,7 +585,7 @@ function startArena() {
     
     const rBtn = document.getElementById('a-ready-btn');
     rBtn.disabled = false;
-    rBtn.innerText = "ENTER THE ARENA"; 
+    rBtn.innerText = "ENTER"; 
     
     socket.emit('join_arena', { name: currentUser });
 }
@@ -594,7 +594,7 @@ function sendArenaReady() {
     masterUnlockAudio();
     socket.emit('arena_ready');
     const rBtn = document.getElementById('a-ready-btn');
-    rBtn.innerText = "WAITING FOR OPPONENT..."; 
+    rBtn.innerText = "WAITING..."; 
     rBtn.disabled = true;
 }
 
@@ -614,7 +614,7 @@ socket.on('arena_wager_phase', () => {
     document.getElementById('arena-wager-input').value = "";
     document.getElementById('arena-wager-input').max = displayPoints;
     
-    document.getElementById('a-submit-wager-btn').style.display = 'inline-block';
+    document.getElementById('a-submit-wager-btn').style.display = 'block';
     document.getElementById('a-wager-status').style.display = 'none';
     
     speak("Place your bets.");
