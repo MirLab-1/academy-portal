@@ -20,26 +20,32 @@
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .options-grid.locked { pointer-events: none !important; } 
         
-        .option-btn { width: 100%; max-width: 100%; margin: 0 auto; transition: transform 0.1s ease; }
-        
-        /* 🚨 ABSOLUTE GREY-HIGHLIGHT KILL-SWITCH 🚨 */
-        .option-btn:focus, .option-btn:active {
-            outline: none !important;
-            background-color: transparent !important;
+        /* 🚨 THE ULTIMATE COLOR LOCK FOR OPTION BUTTONS 🚨 */
+        .option-btn { 
+            width: 100%; max-width: 100%; margin: 0 auto; 
+            background-color: #111 !important; /* Locks the base color so it never flashes */
+            border: 1px solid #333 !important; 
+            color: white !important;
+            transition: transform 0.1s ease !important; 
         }
-        
-        .option-btn:disabled { opacity: 1 !important; }
 
+        /* DESKTOP ONLY: Safe yellow hover for computers with a physical mouse */
         @media (hover: hover) and (pointer: fine) {
             .option-btn:hover { border-color: var(--gold) !important; background-color: rgba(212, 175, 55, 0.1) !important; }
         }
         
-        @media (hover: none), (pointer: coarse) {
-            .option-btn:hover, .option-btn:focus { border-color: #333 !important; background-color: transparent !important; color: white !important; box-shadow: none !important; }
-            .option-btn:active { transform: scale(0.96) !important; background-color: transparent !important; }
+        /* MOBILE ONLY: ZERO COLOR CHANGE ON TAP/HOVER/FOCUS. Only shrinks. */
+        @media (max-width: 1024px) {
+            .option-btn:hover, .option-btn:focus, .option-btn:active { 
+                background-color: #111 !important; 
+                border-color: #333 !important; 
+                color: white !important; 
+                box-shadow: none !important; 
+            }
+            .option-btn:active { transform: scale(0.96) !important; }
         }
 
-        /* 🚨 ENFORCES PURE RED/GREEN 🚨 */
+        /* 🚨 ENFORCES PURE RED/GREEN (Overrides everything above when clicked) 🚨 */
         button.option-btn.correct, button.option-btn.correct:hover, button.option-btn.correct:focus, button.option-btn.correct:active, button.option-btn.correct:disabled { 
             border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.15) !important; color: #10b981 !important; -webkit-text-fill-color: #10b981 !important; opacity: 1 !important; 
         }
@@ -91,7 +97,7 @@
             <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
+            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
             <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); max-width: 300px;">ENTER ACADEMY</button>
         </div>
     </div>
