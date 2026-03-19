@@ -374,15 +374,11 @@ let tugIdx = 0;
 let sessionCancelToken = 0;
 
 // ---------------------------------------------------------
-// 🚀 THE BLUEPRINT COLLECTION (FAMILY GAME) STATE 🚀
+// 🚀 THE 4 SQUARES (FAMILY GAME) STATE 🚀
 // ---------------------------------------------------------
-let bpRoomCode = "";
-let bpIsHost = false;
-let bpTimerInt = null;
-let bpMyHand = [];
-let bpMyBoard = { wisdom: 0, health: 0, facts: 0 };
-let bpActiveCardToPlay = null; 
-let serverConnectionTimeout = null;
+let sqRoomCode = "";
+let sqIsHost = false;
+let sqTimerInt = null;
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -398,7 +394,7 @@ function trueShuffle(array) {
 // 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'blueprint-game-screen'];
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'squares-game-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -627,20 +623,20 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 🚀 THE BLUEPRINT COLLECTION (FAMILY GAME) LOGIC 🚀
+// 🚀 THE 4 SQUARES (FAMILY GAME) LOGIC 🚀
 // ---------------------------------------------------------
-function openBlueprintLobbyMenu() {
+function openSquaresLobbyMenu() {
     masterUnlockAudio();
-    document.getElementById('blueprint-room-input').value = "";
-    document.getElementById('blueprint-join-modal').classList.add('active');
+    document.getElementById('squares-room-input').value = "";
+    document.getElementById('squares-join-modal').classList.add('active');
 }
 
-function closeBlueprintLobbyMenu() {
-    document.getElementById('blueprint-join-modal').classList.remove('active');
+function closeSquaresLobbyMenu() {
+    document.getElementById('squares-join-modal').classList.remove('active');
 }
 
-function switchBpView(viewId) {
-    const views = ['bp-lobby-view', 'bp-trivia-view', 'bp-board-view'];
+function switchSqView(viewId) {
+    const views = ['sq-lobby-view', 'sq-game-view', 'sq-results-view'];
     views.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.style.display = 'none';
@@ -649,150 +645,144 @@ function switchBpView(viewId) {
     if(target) target.style.display = 'block';
 }
 
-function hostBlueprintGame() {
+function hostSquaresGame() {
     masterUnlockAudio();
-    closeBlueprintLobbyMenu();
-    bpIsHost = true;
+    closeSquaresLobbyMenu();
+    sqIsHost = true;
     showToast("Connecting to Server...");
-    socket.emit('bp_create_room', { name: currentUser });
-
-    serverConnectionTimeout = setTimeout(() => {
-        if (!bpRoomCode) {
-            alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
-            bpIsHost = false;
-            switchScreen('home-screen');
-        }
-    }, 4000);
+    socket.emit('sq_create_room', { name: currentUser });
 }
 
-function joinBlueprintGame() {
+function joinSquaresGame() {
     masterUnlockAudio();
-    const code = document.getElementById('blueprint-room-input').value.trim().toUpperCase();
+    const code = document.getElementById('squares-room-input').value.trim().toUpperCase();
     if(code.length !== 4) return alert("Enter a valid 4-digit code.");
-    closeBlueprintLobbyMenu();
-    bpIsHost = false;
+    closeSquaresLobbyMenu();
+    sqIsHost = false;
     showToast("Connecting to Server...");
-    socket.emit('bp_join_room', { name: currentUser, code: code });
-    
-    serverConnectionTimeout = setTimeout(() => {
-        if (!bpRoomCode) {
-            alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
-            bpIsHost = false;
-            switchScreen('home-screen');
-        }
-    }, 4000);
+    socket.emit('sq_join_room', { name: currentUser, code: code });
 }
 
-socket.on('bp_room_created', (code) => {
-    clearTimeout(serverConnectionTimeout);
-    bpRoomCode = code;
-    switchScreen('blueprint-game-screen');
-    switchBpView('bp-lobby-view');
-    document.getElementById('bp-room-code-display').innerText = code;
-    document.getElementById('bp-host-start-btn').style.display = 'block';
-    document.getElementById('bp-wait-msg').style.display = 'none';
-    updateBpLobbyPlayers([]);
+socket.on('sq_room_created', (code) => {
+    sqRoomCode = code;
+    switchScreen('squares-game-screen');
+    switchSqView('sq-lobby-view');
+    document.getElementById('sq-room-code-display').innerText = code;
+    document.getElementById('sq-host-start-btn').style.display = 'block';
+    document.getElementById('sq-wait-msg').style.display = 'none';
+    updateSqLobbyPlayers([]);
 });
 
-socket.on('bp_joined_successfully', (data) => {
-    clearTimeout(serverConnectionTimeout);
-    bpRoomCode = data.code;
-    switchScreen('blueprint-game-screen');
-    switchBpView('bp-lobby-view');
-    document.getElementById('bp-room-code-display').innerText = data.code;
-    document.getElementById('bp-host-start-btn').style.display = 'none';
-    document.getElementById('bp-wait-msg').style.display = 'block';
+socket.on('sq_joined_successfully', (data) => {
+    sqRoomCode = data.code;
+    switchScreen('squares-game-screen');
+    switchSqView('sq-lobby-view');
+    document.getElementById('sq-room-code-display').innerText = data.code;
+    document.getElementById('sq-host-start-btn').style.display = 'none';
+    document.getElementById('sq-wait-msg').style.display = 'block';
 });
 
-socket.on('bp_join_error', (msg) => {
-    clearTimeout(serverConnectionTimeout);
+socket.on('sq_join_error', (msg) => {
     alert(msg);
-    if (!bpRoomCode) openBlueprintLobbyMenu();
+    if (!sqRoomCode) openSquaresLobbyMenu();
 });
 
-socket.on('bp_lobby_update', (players) => {
-    updateBpLobbyPlayers(players);
+socket.on('sq_lobby_update', (players) => {
+    updateSqLobbyPlayers(players);
 });
 
-function updateBpLobbyPlayers(players) {
-    const list = document.getElementById('bp-lobby-players');
+function updateSqLobbyPlayers(players) {
+    const list = document.getElementById('sq-lobby-players');
     if(!list) return;
     list.innerHTML = "";
     players.forEach(p => {
-        list.innerHTML += `<div class="bp-player-row ready" style="width: 45%; min-width: 150px;">
+        list.innerHTML += `<div class="sq-player-row">
             <div style="display:flex; align-items:center;">
-                <div style="width:28px; height:28px; border-radius:50%; background:#000; color:#c084fc; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:14px; border:1px solid #c084fc; margin-right:10px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#000; color:#06b6d4; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:14px; border:1px solid #06b6d4; margin-right:10px;">
                     ${p.name.charAt(0).toUpperCase()}
                 </div>
                 <span class="white-text" style="font-weight: bold; font-size:13px; text-transform: uppercase;">${p.name}</span>
             </div>
+            <span style="color:#06b6d4; font-size:10px; font-weight:bold;">READY</span>
         </div>`;
     });
 }
 
-function leaveBlueprintRoom() {
+function leaveSquaresRoom() {
     sessionCancelToken++;
-    clearInterval(bpTimerInt);
-    socket.emit('bp_leave_room');
-    bpIsHost = false;
-    bpRoomCode = "";
+    clearInterval(sqTimerInt);
+    socket.emit('sq_leave_room');
+    sqIsHost = false;
+    sqRoomCode = "";
     switchScreen('home-screen');
 }
 
-function hostStartBlueprintGame() {
+function hostStartSquaresGame() {
     masterUnlockAudio();
-    socket.emit('bp_host_start_game');
+    socket.emit('sq_start_game');
 }
 
-// Phase 1: Trivia
-socket.on('bp_start_trivia', (qData) => {
-    switchBpView('bp-trivia-view');
+socket.on('sq_start_round', (data) => {
+    switchSqView('sq-game-view');
     
-    document.getElementById('bp-question-box').innerText = qData.question;
-    speak(qData.question);
+    document.getElementById('sq-round-display').innerText = `ROUND ${data.round}/${data.maxRounds}`;
+    document.getElementById('sq-waiting-msg').style.display = 'none';
     
-    const optBox = document.getElementById('bp-options-box');
+    // Render the Grid
+    const grid = document.getElementById('sq-grid');
+    grid.innerHTML = "";
+    data.clues.forEach(clue => {
+        if (clue.startsWith("IMG:")) {
+            const prompt = clue.replace("IMG:", "");
+            // Fast, live generative AI image endpoint
+            const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=400&nologo=true`;
+            grid.innerHTML += `<div class="fs-clue-box"><img src="${url}" alt="clue" onerror="this.style.display='none'"></div>`;
+        } else if (clue.startsWith("TEXT:")) {
+            const txt = clue.replace("TEXT:", "");
+            grid.innerHTML += `<div class="fs-clue-box"><span class="fs-clue-text">${txt}</span></div>`;
+        }
+    });
+    
+    // Render the Options
+    const optBox = document.getElementById('sq-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
-    document.getElementById('bp-waiting-trivia-msg').style.display = 'none';
     
-    let options = trueShuffle(qData.options);
-    options.forEach(opt => {
+    data.options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.innerText = opt;
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitBpTriviaAnswer(opt, this);
+            submitSqAnswer(opt, this);
         };
         optBox.appendChild(btn);
     });
     
-    startBpTimer('bp-trivia-timer', 'bp-pressure-bar', 15, () => {
-        sfx.wrong();
+    speak("Analyze the board.");
+    startSqTimer('sq-timer-display', 'sq-pressure-bar', 20, () => {
         optBox.classList.add('locked');
     });
 });
 
-function submitBpTriviaAnswer(selectedAnswer, btn) {
+function submitSqAnswer(selectedAnswer, btn) {
     masterUnlockAudio();
-    const optBox = document.getElementById('bp-options-box');
+    const optBox = document.getElementById('sq-options-box');
     optBox.classList.add('locked');
     
     const btns = optBox.querySelectorAll('.option-btn');
     btns.forEach(b => b.classList.add('locked'));
     btn.classList.add('selected');
     
-    socket.emit('bp_submit_trivia', { answer: selectedAnswer });
-    document.getElementById('bp-waiting-trivia-msg').style.display = 'block';
+    socket.emit('sq_submit_answer', { answer: selectedAnswer });
+    document.getElementById('sq-waiting-msg').style.display = 'block';
     sfx.buzz();
 }
 
-// Phase 2: Show Answers & Draw
-socket.on('bp_trivia_results', (data) => {
-    clearInterval(bpTimerInt);
-    const optBox = document.getElementById('bp-options-box');
+socket.on('sq_round_results', (data) => {
+    clearInterval(sqTimerInt);
+    const optBox = document.getElementById('sq-options-box');
     const btns = optBox.querySelectorAll('.option-btn');
     
     btns.forEach(b => {
@@ -805,190 +795,80 @@ socket.on('bp_trivia_results', (data) => {
 
     if (data.iGotItRight) {
         sfx.correct();
-        showToast("Correct! You draw a card.");
+        showToast("Correct! +1000 Points");
     } else {
         sfx.wrong();
-        showToast("Incorrect. No cards drawn.");
+        showToast("Incorrect. The answer was " + data.correctAnswer);
     }
 });
 
-// Phase 3: The Board / Action Phase
-socket.on('bp_board_phase', (gameState) => {
-    switchBpView('bp-board-view');
-    renderBpBoard(gameState);
-    startBpTimer('bp-hand-count', null, 25, () => {
-        skipBlueprintTurn();
-    });
-});
-
-function renderBpBoard(state) {
-    const oppArea = document.getElementById('bp-opponents-area');
-    oppArea.innerHTML = "";
-    state.opponents.forEach(opp => {
-        let dots = '';
-        for(let i=0; i<opp.board.wisdom; i++) dots += `<div class="bp-dot wisdom"></div>`;
-        for(let i=0; i<opp.board.health; i++) dots += `<div class="bp-dot health"></div>`;
-        for(let i=0; i<opp.board.facts; i++) dots += `<div class="bp-dot facts"></div>`;
-        if(dots === '') dots = '<span class="muted-text" style="font-size:10px;">Empty</span>';
-
-        oppArea.innerHTML += `
-            <div class="bp-opp-board">
-                <span class="white-text" style="font-size:12px; font-weight:bold; text-transform:uppercase;">${opp.name}</span>
-                <div class="bp-opp-dots">${dots}</div>
+socket.on('sq_game_over', (data) => {
+    clearInterval(sqTimerInt);
+    switchSqView('sq-results-view');
+    
+    document.getElementById('sq-reveal-avatar-container').innerHTML = getAvatar(data.winnerName, 10000); 
+    document.getElementById('sq-winner-name').innerText = data.winnerName;
+    
+    speak(`The match is over. The ultimate detective is ${data.winnerName}.`);
+    
+    const scoreList = document.getElementById('sq-scores-list');
+    scoreList.innerHTML = "";
+    
+    data.scores.forEach(s => {
+        scoreList.innerHTML += `
+            <div class="sq-score-row">
+                <div style="display:flex; align-items:center;">
+                    ${getAvatar(s.name, 0)}
+                </div>
+                <div class="score-badge ${s.score > 0 ? 'score-positive' : 'score-negative'}">
+                    ${s.score} pts
+                </div>
             </div>
         `;
-    });
-
-    document.getElementById('bp-my-wisdom').innerText = state.myBoard.wisdom;
-    document.getElementById('bp-my-health').innerText = state.myBoard.health;
-    document.getElementById('bp-my-facts').innerText = state.myBoard.facts;
-
-    bpMyHand = state.myHand;
-    document.getElementById('bp-hand-count').innerText = `(${bpMyHand.length})`;
-    const handContainer = document.getElementById('bp-my-hand-container');
-    handContainer.innerHTML = "";
-    
-    if (bpMyHand.length === 0) {
-        handContainer.innerHTML = `<p class="muted-text" style="width: 100%; text-align: center; margin-top: 40px; font-style: italic;">Your hand is empty.</p>`;
-    } else {
-        bpMyHand.forEach(card => {
-            handContainer.innerHTML += createCardHTML(card);
-        });
-    }
-}
-
-function createCardHTML(card) {
-    let cardClass = "";
-    let icon = "";
-    let title = "";
-    let desc = "";
-
-    if (card.type === "blueprint") {
-        if (card.category === "wisdom") { cardClass = "card-wisdom"; icon = "👑"; title = "Wisdom"; desc = "Blueprint"; }
-        if (card.category === "health") { cardClass = "card-health"; icon = "🍎"; title = "Health"; desc = "Blueprint"; }
-        if (card.category === "facts") { cardClass = "card-facts"; icon = "🌍"; title = "Facts"; desc = "Blueprint"; }
-    } else {
-        if (card.action === "thief") { cardClass = "card-thief"; icon = "🦹"; title = "Thief"; desc = "Steal 1 Card"; }
-        if (card.action === "tax") { cardClass = "card-tax"; icon = "💥"; title = "Tax"; desc = "Destroy 1 Card"; }
-        if (card.action === "shield") { cardClass = "card-shield"; icon = "🛡️"; title = "Shield"; desc = "Auto-Block"; }
-    }
-
-    return `
-        <div class="playing-card ${cardClass}" onclick="handleCardClick('${card.id}', '${card.type}', '${card.action || card.category}')">
-            <div class="card-title">${title}</div>
-            <div class="card-icon">${icon}</div>
-            <div style="font-size: 8px;">${desc}</div>
-        </div>
-    `;
-}
-
-function handleCardClick(cardId, type, subtype) {
-    masterUnlockAudio();
-    if (type === "blueprint" || subtype === "shield") {
-        socket.emit('bp_play_card', { cardId: cardId, targetId: null });
-        document.getElementById('bp-my-hand-container').innerHTML = `<p class="gold-text" style="width: 100%; text-align: center; margin-top: 40px; font-weight: bold;">Card Played!</p>`;
-    } else if (type === "action") {
-        bpActiveCardToPlay = cardId;
-        openBlueprintTargetModal();
-    }
-}
-
-function openBlueprintTargetModal() {
-    const list = document.getElementById('bp-target-list');
-    list.innerHTML = "";
-    socket.emit('bp_get_targets');
-    document.getElementById('bp-target-modal').classList.add('active');
-}
-
-function closeBlueprintTargetModal() {
-    document.getElementById('bp-target-modal').classList.remove('active');
-    bpActiveCardToPlay = null;
-}
-
-socket.on('bp_receive_targets', (opponents) => {
-    const list = document.getElementById('bp-target-list');
-    list.innerHTML = "";
-    if(opponents.length === 0) {
-        list.innerHTML = `<p class="muted-text text-center">No targets available.</p>`;
-        return;
-    }
-    opponents.forEach(opp => {
-        list.innerHTML += `
-            <div class="bp-target-btn" onclick="executeActionCard('${opp.id}')">
-                <span class="white-text" style="font-weight: bold;">${opp.name}</span>
-                <span class="red-text" style="font-size: 10px; font-weight: bold; text-transform: uppercase;">TARGET</span>
-            </div>
-        `;
+        
+        // Update global points if it's me
+        if(s.name === currentUser) {
+            currentPoints += s.score;
+            if(currentPoints < 0) currentPoints = 0;
+            
+            // Winner gets a global bonus!
+            if(s.name === data.winnerName) {
+                currentPoints += 5000;
+                showToast("🏆 You won the match! +5000 Bonus Points!");
+                if (typeof confetti !== 'undefined') confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+            }
+            
+            try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
+            document.getElementById('display-points').innerText = currentPoints;
+            socket.emit('update_global_score', { name: currentUser, points: currentPoints });
+        }
     });
 });
 
-function executeActionCard(targetId) {
-    if (!bpActiveCardToPlay) return;
-    masterUnlockAudio();
-    closeBlueprintTargetModal();
-    socket.emit('bp_play_card', { cardId: bpActiveCardToPlay, targetId: targetId });
-    document.getElementById('bp-my-hand-container').innerHTML = `<p class="red-text" style="width: 100%; text-align: center; margin-top: 40px; font-weight: bold;">Sabotage Deployed!</p>`;
-}
-
-function skipBlueprintTurn() {
-    masterUnlockAudio();
-    socket.emit('bp_skip_turn');
-    document.getElementById('bp-my-hand-container').innerHTML = `<p class="muted-text" style="width: 100%; text-align: center; margin-top: 40px; font-style: italic;">Turn Skipped. Waiting for next trivia round...</p>`;
-}
-
-socket.on('bp_game_over', (data) => {
-    clearInterval(bpTimerInt);
-    switchScreen('result-screen');
-    const fScore = document.getElementById('final-score');
-    const ePoints = document.getElementById('earned-points');
-    const rDisp = document.getElementById('rank-display');
-    
-    if (data.winner === currentUser) {
-        fScore.innerText = "VICTORY!";
-        fScore.style.color = "var(--accent-green)";
-        ePoints.innerText = "10,000";
-        currentPoints += 10000;
-        speak("Congratulations. You have completed the Blueprints.");
-        if (typeof confetti !== 'undefined') confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
-    } else {
-        fScore.innerText = "DEFEAT";
-        fScore.style.color = "var(--accent-red)";
-        ePoints.innerText = "0";
-        speak(`${data.winner} has completed the Blueprints and won the game.`);
-    }
-    
-    rDisp.innerText = `${data.winner} Wins!`;
-    try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
-    document.getElementById('display-points').innerText = currentPoints;
-    socket.emit('update_global_score', { name: currentUser, points: currentPoints });
-});
-
-function startBpTimer(textId, barId, duration, onEnd) {
-    clearInterval(bpTimerInt);
+function startSqTimer(textId, barId, duration, onEnd) {
+    clearInterval(sqTimerInt);
     let timer = duration;
     const tDisplay = document.getElementById(textId);
     const bDisplay = document.getElementById(barId);
     
-    bpTimerInt = setInterval(() => {
+    sqTimerInt = setInterval(() => {
         timer--;
-        if(tDisplay) {
-            if(tDisplay.id === 'bp-trivia-timer') tDisplay.innerText = timer + "s";
-            else tDisplay.innerText = `(${timer}s)`;
-        }
+        if(tDisplay) tDisplay.innerText = timer + "s";
         
         if(bDisplay) {
             const pct = (timer / duration) * 100;
             bDisplay.style.width = pct + "%";
             if(pct < 30) bDisplay.style.background = "var(--accent-red)";
-            else bDisplay.style.background = "#a855f7";
+            else bDisplay.style.background = "#06b6d4";
         }
         
         if (timer <= 0) {
-            clearInterval(bpTimerInt);
+            clearInterval(sqTimerInt);
             if(onEnd) onEnd();
         }
     }, 1000);
 }
+
 
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
@@ -1880,13 +1760,13 @@ socket.on('leaderboard_data', (data) => {
 function returnToMenu() {
     sessionCancelToken++; 
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    clearInterval(bpTimerInt);
-    socket.emit('bp_leave_room');
+    clearInterval(sqTimerInt);
+    socket.emit('sq_leave_room');
     socket.emit('leave_arena');
     socket.emit('leave_jeopardy');
     socket.emit('leave_tug');
-    bpIsHost = false;
-    bpRoomCode = "";
+    sqIsHost = false;
+    sqRoomCode = "";
     switchScreen('home-screen');
 }
 
