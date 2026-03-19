@@ -834,7 +834,6 @@ socket.on('request_question', (data) => {
         let randomQ = null;
         let randomCat = "";
         
-        // Loop until we find a question that is NOT in the usedJeopardyQuestions log
         while (!randomQ) {
             randomCat = categories[Math.floor(Math.random() * categories.length)];
             const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
