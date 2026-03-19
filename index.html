@@ -20,29 +20,23 @@
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .options-grid.locked { pointer-events: none !important; } 
         
-        /* 🚨 THE ULTIMATE COLOR LOCK FOR OPTION BUTTONS 🚨 */
+        /* Removed the !important tags that were overwriting your custom difficulty colors */
         .option-btn { 
             width: 100%; max-width: 100%; margin: 0 auto; 
-            background-color: #111 !important; /* Locks the base color so it never flashes */
-            border: 1px solid #333 !important; 
-            color: white !important;
-            transition: transform 0.1s ease !important; 
-        }
-
-        /* DESKTOP ONLY: Safe yellow hover for computers with a physical mouse */
-        @media (hover: hover) and (pointer: fine) {
-            .option-btn:hover { border-color: var(--gold) !important; background-color: rgba(212, 175, 55, 0.1) !important; }
+            background-color: #111; 
+            border: 1px solid #333; 
+            color: white; 
+            transition: transform 0.1s ease; 
         }
         
-        /* MOBILE ONLY: ZERO COLOR CHANGE ON TAP/HOVER/FOCUS. Only shrinks. */
-        @media (max-width: 1024px) {
-            .option-btn:hover, .option-btn:focus, .option-btn:active { 
-                background-color: #111 !important; 
-                border-color: #333 !important; 
-                color: white !important; 
-                box-shadow: none !important; 
-            }
-            .option-btn:active { transform: scale(0.96) !important; }
+        /* The tap animation */
+        .option-btn:active { transform: scale(0.96) !important; }
+        
+        .option-btn:disabled { opacity: 1 !important; }
+
+        /* DESKTOP ONLY: Safe yellow hover for computers with a mouse */
+        @media (hover: hover) and (pointer: fine) {
+            .option-btn:hover { border-color: var(--gold); background-color: rgba(212, 175, 55, 0.1); }
         }
 
         /* 🚨 ENFORCES PURE RED/GREEN (Overrides everything above when clicked) 🚨 */
@@ -271,7 +265,7 @@
                 <button class="option-btn" style="border-color: #f59e0b;" onclick="selectDifficulty('medium')">Medium</button>
                 <button class="option-btn" style="border-color: #ef4444;" onclick="selectDifficulty('hard')">Hard</button>
                 <button class="option-btn" style="border-color: #a855f7; color: #d8b4fe;" onclick="selectDifficulty('extreme')">Extreme</button>
-                <button class="option-btn" style="background: #333;" onclick="closeDifficulty()">Cancel</button>
+                <button class="option-btn" style="background-color: #333;" onclick="closeDifficulty()">Cancel</button>
             </div>
         </div>
     </div>
