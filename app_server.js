@@ -174,13 +174,41 @@ const fourSquaresData = [
     }
 ];
 
+// ---------------------------------------------------------
+// SERVER-SIDE FULL QUIZ DATA FOR JEOPARDY & ARENA FIX
+// ---------------------------------------------------------
+const quizData = {
+    kids: { 
+        easy: [ 
+            { question: "What does the word 'Islam' mean?", options: ["War", "Peace", "Power"], correct: "Peace" }, 
+            { question: "What is the greeting of peace used in the Nation of Islam?", options: ["Hello", "As-Salaam Alaikum", "Good Morning"], correct: "As-Salaam Alaikum" }, 
+            { question: "Who was the teacher of the Honorable Elijah Muhammad?", options: ["Master Fard Muhammad", "Malcolm X", "Marcus Garvey"], correct: "Master Fard Muhammad" }, 
+            { question: "In what city was the Nation of Islam founded?", options: ["Chicago", "Detroit", "New York"], correct: "Detroit" }, 
+            { question: "What color is the flag of Islam?", options: ["Red, White, and Blue", "Solid Red with a White Sun, Moon, and Star", "Green and Black"], correct: "Solid Red with a White Sun, Moon, and Star" },
+            { question: "Who is the Supreme Being in the Nation of Islam?", options: ["Allah", "The President", "The Mayor"], correct: "Allah" }
+        ],
+        medium: [
+            { question: "How many meals a day does the Honorable Elijah Muhammad teach us to eat?", options: ["Three meals a day", "One meal a day", "Five small meals"], correct: "One meal a day" }, 
+            { question: "What animal are we taught never to eat because it is a scavenger?", options: ["Cow", "Chicken", "The Pig (Swine)"], correct: "The Pig (Swine)" }
+        ]
+    },
+    lessons: {
+        hard: [
+            { question: "On the flag of Islam, what does the Sun represent?", options: ["Freedom", "Justice", "Equality"], correct: "Freedom" }, 
+            { question: "On the flag of Islam, what does the Star represent?", options: ["Justice", "Power", "Wealth"], correct: "Justice" }
+        ],
+        extreme: [
+            { question: "What is the mathematical meaning of the word 'Allah'?", options: ["Arm, Leg, Leg, Arm, Head", "The Supreme Being", "Peace and Power"], correct: "Arm, Leg, Leg, Arm, Head" }
+        ]
+    }
+};
+
 function trueShuffle(array) {
     return [...array]
         .map(value => ({ value, sort: Math.random() }))
         .sort((a, b) => a.sort - b.sort)
         .map(({ value }) => value);
 }
-
 
 io.on('connection', (socket) => {
     console.log('User connected: ' + socket.id);
@@ -212,7 +240,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 2. THE ARENA (High Stakes Duel)
+    // 2. THE ARENA (High Stakes Duel) - FIXED
     // ==========================================
     socket.on('join_arena', (data) => {
         let roomID = Object.keys(arenaRooms).find(id => arenaRooms[id].players.length === 1);
@@ -254,9 +282,22 @@ io.on('connection', (socket) => {
         if (player) player.wager = data.wager;
 
         if (room.players.every(p => p.wager > 0)) {
+            // Pick ONE exact question for the arena server-side so both see the same
+            let deepCuts = [];
+            for (let path in quizData) {
+                if (path !== 'adults' && path !== 'actualfacts') {
+                    if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
+                    if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
+                }
+            }
+            if (deepCuts.length === 0) deepCuts = quizData['kids']['easy']; // Fallback
+            deepCuts = trueShuffle(deepCuts);
+            room.question = deepCuts[0];
+
             io.to(socket.currentArenaRoom).emit('arena_start_question', {
                 p1Name: room.players[0].name, p1Wager: room.players[0].wager,
-                p2Name: room.players[1].name, p2Wager: room.players[1].wager
+                p2Name: room.players[1].name, p2Wager: room.players[1].wager,
+                question: room.question
             });
         }
     });
@@ -378,7 +419,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 4. LIVE JEOPARDY LOGIC
+    // 4. LIVE JEOPARDY LOGIC - FIXED SERVER SIDE
     // ==========================================
     socket.on('join_jeopardy', (data) => {
         if (!jeopardyPlayers.find(p => p.id === socket.id)) {
@@ -438,7 +479,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 🚀 5. THE 4 SQUARES LOGIC 🚀
+    // 🚀 5. THE 4 SQUARES LOGIC (HOST SAFETY NET INCLUDED)
     // ==========================================
     
     socket.on('sq_create_room', (data) => {
@@ -497,10 +538,7 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // Reset answers
         room.players.forEach(p => p.answer = null);
-
-        // Pick random puzzle
         const puzzle = fourSquaresData[Math.floor(Math.random() * fourSquaresData.length)];
         room.currentPuzzle = puzzle;
 
@@ -525,7 +563,6 @@ io.on('connection', (socket) => {
         const p = room.players.find(p => p.id === socket.id);
         if(p) p.answer = data.answer;
 
-        // Check if everyone answered
         if(room.players.every(pl => pl.answer !== null)) {
             clearTimeout(room.timer);
             evaluateSqRound(room);
@@ -556,8 +593,6 @@ io.on('connection', (socket) => {
             winnerName: winner ? winner.name : "Nobody",
             scores: room.players.map(p => ({ name: p.name, score: p.score }))
         };
-        
-        // Final update to the persistent database happens via client 'update_global_score' emit
 
         io.to(room.code).emit('sq_game_over', payload);
         delete sqRooms[room.code];
@@ -569,13 +604,12 @@ io.on('connection', (socket) => {
             room.players = room.players.filter(p => p.id !== s.id);
             
             if (room.host === s.id) {
-                // HOST LEFT - DESTROY ROOM & KICK EVERYONE
+                // 🚨 HOST LEFT - DESTROY ROOM & KICK EVERYONE OUT OF FREEZE 🚨
                 io.to(s.currentSqRoom).emit('sq_host_left');
                 delete sqRooms[s.currentSqRoom];
             } else if (room.players.length === 0) {
                 delete sqRooms[s.currentSqRoom];
             } else {
-                // JUST UPDATE LOBBY
                 io.to(s.currentSqRoom).emit('sq_lobby_update', room.players.map(p => ({ name: p.name })));
             }
         }
@@ -643,33 +677,19 @@ function nextRound() {
     canBuzz = false;
     io.emit('reset_buzzer');
     io.emit('round_update', { round: currentRound, max: MAX_ROUNDS });
-    let host = alivePlayers.length > 0 ? alivePlayers[0] : jeopardyPlayers[0];
     
-    // Jeopardy question fetching logic
-    const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
-    const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
-    let randomQ = null;
-    let randomCat = "";
+    // 🚨 FIXED: JEOPARDY QUESTION IS NOW GENERATED ENTIRELY SERVER-SIDE 🚨
+    const categories = ['kids', 'teens', 'training', 'lessons', 'health']; 
+    const diffs = ['easy', 'medium', 'hard', 'extreme'];
     
-    // We do this server side now to avoid client mismatch
-    randomCat = categories[Math.floor(Math.random() * categories.length)];
+    const randomCat = categories[Math.floor(Math.random() * categories.length)];
     const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-    let questions = null;
+    
+    let questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : quizData['kids']['easy'];
+    if (!questions) questions = quizData['kids']['easy']; // safety fallback
 
-    if (quizData[randomCat]) {
-        if (quizData[randomCat][randomDiff]) {
-            questions = quizData[randomCat][randomDiff];
-        } else if (quizData[randomCat]['exact']) {
-            questions = quizData[randomCat]['exact'];
-        } else {
-            questions = quizData['kids']['easy']; // Fallback
-        }
-    } else {
-        questions = quizData['kids']['easy']; // Fallback
-    }
-
-    randomQ = questions[Math.floor(Math.random() * questions.length)];
-    randomQ.categoryTitle = quizData[randomCat] ? quizData[randomCat].title : "General";
+    let randomQ = questions[Math.floor(Math.random() * questions.length)];
+    randomQ.categoryTitle = randomCat.toUpperCase();
     
     currentCorrectAnswer = randomQ.correct;
     const isGolden = (currentRound === goldenRound);
