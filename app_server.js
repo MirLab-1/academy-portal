@@ -551,7 +551,20 @@ io.on('connection', (socket) => {
         setTimeout(nextRound, 3000);
     });
 
+    // 🚨 MODIFIED FOR BOTH JEOPARDY AND THE BLUEPRINT GAME 🚨
     socket.on('start_round', (qData) => {
+        
+        // INTERCEPT FOR BLUEPRINT FAMILY GAME
+        if (socket.currentBpRoom && bpRooms[socket.currentBpRoom]) {
+            const room = bpRooms[socket.currentBpRoom];
+            room.currentQuestion = qData;
+            
+            // Broadcast discussion phase
+            io.to(room.code).emit('bp_start_trivia', qData);
+            return; // STOP IT from bleeding into Jeopardy
+        }
+        
+        // REGULAR JEOPARDY LOGIC
         if (!gameActive) return;
         currentCorrectAnswer = qData.correct;
         const isGolden = (currentRound === goldenRound);
