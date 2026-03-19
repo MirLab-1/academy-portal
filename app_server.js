@@ -125,14 +125,19 @@ io.on('connection', (socket) => {
 
         if (room.ropePosition <= 0 || room.ropePosition >= 100) {
             const winner = room.ropePosition <= 0 ? p1.name : p2.name;
-            io.to(socket.currentTugRoom).emit('tug_game_over', { winner: winner });
+            io.to(socket.currentTugRoom).emit('tug_game_over', { winner: winner, reason: "win" });
             delete tugRooms[socket.currentTugRoom];
         }
     });
 
+    // THE FORFEIT FIX: It actively checks who stayed and gives them the win
     socket.on('leave_tug', () => {
         if (socket.currentTugRoom && tugRooms[socket.currentTugRoom]) {
-            io.to(socket.currentTugRoom).emit('tug_game_over', { winner: "Opponent Forfeited" });
+            const room = tugRooms[socket.currentTugRoom];
+            const remainingPlayer = room.players.find(p => p.id !== socket.id);
+            const winnerName = remainingPlayer ? remainingPlayer.name : "Nobody";
+            
+            io.to(socket.currentTugRoom).emit('tug_game_over', { winner: winnerName, reason: "forfeit" });
             delete tugRooms[socket.currentTugRoom];
         }
     });
@@ -246,8 +251,12 @@ io.on('connection', (socket) => {
     socket.on('leave_jeopardy', () => handleLeave(socket));
 
     function handleLeave(s) {
+        // Disconnect fix for Tug of War
         if (s.currentTugRoom && tugRooms[s.currentTugRoom]) {
-            io.to(s.currentTugRoom).emit('tug_game_over', { winner: "Opponent Disconnected" });
+            const room = tugRooms[s.currentTugRoom];
+            const remainingPlayer = room.players.find(p => p.id !== s.id);
+            const winnerName = remainingPlayer ? remainingPlayer.name : "Nobody";
+            io.to(s.currentTugRoom).emit('tug_game_over', { winner: winnerName, reason: "disconnect" });
             delete tugRooms[s.currentTugRoom];
         }
 
