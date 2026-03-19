@@ -1,6 +1,6 @@
 /**
  * The Knowledge Portal - V4.3 AAA SERVER
- * MULTIPLAYER BRAIN: Handles Chat, Leaderboards, Jeopardy, Tug of War, THE ARENA, and THE 4 SQUARES.
+ * MULTIPLAYER BRAIN: Handles Chat, Leaderboards, Jeopardy, Tug of War, and THE ARENA.
  */
 
 const express = require('express');
@@ -58,120 +58,6 @@ let questionStartTime = 0;
 // --- 1V1 MODES STATE ---
 let tugRooms = {};
 let arenaRooms = {};
-
-// --- 🚀 THE 4 SQUARES (FAMILY GAME) STATE 🚀 ---
-let sqRooms = {};
-
-// Helper: Generate Random 4-Digit Code
-function generateRoomCode() {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-}
-
-// ---------------------------------------------------------
-// 🚀 THE 4 SQUARES DEDUCTION DATABASE 🚀
-// ---------------------------------------------------------
-const fourSquaresData = [
-    {
-        answer: "Master Fard Muhammad",
-        options: ["The Honorable Elijah Muhammad", "Master Fard Muhammad", "Marcus Garvey", "Noble Drew Ali"],
-        clues: [
-            "IMG:cinematic_vintage_1930s_passenger_airplane_dark_moody",
-            "IMG:detroit_skyline_black_and_white_vintage_photography",
-            "TEXT:1930",
-            "IMG:dark_chalkboard_with_complex_physics_equations_cinematic"
-        ]
-    },
-    {
-        answer: "The Pig (Swine)",
-        options: ["The Catfish", "The Cow", "The Pig (Swine)", "The Crow"],
-        clues: [
-            "IMG:muddy_swamp_dark_cinematic",
-            "TEXT:1/3 Cat, 1/3 Rat, 1/3 Dog",
-            "IMG:poisonous_toxin_bottle_glowing_green",
-            "TEXT:Scavenger"
-        ]
-    },
-    {
-        answer: "6 Sextillion Tons",
-        options: ["6 Sextillion Tons", "10 Billion Tons", "196,940,000 Tons", "1 Trillion Tons"],
-        clues: [
-            "IMG:massive_planet_earth_floating_in_dark_space",
-            "TEXT:Weight",
-            "IMG:heavy_metal_scale_cinematic",
-            "TEXT:21 Ciphers"
-        ]
-    },
-    {
-        answer: "The Moon",
-        options: ["The Sun", "The Moon", "The Stars", "Island of Pelan"],
-        clues: [
-            "IMG:massive_explosion_in_space_cinematic",
-            "TEXT:66 Trillion Years Ago",
-            "IMG:ocean_tides_crashing_at_night",
-            "TEXT:Separation"
-        ]
-    },
-    {
-        answer: "24,896 Miles",
-        options: ["25,000 Miles", "196,940,000 Miles", "24,896 Miles", "93,000,000 Miles"],
-        clues: [
-            "IMG:equator_line_glowing_around_earth",
-            "TEXT:Circumference",
-            "IMG:measuring_tape_wrapping_a_globe",
-            "TEXT:Mathematical Fact"
-        ]
-    },
-    {
-        answer: "Speed of Sound",
-        options: ["Speed of Light", "Speed of Sound", "Rotation of Earth", "Speed of Thought"],
-        clues: [
-            "IMG:soundwave_frequency_glowing_blue_neon",
-            "TEXT:1,120",
-            "TEXT:Feet Per Second",
-            "IMG:jet_breaking_the_sound_barrier_cinematic"
-        ]
-    },
-    {
-        answer: "Yacub",
-        options: ["Elijah", "Fard", "Yacub", "Nimrod"],
-        clues: [
-            "IMG:scientist_looking_through_microscope_cinematic",
-            "TEXT:Big Head",
-            "IMG:island_in_the_middle_of_the_ocean_dark_moody",
-            "TEXT:600 Years"
-        ]
-    },
-    {
-        answer: "The Navy Bean",
-        options: ["The Pinto Bean", "The Lima Bean", "The Navy Bean", "The Lentil"],
-        clues: [
-            "IMG:hot_bowl_of_bean_soup_cinematic_lighting",
-            "TEXT:Prescribed",
-            "IMG:golden_wheat_bread_loaf",
-            "TEXT:Prolong Life"
-        ]
-    },
-    {
-        answer: "Mosque Maryam",
-        options: ["Mosque No. 1", "Mosque Maryam", "The Salaam Restaurant", "The National House"],
-        clues: [
-            "IMG:beautiful_mosque_dome_cinematic_lighting",
-            "TEXT:Chicago",
-            "IMG:headquarters_building_blueprint",
-            "TEXT:Stony Island Ave"
-        ]
-    },
-    {
-        answer: "Red, Sun, Moon, Star",
-        options: ["Red, Black, Green", "Red, Sun, Moon, Star", "Crescent and Star", "White and Gold"],
-        clues: [
-            "TEXT:Freedom",
-            "TEXT:Justice",
-            "TEXT:Equality",
-            "IMG:solid_red_background_with_shadows"
-        ]
-    }
-];
 
 // ---------------------------------------------------------
 // FULL MASSIVE QUESTION DATABASE (MANDATORY FOR SERVER LOGIC)
@@ -506,6 +392,13 @@ const quizData = {
     }
 };
 
+function trueShuffle(array) {
+    return [...array]
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+}
+
 io.on('connection', (socket) => {
     console.log('User connected: ' + socket.id);
 
@@ -535,7 +428,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 2. THE ARENA (High Stakes Duel) - FIXED
+    // 2. THE ARENA (High Stakes Duel)
     // ==========================================
     socket.on('join_arena', (data) => {
         let roomID = Object.keys(arenaRooms).find(id => arenaRooms[id].players.length === 1);
@@ -584,7 +477,7 @@ io.on('connection', (socket) => {
                     if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
                 }
             }
-            if (deepCuts.length === 0) deepCuts = quizData['kids']['easy']; 
+            if (deepCuts.length === 0) deepCuts = quizData['kids']['easy']; // Fallback
             deepCuts = trueShuffle(deepCuts);
             room.question = deepCuts[0];
 
@@ -594,6 +487,7 @@ io.on('connection', (socket) => {
                 question: room.question
             });
 
+            // 🚨 STRICT SERVER TIMER: 16 SECONDS ALLOWS FOR CLIENT ANIMATION DELAY 🚨
             room.timer = setTimeout(() => {
                 if (arenaRooms[socket.currentArenaRoom]) {
                     processArenaResults(socket.currentArenaRoom);
@@ -660,7 +554,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 3. TUG OF WAR (1v1) - SYNCED LOGIC
+    // 3. TUG OF WAR (1v1) SERVER LOGIC
     // ==========================================
     socket.on('join_tug', (data) => {
         let roomID = Object.keys(tugRooms).find(id => tugRooms[id].players.length === 1);
@@ -701,6 +595,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 🚨 FIXED: SERVER CONTROLS TUG OF WAR ROUNDS TO PREVENT DESYNC 🚨
     function startTugRound(room, isFirst) {
         if (room.activeQuestions.length === 0) return;
         room.currentQuestion = room.activeQuestions.pop();
@@ -724,6 +619,7 @@ io.on('connection', (socket) => {
         const player = room.players.find(p => p.id === socket.id);
         if (player) player.answer = data.correct;
 
+        // When BOTH players lock in their answer, evaluate the round
         if (room.players[0].answer !== null && room.players[1].answer !== null) {
             let p1 = room.players[0];
             let p2 = room.players[1];
@@ -767,7 +663,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 4. LIVE JEOPARDY LOGIC - FIXED SERVER SIDE
+    // 4. LIVE JEOPARDY LOGIC 
     // ==========================================
     socket.on('join_jeopardy', (data) => {
         if (!jeopardyPlayers.find(p => p.id === socket.id)) {
@@ -827,148 +723,10 @@ io.on('connection', (socket) => {
     });
 
     // ==========================================
-    // 🚀 5. THE 4 SQUARES LOGIC
-    // ==========================================
-    
-    socket.on('sq_create_room', (data) => {
-        const code = generateRoomCode();
-        sqRooms[code] = {
-            host: socket.id, 
-            code: code,
-            players: [{ id: socket.id, name: data.name, score: 0, answer: null }],
-            round: 0,
-            maxRounds: 5,
-            currentPuzzle: null,
-            timer: null
-        };
-        socket.join(code);
-        socket.currentSqRoom = code;
-        socket.emit('sq_room_created', code);
-    });
-
-    socket.on('sq_join_room', (data) => {
-        const room = sqRooms[data.code];
-        if (!room) {
-            socket.emit('sq_join_error', "Table code not found.");
-            return;
-        }
-        if (room.round > 0) {
-            socket.emit('sq_join_error', "Game already in progress.");
-            return;
-        }
-        if (room.players.find(p => p.id === socket.id)) return; 
-        
-        room.players.push({ id: socket.id, name: data.name, score: 0, answer: null });
-        socket.join(data.code);
-        socket.currentSqRoom = data.code;
-        socket.emit('sq_joined_successfully', { code: data.code });
-        
-        io.to(data.code).emit('sq_lobby_update', room.players.map(p => ({ name: p.name })));
-    });
-
-    socket.on('sq_leave_room', () => {
-        handleSqDisconnect(socket);
-    });
-
-    socket.on('sq_start_game', () => {
-        const room = sqRooms[socket.currentSqRoom];
-        if(!room || room.host !== socket.id) return;
-        
-        room.round = 0;
-        room.players.forEach(p => { p.score = 0; p.answer = null; });
-        startSqRound(room);
-    });
-
-    function startSqRound(room) {
-        room.round++;
-        if(room.round > room.maxRounds) {
-            endSqGame(room);
-            return;
-        }
-
-        room.players.forEach(p => p.answer = null);
-        const puzzle = fourSquaresData[Math.floor(Math.random() * fourSquaresData.length)];
-        room.currentPuzzle = puzzle;
-
-        const payload = {
-            round: room.round,
-            maxRounds: room.maxRounds,
-            clues: trueShuffle(puzzle.clues), 
-            options: trueShuffle(puzzle.options)
-        };
-
-        io.to(room.code).emit('sq_start_round', payload);
-
-        room.timer = setTimeout(() => {
-            evaluateSqRound(room);
-        }, 20000); 
-    }
-
-    socket.on('sq_submit_answer', (data) => {
-        const room = sqRooms[socket.currentSqRoom];
-        if(!room || !room.currentPuzzle) return;
-        
-        const p = room.players.find(p => p.id === socket.id);
-        if(p) p.answer = data.answer;
-
-        if(room.players.every(pl => pl.answer !== null)) {
-            clearTimeout(room.timer);
-            evaluateSqRound(room);
-        }
-    });
-
-    function evaluateSqRound(room) {
-        room.players.forEach(p => {
-            if (p.answer === room.currentPuzzle.answer) {
-                p.score += 1000;
-                io.to(p.id).emit('sq_round_results', { correctAnswer: room.currentPuzzle.answer, iGotItRight: true });
-            } else {
-                p.score -= 250;
-                io.to(p.id).emit('sq_round_results', { correctAnswer: room.currentPuzzle.answer, iGotItRight: false });
-            }
-        });
-
-        setTimeout(() => {
-            startSqRound(room);
-        }, 5000); 
-    }
-
-    function endSqGame(room) {
-        room.players.sort((a,b) => b.score - a.score);
-        const winner = room.players[0];
-
-        const payload = {
-            winnerName: winner ? winner.name : "Nobody",
-            scores: room.players.map(p => ({ name: p.name, score: p.score }))
-        };
-
-        io.to(room.code).emit('sq_game_over', payload);
-        delete sqRooms[room.code];
-    }
-
-    function handleSqDisconnect(s) {
-        if (s.currentSqRoom && sqRooms[s.currentSqRoom]) {
-            const room = sqRooms[s.currentSqRoom];
-            room.players = room.players.filter(p => p.id !== s.id);
-            
-            if (room.host === s.id) {
-                io.to(s.currentSqRoom).emit('sq_host_left');
-                delete sqRooms[s.currentSqRoom];
-            } else if (room.players.length === 0) {
-                delete sqRooms[s.currentSqRoom];
-            } else {
-                io.to(s.currentSqRoom).emit('sq_lobby_update', room.players.map(p => ({ name: p.name })));
-            }
-        }
-    }
-
-
-    // ==========================================
     // DISCONNECT HANDLER (Master)
     // ==========================================
     socket.on('disconnect', () => {
         handleLeave(socket);
-        handleSqDisconnect(socket);
     });
     
     function handleLeave(s) {
@@ -1001,6 +759,9 @@ io.on('connection', (socket) => {
                 } else if (jeopardyPlayers.length === 0) {
                     gameActive = false;
                     if (roundTimer) clearInterval(roundTimer);
+                    // 🚨 FIXED: PREVENT GHOST LOBBY 🚨
+                    jeopardyPlayers = [];
+                    readyPlayers.clear();
                 }
             }
         }
@@ -1025,6 +786,7 @@ function nextRound() {
     io.emit('reset_buzzer');
     io.emit('round_update', { round: currentRound, max: MAX_ROUNDS });
     
+    // 🚨 FIXED: JEOPARDY QUESTION IS NOW GENERATED ENTIRELY SERVER-SIDE 🚨
     const categories = ['kids', 'teens', 'training', 'lessons', 'health']; 
     const diffs = ['easy', 'medium', 'hard', 'extreme'];
     
@@ -1032,7 +794,7 @@ function nextRound() {
     const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
     
     let questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : quizData['kids']['easy'];
-    if (!questions) questions = quizData['kids']['easy']; 
+    if (!questions) questions = quizData['kids']['easy']; // safety fallback
 
     let randomQ = questions[Math.floor(Math.random() * questions.length)];
     randomQ.categoryTitle = randomCat.toUpperCase();
@@ -1121,8 +883,11 @@ function handleGameOver() {
         if (p.id === winner.id) globalWinStreaks[p.name] = (globalWinStreaks[p.name] || 0) + 1; else globalWinStreaks[p.name] = 0;
     });
     
-    saveDatabase(); 
+    saveDatabase(); // Save results to disk
     io.emit('game_over', jeopardyPlayers);
+    
+    // 🚨 FIXED: HARD WIPE JEOPARDY LOBBY 🚨
+    jeopardyPlayers = [];
 }
 
 const PORT = process.env.PORT || 3000;
