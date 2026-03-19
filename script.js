@@ -374,18 +374,14 @@ let tugIdx = 0;
 let sessionCancelToken = 0;
 
 // ---------------------------------------------------------
-// 🚀 FAMILY GAME (MOTHER PLANE) STATE 🚀
+// 🚀 THE BLUEPRINT COLLECTION (FAMILY GAME) STATE 🚀
 // ---------------------------------------------------------
-let familyRoomCode = "";
-let isHost = false;
-let myFamilyRole = ""; 
-let familyActiveQuestion = null;
-let discussionTimerInt = null;
-let votingTimerInt = null;
-let hasLockedTriviaVote = false;
-let hasLockedAccuseVote = false;
-let currentPhase = ""; 
-let serverConnectionTimeout = null; // 🚨 Added to fix the freeze bug
+let bpRoomCode = "";
+let bpIsHost = false;
+let bpTimerInt = null;
+let bpMyHand = [];
+let bpMyBoard = { wisdom: 0, health: 0, facts: 0 };
+let bpActiveCardToPlay = null; 
 
 // ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
@@ -401,7 +397,7 @@ function trueShuffle(array) {
 // 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'family-game-screen'];
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'blueprint-game-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -455,22 +451,6 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
             <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${safeName}</span>
             <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
         </div>
-    </div>`;
-}
-
-function getPlaneAvatar(name, isReady = false) {
-    const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "CREW";
-    const initial = safeName.charAt(0).toUpperCase();
-    const readyClass = isReady ? "ready" : "";
-    
-    return `<div class="plane-player-row ${readyClass}">
-        <div style="display:flex; align-items:center;">
-            <div style="width:32px; height:32px; border-radius:50%; background:#000; color:var(--plane-cyan); display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:16px; border:1px solid var(--plane-cyan); margin-right:10px; box-shadow: 0 0 10px var(--plane-cyan-glow);">
-                ${initial}
-            </div>
-            <span class="white-text" style="font-weight: bold; font-size:14px;">${safeName}</span>
-        </div>
-        ${isReady ? '<span class="cyan-text" style="font-size:10px; font-weight:bold;">STANDBY</span>' : '<span class="muted-text" style="font-size:10px;">CONNECTING</span>'}
     </div>`;
 }
 
@@ -616,8 +596,6 @@ function registerUser() {
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
     
-    // 🚨 DATA RECOVERY PROTOCOL 🚨
-    // Checks if the user is re-entering their old name to prevent wiping their points to 0.
     const savedUser = localStorage.getItem('noi_user');
     if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
         currentUser = savedUser;
@@ -647,358 +625,373 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 🚀 THE MOTHER PLANE SHOWDOWN (Family Game) LOGIC 🚀
+// 🚀 THE BLUEPRINT COLLECTION (FAMILY GAME) LOGIC 🚀
 // ---------------------------------------------------------
-function openFamilyLobbyMenu() {
+function openBlueprintLobbyMenu() {
     masterUnlockAudio();
-    document.getElementById('family-room-input').value = "";
-    document.getElementById('family-join-modal').classList.add('active');
+    document.getElementById('blueprint-room-input').value = "";
+    document.getElementById('blueprint-join-modal').classList.add('active');
 }
 
-function closeFamilyLobbyMenu() {
-    document.getElementById('family-join-modal').classList.remove('active');
+function closeBlueprintLobbyMenu() {
+    document.getElementById('blueprint-join-modal').classList.remove('active');
 }
 
-function switchFamilyView(viewId) {
-    const views = ['p-lobby-view', 'p-role-view', 'p-game-view', 'p-voting-view', 'p-results-view'];
-    views.forEach(id => document.getElementById(id).classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
+function switchBpView(viewId) {
+    const views = ['bp-lobby-view', 'bp-trivia-view', 'bp-board-view'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.style.display = 'none';
+    });
+    const target = document.getElementById(viewId);
+    if(target) target.style.display = 'block';
 }
 
-function hostFamilyGame() {
+function hostBlueprintGame() {
     masterUnlockAudio();
-    closeFamilyLobbyMenu();
-    isHost = true;
-    
+    closeBlueprintLobbyMenu();
+    bpIsHost = true;
     showToast("Connecting to Server...");
-    socket.emit('create_family_room', { name: currentUser });
+    socket.emit('bp_create_room', { name: currentUser });
 
-    // 🚨 SERVER MISMATCH SAFETY TIMEOUT 🚨
-    serverConnectionTimeout = setTimeout(() => {
-        alert("🚨 SERVER MISMATCH 🚨\n\nThe frontend is sending the command, but your backend server is ignoring it. You must update your server.js file to handle the new Mother Plane logic!");
-        isHost = false;
-        switchScreen('home-screen');
+    setTimeout(() => {
+        if (!bpRoomCode) {
+            alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
+            bpIsHost = false;
+            switchScreen('home-screen');
+        }
     }, 4000);
 }
 
-function joinFamilyGame() {
+function joinBlueprintGame() {
     masterUnlockAudio();
-    const code = document.getElementById('family-room-input').value.trim().toUpperCase();
+    const code = document.getElementById('blueprint-room-input').value.trim().toUpperCase();
     if(code.length !== 4) return alert("Enter a valid 4-digit code.");
-    closeFamilyLobbyMenu();
-    isHost = false;
-    
+    closeBlueprintLobbyMenu();
+    bpIsHost = false;
     showToast("Connecting to Server...");
-    socket.emit('join_family_room', { name: currentUser, code: code });
+    socket.emit('bp_join_room', { name: currentUser, code: code });
     
-    // 🚨 SERVER MISMATCH SAFETY TIMEOUT 🚨
-    serverConnectionTimeout = setTimeout(() => {
-        alert("🚨 SERVER MISMATCH 🚨\n\nThe frontend is sending the command, but your backend server is ignoring it. You must update your server.js file to handle the new Mother Plane logic!");
-        isHost = false;
-        switchScreen('home-screen');
+    setTimeout(() => {
+        if (!bpRoomCode) {
+            alert("🚨 SERVER UPDATE REQUIRED 🚨\n\nYour backend server (server.js) needs to be updated to handle 'The Blueprint Collection' logic.");
+            bpIsHost = false;
+            switchScreen('home-screen');
+        }
     }, 4000);
 }
 
-socket.on('family_room_created', (code) => {
-    clearTimeout(serverConnectionTimeout); // Server responded, cancel the error
-    familyRoomCode = code;
-    switchScreen('family-game-screen');
-    switchFamilyView('p-lobby-view');
-    document.querySelector('#p-lobby-view strong.white-text').innerText = code;
-    document.getElementById('p-host-start-btn').style.display = 'block';
-    document.getElementById('p-wait-msg').style.display = 'none';
-    updateCrewList([]);
+socket.on('bp_room_created', (code) => {
+    bpRoomCode = code;
+    switchScreen('blueprint-game-screen');
+    switchBpView('bp-lobby-view');
+    document.getElementById('bp-room-code-display').innerText = code;
+    document.getElementById('bp-host-start-btn').style.display = 'block';
+    document.getElementById('bp-wait-msg').style.display = 'none';
+    updateBpLobbyPlayers([]);
 });
 
-socket.on('family_joined_successfully', (data) => {
-    clearTimeout(serverConnectionTimeout); // Server responded, cancel the error
-    familyRoomCode = data.code;
-    switchScreen('family-game-screen');
-    switchFamilyView('p-lobby-view');
-    document.querySelector('#p-lobby-view strong.white-text').innerText = data.code;
-    document.getElementById('p-host-start-btn').style.display = 'none';
-    document.getElementById('p-wait-msg').style.display = 'block';
+socket.on('bp_joined_successfully', (data) => {
+    bpRoomCode = data.code;
+    switchScreen('blueprint-game-screen');
+    switchBpView('bp-lobby-view');
+    document.getElementById('bp-room-code-display').innerText = data.code;
+    document.getElementById('bp-host-start-btn').style.display = 'none';
+    document.getElementById('bp-wait-msg').style.display = 'block';
 });
 
-socket.on('family_join_error', (msg) => {
-    clearTimeout(serverConnectionTimeout);
+socket.on('bp_join_error', (msg) => {
     alert(msg);
-    openFamilyLobbyMenu();
+    if (!bpRoomCode) openBlueprintLobbyMenu();
 });
 
-socket.on('family_lobby_update', (players) => {
-    updateCrewList(players);
+socket.on('bp_lobby_update', (players) => {
+    updateBpLobbyPlayers(players);
 });
 
-function updateCrewList(players) {
-    const list = document.getElementById('p-lobby-players');
+function updateBpLobbyPlayers(players) {
+    const list = document.getElementById('bp-lobby-players');
+    if(!list) return;
     list.innerHTML = "";
     players.forEach(p => {
-        list.innerHTML += getPlaneAvatar(p.name, p.isReady);
+        list.innerHTML += `<div class="bp-player-row ready" style="width: 45%; min-width: 150px;">
+            <div style="display:flex; align-items:center;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#000; color:#c084fc; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:14px; border:1px solid #c084fc; margin-right:10px;">
+                    ${p.name.charAt(0).toUpperCase()}
+                </div>
+                <span class="white-text" style="font-weight: bold; font-size:13px; text-transform: uppercase;">${p.name}</span>
+            </div>
+        </div>`;
     });
 }
 
-function leaveFamilyRoom() {
+function leaveBlueprintRoom() {
     sessionCancelToken++;
-    clearInterval(discussionTimerInt);
-    clearInterval(votingTimerInt);
-    socket.emit('leave_family_room');
-    isHost = false;
-    familyRoomCode = "";
+    clearInterval(bpTimerInt);
+    socket.emit('bp_leave_room');
+    bpIsHost = false;
+    bpRoomCode = "";
     switchScreen('home-screen');
 }
 
-function hostStartFamilyGame() {
+function hostStartBlueprintGame() {
     masterUnlockAudio();
-    socket.emit('host_start_family_game');
+    socket.emit('bp_host_start_game');
 }
 
-socket.on('family_assign_role', (role) => {
-    myFamilyRole = role; 
-    currentPhase = "role_reveal";
-    switchFamilyView('p-role-view');
+// Phase 1: Trivia
+socket.on('bp_start_trivia', (qData) => {
+    switchBpView('bp-trivia-view');
     
-    const icon = document.getElementById('p-role-icon');
-    const text = document.getElementById('p-role-text');
-    const subtext = document.getElementById('p-role-subtext');
+    document.getElementById('bp-question-box').innerText = qData.question;
+    speak(qData.question);
     
-    icon.innerText = "?";
-    icon.className = "scanner-icon";
-    text.innerText = "SCANNING...";
-    text.className = "plane-big-text muted-text";
+    const optBox = document.getElementById('bp-options-box');
+    optBox.innerHTML = "";
+    optBox.classList.remove('locked');
+    document.getElementById('bp-waiting-trivia-msg').style.display = 'none';
     
-    speak("Scanning neural patterns. Confirming identity.");
+    let options = trueShuffle(qData.options);
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = function(e) {
+            e.preventDefault();
+            this.blur();
+            submitBpTriviaAnswer(opt, this);
+        };
+        optBox.appendChild(btn);
+    });
     
-    setTimeout(() => {
-        if(myFamilyRole === "vanguard") {
-            icon.innerText = "🛡️";
-            icon.className = "scanner-icon cyanglow";
-            text.innerText = "VANGUARD";
-            text.className = "plane-big-text cyan-text";
-            subtext.innerHTML = "You are Original Crew.<br>Discuss FaceTime to solve the Question.";
-            speak("Welcome aboard, Vanguard. Protect the Plane.");
-            sfx.correct();
-        } else {
-            icon.innerText = "💀";
-            icon.className = "scanner-icon redglow plane-shake";
-            text.innerText = "INFILTRATOR";
-            text.className = "plane-big-text red-text";
-            subtext.innerHTML = "SYSTEM ERROR.<br>corrupted. lying is your weapon.";
-            speak("WARNING. 85er detected on board.");
-            sfx.alarm();
-        }
-    }, 3000);
-});
-
-socket.on('family_start_discussion', (qData) => {
-    currentPhase = "discussion";
-    familyActiveQuestion = qData;
-    switchFamilyView('p-game-view');
-    
-    const vQ = document.getElementById('p-vanguard-q');
-    const iQ = document.getElementById('p-infiltrator-q');
-    const instruct = document.getElementById('p-instruction-card');
-    
-    vQ.style.display = 'none';
-    iQ.style.display = 'none';
-    
-    if(myFamilyRole === "vanguard") {
-        vQ.style.display = 'block';
-        document.getElementById('p-actual-question').innerText = familyActiveQuestion.question;
-        
-        const opts = document.getElementById('p-vanguard-options');
-        opts.innerHTML = "";
-        familyActiveQuestion.options.forEach(opt => {
-            const b = document.createElement('button');
-            b.className = "plane-opt-btn";
-            b.innerText = opt;
-            b.disabled = true; 
-            opts.appendChild(b);
-        });
-        
-        instruct.className = "plane-glass-card text-center accent-border-cyan";
-        instruct.innerHTML = `<h4 class="cyan-text heading-font mb-10">VANGUARD MISSION</h4>
-                              <p class="muted-text">Solve the Query. Watch for hesitation. The 85er is guessing.</p>`;
-        
-    } else {
-        iQ.style.display = 'block';
-        sfx.alarm(); 
-        instruct.className = "plane-glass-card text-center accent-border-red plane-shake";
-        instruct.innerHTML = `<h4 class="red-text heading-font mb-10">INFILTRATOR MISSION</h4>
-                              <p class="muted-text">SYSTEM MALFUNCTION. Lie. Smooth-talk. trick them into selecting WRONG.</p>`;
-    }
-    
-    startPlaneTimer('p-discussion-timer', 60, () => {
-        speak(" Discussion time is over. Input final decisions.");
+    startBpTimer('bp-trivia-timer', 'bp-pressure-bar', 15, () => {
+        sfx.wrong();
+        optBox.classList.add('locked');
     });
 });
 
-function startPlaneTimer(id, duration, onEnd) {
-    clearInterval(discussionTimerInt);
-    clearInterval(votingTimerInt); 
+function submitBpTriviaAnswer(selectedAnswer, btn) {
+    masterUnlockAudio();
+    const optBox = document.getElementById('bp-options-box');
+    optBox.classList.add('locked');
     
-    let timer = duration, minutes, seconds;
-    const display = document.getElementById(id);
+    const btns = optBox.querySelectorAll('.option-btn');
+    btns.forEach(b => b.classList.add('locked'));
+    btn.classList.add('selected');
     
-    discussionTimerInt = setInterval(function () {
-        minutes = parseInt(timer / 60, 10);
-        seconds = parseInt(timer % 60, 10);
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        seconds = seconds < 10 ? "0" + seconds : seconds;
-        display.innerText = minutes + ":" + seconds;
+    socket.emit('bp_submit_trivia', { answer: selectedAnswer });
+    document.getElementById('bp-waiting-trivia-msg').style.display = 'block';
+    sfx.buzz();
+}
 
-        if (--timer < 0) {
-            clearInterval(discussionTimerInt);
-            if(onEnd) onEnd();
+// Phase 2: Show Answers & Draw
+socket.on('bp_trivia_results', (data) => {
+    clearInterval(bpTimerInt);
+    const optBox = document.getElementById('bp-options-box');
+    const btns = optBox.querySelectorAll('.option-btn');
+    
+    btns.forEach(b => {
+        if (b.innerText === data.correctAnswer) {
+            b.classList.add('correct');
+        } else if (b.classList.contains('selected')) {
+            b.classList.add('wrong');
+        }
+    });
+
+    if (data.iGotItRight) {
+        sfx.correct();
+        showToast("Correct! You draw a card.");
+    } else {
+        sfx.wrong();
+        showToast("Incorrect. No cards drawn.");
+    }
+});
+
+// Phase 3: The Board / Action Phase
+socket.on('bp_board_phase', (gameState) => {
+    switchBpView('bp-board-view');
+    renderBpBoard(gameState);
+    startBpTimer('bp-hand-count', null, 25, () => {
+        // Auto skip turn if timeout
+        skipBlueprintTurn();
+    });
+});
+
+function renderBpBoard(state) {
+    // 1. Render Opponents
+    const oppArea = document.getElementById('bp-opponents-area');
+    oppArea.innerHTML = "";
+    state.opponents.forEach(opp => {
+        let dots = '';
+        for(let i=0; i<opp.board.wisdom; i++) dots += `<div class="bp-dot wisdom"></div>`;
+        for(let i=0; i<opp.board.health; i++) dots += `<div class="bp-dot health"></div>`;
+        for(let i=0; i<opp.board.facts; i++) dots += `<div class="bp-dot facts"></div>`;
+        if(dots === '') dots = '<span class="muted-text" style="font-size:10px;">Empty</span>';
+
+        oppArea.innerHTML += `
+            <div class="bp-opp-board">
+                <span class="white-text" style="font-size:12px; font-weight:bold; text-transform:uppercase;">${opp.name}</span>
+                <div class="bp-opp-dots">${dots}</div>
+            </div>
+        `;
+    });
+
+    // 2. Render My Board
+    document.getElementById('bp-my-wisdom').innerText = state.myBoard.wisdom;
+    document.getElementById('bp-my-health').innerText = state.myBoard.health;
+    document.getElementById('bp-my-facts').innerText = state.myBoard.facts;
+
+    // 3. Render My Hand
+    bpMyHand = state.myHand;
+    document.getElementById('bp-hand-count').innerText = `(${bpMyHand.length})`;
+    const handContainer = document.getElementById('bp-my-hand-container');
+    handContainer.innerHTML = "";
+    
+    if (bpMyHand.length === 0) {
+        handContainer.innerHTML = `<p class="muted-text" style="width: 100%; text-align: center; margin-top: 40px; font-style: italic;">Your hand is empty.</p>`;
+    } else {
+        bpMyHand.forEach(card => {
+            handContainer.innerHTML += createCardHTML(card);
+        });
+    }
+}
+
+function createCardHTML(card) {
+    let cardClass = "";
+    let icon = "";
+    let title = "";
+    let desc = "";
+
+    if (card.type === "blueprint") {
+        if (card.category === "wisdom") { cardClass = "card-wisdom"; icon = "👑"; title = "Wisdom"; desc = "Blueprint"; }
+        if (card.category === "health") { cardClass = "card-health"; icon = "🍎"; title = "Health"; desc = "Blueprint"; }
+        if (card.category === "facts") { cardClass = "card-facts"; icon = "🌍"; title = "Facts"; desc = "Blueprint"; }
+    } else {
+        if (card.action === "thief") { cardClass = "card-thief"; icon = "🦹"; title = "Thief"; desc = "Steal 1 Card"; }
+        if (card.action === "tax") { cardClass = "card-tax"; icon = "💥"; title = "Tax"; desc = "Destroy 1 Card"; }
+        if (card.action === "shield") { cardClass = "card-shield"; icon = "🛡️"; title = "Shield"; desc = "Auto-Block"; }
+    }
+
+    return `
+        <div class="playing-card ${cardClass}" onclick="handleCardClick('${card.id}', '${card.type}', '${card.action || card.category}')">
+            <div class="card-title">${title}</div>
+            <div class="card-icon">${icon}</div>
+            <div style="font-size: 8px;">${desc}</div>
+        </div>
+    `;
+}
+
+function handleCardClick(cardId, type, subtype) {
+    masterUnlockAudio();
+    if (type === "blueprint" || subtype === "shield") {
+        // Play instantly to board
+        socket.emit('bp_play_card', { cardId: cardId, targetId: null });
+        document.getElementById('bp-my-hand-container').innerHTML = `<p class="gold-text" style="width: 100%; text-align: center; margin-top: 40px; font-weight: bold;">Card Played!</p>`;
+    } else if (type === "action") {
+        // Needs a target
+        bpActiveCardToPlay = cardId;
+        openBlueprintTargetModal();
+    }
+}
+
+function openBlueprintTargetModal() {
+    const list = document.getElementById('bp-target-list');
+    list.innerHTML = "";
+    
+    // Request current opponents from server to target
+    socket.emit('bp_get_targets');
+    document.getElementById('bp-target-modal').classList.add('active');
+}
+
+function closeBlueprintTargetModal() {
+    document.getElementById('bp-target-modal').classList.remove('active');
+    bpActiveCardToPlay = null;
+}
+
+socket.on('bp_receive_targets', (opponents) => {
+    const list = document.getElementById('bp-target-list');
+    list.innerHTML = "";
+    if(opponents.length === 0) {
+        list.innerHTML = `<p class="muted-text text-center">No targets available.</p>`;
+        return;
+    }
+    opponents.forEach(opp => {
+        list.innerHTML += `
+            <div class="bp-target-btn" onclick="executeActionCard('${opp.id}')">
+                <span class="white-text" style="font-weight: bold;">${opp.name}</span>
+                <span class="red-text" style="font-size: 10px; font-weight: bold; text-transform: uppercase;">TARGET</span>
+            </div>
+        `;
+    });
+});
+
+function executeActionCard(targetId) {
+    if (!bpActiveCardToPlay) return;
+    masterUnlockAudio();
+    closeBlueprintTargetModal();
+    socket.emit('bp_play_card', { cardId: bpActiveCardToPlay, targetId: targetId });
+    document.getElementById('bp-my-hand-container').innerHTML = `<p class="red-text" style="width: 100%; text-align: center; margin-top: 40px; font-weight: bold;">Sabotage Deployed!</p>`;
+}
+
+function skipBlueprintTurn() {
+    masterUnlockAudio();
+    socket.emit('bp_skip_turn');
+    document.getElementById('bp-my-hand-container').innerHTML = `<p class="muted-text" style="width: 100%; text-align: center; margin-top: 40px; font-style: italic;">Turn Skipped. Waiting for next trivia round...</p>`;
+}
+
+socket.on('bp_game_over', (data) => {
+    clearInterval(bpTimerInt);
+    switchScreen('result-screen');
+    const fScore = document.getElementById('final-score');
+    const ePoints = document.getElementById('earned-points');
+    const rDisp = document.getElementById('rank-display');
+    
+    if (data.winner === currentUser) {
+        fScore.innerText = "VICTORY!";
+        fScore.style.color = "var(--accent-green)";
+        ePoints.innerText = "10,000";
+        currentPoints += 10000;
+        speak("Congratulations. You have completed the Blueprints.");
+        if (typeof confetti !== 'undefined') confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+    } else {
+        fScore.innerText = "DEFEAT";
+        fScore.style.color = "var(--accent-red)";
+        ePoints.innerText = "0";
+        speak(`${data.winner} has completed the Blueprints and won the game.`);
+    }
+    
+    rDisp.innerText = `${data.winner} Wins!`;
+    try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
+    document.getElementById('display-points').innerText = currentPoints;
+    socket.emit('update_global_score', { name: currentUser, points: currentPoints });
+});
+
+function startBpTimer(textId, barId, duration, onEnd) {
+    clearInterval(bpTimerInt);
+    let timer = duration;
+    const tDisplay = document.getElementById(textId);
+    const bDisplay = document.getElementById(barId);
+    
+    bpTimerInt = setInterval(() => {
+        timer--;
+        if(tDisplay) {
+            if(tDisplay.id === 'bp-trivia-timer') tDisplay.innerText = timer + "s";
+            else tDisplay.innerText = `(${timer}s)`; // For hand count label reuse
         }
         
-        if(timer < 10) {
-            display.style.color = "var(--accent-red)";
-            sfx.tick();
-        } else {
-            display.style.color = "white";
+        if(bDisplay) {
+            const pct = (timer / duration) * 100;
+            bDisplay.style.width = pct + "%";
+            if(pct < 30) bDisplay.style.background = "var(--accent-red)";
+            else bDisplay.style.background = "#a855f7";
+        }
+        
+        if (timer <= 0) {
+            clearInterval(bpTimerInt);
+            if(onEnd) onEnd();
         }
     }, 1000);
 }
-
-socket.on('family_start_voting', (data) => {
-    currentPhase = "voting";
-    switchFamilyView('p-voting-view');
-    speak("Deception detected. Alarms blaring.");
-    sfx.siren();
-    
-    hasLockedTriviaVote = false;
-    hasLockedAccuseVote = false;
-    document.getElementById('p-trivia-voted-msg').style.display = 'none';
-    document.getElementById('p-accuse-voted-msg').style.display = 'none';
-    
-    const tMsg = document.getElementById('p-trivia-vote-msg');
-    const aMsg = document.getElementById('p-traitor-vote-msg');
-    const tOpts = document.getElementById('p-vote-options-box');
-    const aOpts = document.getElementById('p-accuse-options-box');
-    
-    tOpts.innerHTML = "";
-    aOpts.innerHTML = "";
-    
-    if(myFamilyRole === "vanguard") {
-        tMsg.innerText = "Vote for the CORRECT answer to the query.";
-        trueShuffle(familyActiveQuestion.options).forEach(opt => {
-            const b = document.createElement('button');
-            b.className = "p-vote-btn";
-            b.innerText = opt;
-            b.onclick = function() { submitTriviaVote(opt, b); };
-            tOpts.appendChild(b);
-        });
-        
-    } else {
-        tMsg.innerHTML = `<span class="red-text">Sabotage Protocol.</span> Vote for a WRONG answer to trick them.`;
-        ['A', 'B', 'C', 'D'].forEach((opt, idx) => {
-            const b = document.createElement('button');
-            b.className = "p-vote-btn plane-pulse";
-            b.innerText = `Fake Option ${opt}`;
-            b.onclick = function() { submitTriviaVote(opt, b); }; 
-            tOpts.appendChild(b);
-        });
-    }
-    
-    aMsg.innerText = "Identify the player you believe is the 85er.";
-    data.players.forEach(p => {
-        if(p.name !== currentUser) { 
-            const b = document.createElement('button');
-            b.className = "p-accuse-btn";
-            b.innerHTML = `
-                <span class="white-text">${p.name}</span>
-                <span class="muted-text" style="font-size:10px;">Select to Accuse</span>
-            `;
-            b.onclick = function() { submitAccuseVote(p.id, b); };
-            aOpts.appendChild(b);
-        }
-    });
-    
-    startPlaneTimer('p-voting-timer', 20, () => {
-        sfx.wrong(); 
-    });
-});
-
-function submitTriviaVote(answer, btn) {
-    if(hasLockedTriviaVote) return;
-    masterUnlockAudio();
-    hasLockedTriviaVote = true;
-    
-    const card = document.getElementById('p-trivia-vote-card');
-    const btns = card.querySelectorAll('.p-vote-btn');
-    btns.forEach(b => b.classList.add('locked'));
-    btn.classList.add('selected');
-    
-    socket.emit('family_vote_trivia', { answer: answer });
-    document.getElementById('p-trivia-voted-msg').style.display = 'flex';
-}
-
-function submitAccuseVote(playerId, btn) {
-    if(hasLockedAccuseVote) return;
-    masterUnlockAudio();
-    hasLockedAccuseVote = true;
-    
-    const card = document.getElementById('p-accuse-options-box');
-    const btns = card.querySelectorAll('.p-accuse-btn');
-    btns.forEach(b => b.classList.add('locked'));
-    btn.classList.add('selected');
-    
-    socket.emit('family_vote_accuse', { accuseId: playerId });
-    document.getElementById('p-accuse-voted-msg').style.display = 'flex';
-}
-
-socket.on('family_round_results', (data) => {
-    currentPhase = "results";
-    switchFamilyView('p-results-view');
-    speak("System decryption complete. The Infiltrator has been revealed.");
-    
-    document.getElementById('p-reveal-avatar-container').innerHTML = getAvatar(data.traitorName, 10000); 
-    document.getElementById('p-reveal-name').innerText = data.traitorName;
-    
-    if(data.vanguardWonRound) {
-        speak("Justice is served. The original nation stands strong.");
-        sfx.correct();
-        if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    } else {
-        speak("Sabotage successful. The system has failed.");
-        sfx.alarm();
-        document.getElementById('p-results-view').classList.add('plane-shake');
-        setTimeout(() => document.getElementById('p-results-view').classList.remove('plane-shake'), 1000);
-    }
-    
-    const scoreList = document.getElementById('p-round-scores-list');
-    scoreList.innerHTML = "";
-    data.scores.sort((a,b) => b.roundScore - a.roundScore).forEach(s => {
-        const isPositive = s.roundScore >= 0;
-        const pts = s.roundScore.toLocaleString();
-        
-        scoreList.innerHTML += `
-            <div class="plane-score-row">
-                <div style="display:flex; align-items:center;">
-                    ${getAvatar(s.name, 0)}
-                    ${s.wasTraitor ? '<span class="red-text" style="font-size:10px; margin-left:10px; font-weight:bold;">85er</span>' : ''}
-                </div>
-                <div class="score-badge ${isPositive ? 'score-positive' : 'score-negative'}">
-                    ${isPositive ? '+' : ''}${pts}
-                </div>
-            </div>
-        `;
-        
-        if(s.name === currentUser) {
-            currentPoints += s.roundScore;
-            if(currentPoints < 0) currentPoints = 0;
-            try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
-            document.getElementById('display-points').innerText = currentPoints;
-        }
-    });
-    
-    if(isHost) {
-        document.getElementById('p-host-next-btn').style.display = 'block';
-    } else {
-        document.getElementById('p-host-next-btn').style.display = 'none';
-    }
-});
 
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
@@ -1890,14 +1883,13 @@ socket.on('leaderboard_data', (data) => {
 function returnToMenu() {
     sessionCancelToken++; 
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    clearInterval(discussionTimerInt);
-    clearInterval(votingTimerInt);
-    socket.emit('leave_family_room');
+    clearInterval(bpTimerInt);
+    socket.emit('bp_leave_room');
     socket.emit('leave_arena');
     socket.emit('leave_jeopardy');
     socket.emit('leave_tug');
-    isHost = false;
-    familyRoomCode = "";
+    bpIsHost = false;
+    bpRoomCode = "";
     switchScreen('home-screen');
 }
 
