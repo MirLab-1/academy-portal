@@ -23,27 +23,23 @@
         .option-btn { width: 100%; max-width: 100%; margin: 0 auto; transition: transform 0.1s ease; }
         
         /* 🚨 ABSOLUTE GREY-HIGHLIGHT KILL-SWITCH 🚨 */
-        /* Physically forces the browser to drop the grey focus background when you tap */
         .option-btn:focus, .option-btn:active {
             outline: none !important;
             background-color: transparent !important;
         }
         
-        /* Prevents iOS from fading out disabled buttons */
         .option-btn:disabled { opacity: 1 !important; }
 
-        /* DESKTOP ONLY: Safe yellow hover for computers with a mouse */
         @media (hover: hover) and (pointer: fine) {
             .option-btn:hover { border-color: var(--gold) !important; background-color: rgba(212, 175, 55, 0.1) !important; }
         }
         
-        /* MOBILE ONLY: Active click shrink, NO background color change allowed */
         @media (hover: none), (pointer: coarse) {
             .option-btn:hover, .option-btn:focus { border-color: #333 !important; background-color: transparent !important; color: white !important; box-shadow: none !important; }
             .option-btn:active { transform: scale(0.96) !important; background-color: transparent !important; }
         }
 
-        /* 🚨 ENFORCES PURE RED/GREEN (Overrides Safari completely) 🚨 */
+        /* 🚨 ENFORCES PURE RED/GREEN 🚨 */
         button.option-btn.correct, button.option-btn.correct:hover, button.option-btn.correct:focus, button.option-btn.correct:active, button.option-btn.correct:disabled { 
             border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.15) !important; color: #10b981 !important; -webkit-text-fill-color: #10b981 !important; opacity: 1 !important; 
         }
@@ -95,7 +91,7 @@
             <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
+            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
             <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); max-width: 300px;">ENTER ACADEMY</button>
         </div>
     </div>
@@ -231,7 +227,7 @@
             <div id="j-game-view" style="display: none; width: 100%;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
                     <h1 style="color: var(--gold); margin: 0; font-size: 24px;">LIVE JEOPARDY</h1>
-                    <div style="background: #111; padding: 5px 15px; border-radius: 20px; color: #10b981; font-weight: bold;">Round: <span id="j-round-display" style="color: white;">1/10</span></div>
+                    <div style="background: #111; padding: 5px 15px; border-radius: 20px; color: #10b981; font-weight: bold;">Round: <span id="j-round-display" style="color: white;">1/21</span></div>
                 </div>
 
                 <div class="jeopardy-flex-container" style="display: flex; gap: 30px; text-align: left; flex-wrap: wrap;">
