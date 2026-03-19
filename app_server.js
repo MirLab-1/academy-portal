@@ -8,13 +8,42 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const path = require('path');
+const fs = require('fs');
 
 app.use(express.static(path.join(__dirname, '/')));
 
-// --- MASTER DATA ---
-let jeopardyPlayers = [];
+// --- PERSISTENT DATABASE LOGIC ---
+const DB_FILE = path.join(__dirname, 'database.json');
 let globalScores = {}; 
 let globalWinStreaks = {}; 
+
+function loadDatabase() {
+    if (fs.existsSync(DB_FILE)) {
+        try {
+            const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+            globalScores = data.scores || {};
+            globalWinStreaks = data.streaks || {};
+            console.log("✅ Database Loaded. Leaderboard Restored.");
+        } catch(e) {
+            console.error("🚨 DB Load Error:", e);
+        }
+    }
+}
+
+function saveDatabase() {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify({ scores: globalScores, streaks: globalWinStreaks }), 'utf8');
+    } catch (e) {
+        console.error("🚨 DB Save Error:", e);
+    }
+}
+
+// Load it when server starts
+loadDatabase();
+
+
+// --- MASTER DATA ---
+let jeopardyPlayers = [];
 let readyPlayers = new Set();
 
 // --- JEOPARDY STATE ---
@@ -161,12 +190,15 @@ io.on('connection', (socket) => {
     // ==========================================
     socket.on('join_game', (data) => {
         socket.userName = data.name;
-        globalScores[data.name] = data.points || 0;
+        // Keep the highest score to prevent accidental overwrites
+        globalScores[data.name] = Math.max((globalScores[data.name] || 0), data.points || 0);
         if (!globalWinStreaks[data.name]) globalWinStreaks[data.name] = 0;
+        saveDatabase();
     });
 
     socket.on('update_global_score', (data) => {
-        globalScores[data.name] = data.points;
+        globalScores[data.name] = Math.max((globalScores[data.name] || 0), data.points);
+        saveDatabase();
     });
 
     socket.on('get_leaderboard', () => {
@@ -262,6 +294,7 @@ io.on('connection', (socket) => {
 
             globalScores[p1.name] = Math.max(0, (globalScores[p1.name] || 0) + resultData.p1Result);
             globalScores[p2.name] = Math.max(0, (globalScores[p2.name] || 0) + resultData.p2Result);
+            saveDatabase();
 
             io.to(roomID).emit('arena_game_over', resultData);
             delete arenaRooms[roomID];
@@ -404,35 +437,6 @@ io.on('connection', (socket) => {
         setTimeout(nextRound, 3000);
     });
 
-    socket.on('start_round', (qData) => {
-        if (!gameActive) return;
-        currentCorrectAnswer = qData.correct;
-        const isGolden = (currentRound === goldenRound);
-        if (isGolden) {
-            io.emit('golden_alert');
-            setTimeout(() => {
-                if (!gameActive) return;
-                io.emit('announce_category', { ...qData, isGolden: true });
-                setTimeout(() => {
-                    if (!gameActive) return;
-                    io.emit('new_question', qData);
-                    questionStartTime = Date.now();
-                    canBuzz = true;
-                    startBuzzTimer(15);
-                }, 4000);
-            }, 4000); 
-        } else {
-            io.emit('announce_category', { ...qData, isGolden: false });
-            setTimeout(() => {
-                if (!gameActive) return;
-                io.emit('new_question', qData);
-                questionStartTime = Date.now();
-                canBuzz = true;
-                startBuzzTimer(15);
-            }, 4000);
-        }
-    });
-
     // ==========================================
     // 🚀 5. THE 4 SQUARES LOGIC 🚀
     // ==========================================
@@ -503,7 +507,7 @@ io.on('connection', (socket) => {
         const payload = {
             round: room.round,
             maxRounds: room.maxRounds,
-            clues: trueShuffle(puzzle.clues), // Shuffle so it's not always in the same order
+            clues: trueShuffle(puzzle.clues), 
             options: trueShuffle(puzzle.options)
         };
 
@@ -511,7 +515,7 @@ io.on('connection', (socket) => {
 
         room.timer = setTimeout(() => {
             evaluateSqRound(room);
-        }, 20000); // 20 seconds to answer
+        }, 20000); 
     }
 
     socket.on('sq_submit_answer', (data) => {
@@ -541,7 +545,7 @@ io.on('connection', (socket) => {
 
         setTimeout(() => {
             startSqRound(room);
-        }, 5000); // 5 second pause between rounds
+        }, 5000); 
     }
 
     function endSqGame(room) {
@@ -552,6 +556,8 @@ io.on('connection', (socket) => {
             winnerName: winner ? winner.name : "Nobody",
             scores: room.players.map(p => ({ name: p.name, score: p.score }))
         };
+        
+        // Final update to the persistent database happens via client 'update_global_score' emit
 
         io.to(room.code).emit('sq_game_over', payload);
         delete sqRooms[room.code];
@@ -562,12 +568,14 @@ io.on('connection', (socket) => {
             const room = sqRooms[s.currentSqRoom];
             room.players = room.players.filter(p => p.id !== s.id);
             
-            if (room.players.length === 0) {
+            if (room.host === s.id) {
+                // HOST LEFT - DESTROY ROOM & KICK EVERYONE
+                io.to(s.currentSqRoom).emit('sq_host_left');
                 delete sqRooms[s.currentSqRoom];
-            } else if (room.host === s.id) {
-                io.to(s.currentSqRoom).emit('sq_join_error', "The Host disconnected. The table has closed.");
+            } else if (room.players.length === 0) {
                 delete sqRooms[s.currentSqRoom];
             } else {
+                // JUST UPDATE LOBBY
                 io.to(s.currentSqRoom).emit('sq_lobby_update', room.players.map(p => ({ name: p.name })));
             }
         }
@@ -636,7 +644,59 @@ function nextRound() {
     io.emit('reset_buzzer');
     io.emit('round_update', { round: currentRound, max: MAX_ROUNDS });
     let host = alivePlayers.length > 0 ? alivePlayers[0] : jeopardyPlayers[0];
-    io.to(host.id).emit('request_question', { hostId: host.id });
+    
+    // Jeopardy question fetching logic
+    const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
+    const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
+    let randomQ = null;
+    let randomCat = "";
+    
+    // We do this server side now to avoid client mismatch
+    randomCat = categories[Math.floor(Math.random() * categories.length)];
+    const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+    let questions = null;
+
+    if (quizData[randomCat]) {
+        if (quizData[randomCat][randomDiff]) {
+            questions = quizData[randomCat][randomDiff];
+        } else if (quizData[randomCat]['exact']) {
+            questions = quizData[randomCat]['exact'];
+        } else {
+            questions = quizData['kids']['easy']; // Fallback
+        }
+    } else {
+        questions = quizData['kids']['easy']; // Fallback
+    }
+
+    randomQ = questions[Math.floor(Math.random() * questions.length)];
+    randomQ.categoryTitle = quizData[randomCat] ? quizData[randomCat].title : "General";
+    
+    currentCorrectAnswer = randomQ.correct;
+    const isGolden = (currentRound === goldenRound);
+    
+    if (isGolden) {
+        io.emit('golden_alert');
+        setTimeout(() => {
+            if (!gameActive) return;
+            io.emit('announce_category', { ...randomQ, isGolden: true });
+            setTimeout(() => {
+                if (!gameActive) return;
+                io.emit('new_question', randomQ);
+                questionStartTime = Date.now();
+                canBuzz = true;
+                startBuzzTimer(15);
+            }, 4000);
+        }, 4000); 
+    } else {
+        io.emit('announce_category', { ...randomQ, isGolden: false });
+        setTimeout(() => {
+            if (!gameActive) return;
+            io.emit('new_question', randomQ);
+            questionStartTime = Date.now();
+            canBuzz = true;
+            startBuzzTimer(15);
+        }, 4000);
+    }
 }
 
 function startBuzzTimer(maxTime) {
@@ -694,6 +754,8 @@ function handleGameOver() {
     jeopardyPlayers.forEach(p => {
         if (p.id === winner.id) globalWinStreaks[p.name] = (globalWinStreaks[p.name] || 0) + 1; else globalWinStreaks[p.name] = 0;
     });
+    
+    saveDatabase(); // Save results to disk
     io.emit('game_over', jeopardyPlayers);
 }
 
