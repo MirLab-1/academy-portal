@@ -408,8 +408,9 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 5. RESTORED WORKING AUDIO ENGINE (GLOBAL TOUCH ENABLED)
 // ---------------------------------------------------------
+
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
     try {
@@ -432,6 +433,7 @@ function masterUnlockAudio() {
     } catch(e) { console.error("Audio Bypass Failed", e); }
 }
 
+// GLOBAL EVENT LISTENERS TO FIX MOBILE VOICE AND PREVENT CRASHES
 document.addEventListener('touchstart', masterUnlockAudio, { once: true });
 document.addEventListener('click', masterUnlockAudio, { once: true });
 
@@ -473,6 +475,7 @@ function speak(text) {
         const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
         if (preferredVoice) msg.voice = preferredVoice;
         msg.rate = 0.95; 
+        
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         window.speechSynthesis.speak(msg);
     }
@@ -520,7 +523,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC 
+// 7. PRO JEOPARDY LOGIC (AAA BUILD RESTORED)
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -550,7 +553,7 @@ function sendReady() {
     if (rBtn) {
         rBtn.style.background = '#555'; 
         rBtn.style.color = 'white'; 
-        rBtn.innerText = "WAITING..."; 
+        rBtn.innerText = "WAITING FOR OTHERS..."; 
         rBtn.disabled = true;
     }
 }
@@ -879,7 +882,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
+// 9. ORIGINAL QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -925,7 +928,6 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // IMPORTANT FIX: Clears out old buttons entirely to stop sticky hover state
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -942,7 +944,6 @@ function loadQuestion() {
         btn.innerText = opt;
         
         btn.onclick = () => { 
-            // IMPORTANT FIX: Forces browser to drop mobile focus target immediately
             if (document.activeElement) document.activeElement.blur();
             masterUnlockAudio(); 
             checkAnswer(opt, btn, q.correct); 
@@ -958,7 +959,6 @@ function checkAnswer(selected, btn, correct) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
-            // CRITICAL FIX: Further ensures mobile buttons lose focus
             b.blur();
         });
     }
@@ -971,6 +971,15 @@ function checkAnswer(selected, btn, correct) {
         sfx.correct();
     } else {
         btn.classList.add('wrong');
+        // HIGHLIGHTS CORRECT ANSWER GREEN
+        if (optionsDiv) {
+            const quizBtns = optionsDiv.querySelectorAll('.option-btn');
+            quizBtns.forEach(b => {
+                if (b.innerText === correct) {
+                    b.classList.add('correct');
+                }
+            });
+        }
         sfx.wrong();
     }
     
