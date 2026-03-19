@@ -579,10 +579,8 @@ function startTugOfWar() {
     document.getElementById('t-results-view').style.display = 'none';
     
     const rBtn = document.getElementById('t-ready-btn');
-    rBtn.style.background = '#eab308'; 
-    rBtn.style.color = 'black'; 
+    rBtn.disabled = false; 
     rBtn.innerText = "I'M READY"; 
-    rBtn.disabled = false;
     
     socket.emit('join_tug', { name: currentUser });
 }
@@ -591,8 +589,6 @@ function sendTugReady() {
     masterUnlockAudio();
     socket.emit('tug_ready');
     const rBtn = document.getElementById('t-ready-btn');
-    rBtn.style.background = '#555'; 
-    rBtn.style.color = 'white'; 
     rBtn.innerText = "WAITING..."; 
     rBtn.disabled = true;
 }
@@ -736,7 +732,7 @@ socket.on('tug_game_over', (data) => {
 
 
 // ---------------------------------------------------------
-// 9. PRO JEOPARDY LOGIC (21 ROUNDS NO DUPLICATES)
+// 9. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     sessionCancelToken++;
@@ -752,10 +748,8 @@ function startJeopardy() {
     if (gView) gView.style.display = 'none';
     if (pView) pView.style.display = 'none';
     if (rBtn) {
-        rBtn.style.background = 'var(--gold)'; 
-        rBtn.style.color = 'black'; 
-        rBtn.innerText = "I'M READY"; 
         rBtn.disabled = false;
+        rBtn.innerText = "I'M READY"; 
     }
     socket.emit('join_jeopardy', { name: currentUser });
 }
@@ -765,8 +759,6 @@ function sendReady() {
     socket.emit('player_ready');
     const rBtn = document.getElementById('ready-btn');
     if (rBtn) {
-        rBtn.style.background = '#555'; 
-        rBtn.style.color = 'white'; 
         rBtn.innerText = "WAITING FOR OTHERS..."; 
         rBtn.disabled = true;
     }
@@ -808,7 +800,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = []; // Reset local log for a new game
+    usedJeopardyQuestions = []; 
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -899,7 +891,6 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
-    // 🚨 ZERO DUPLICATES: Log the question locally as soon as it's broadcasted
     if (!usedJeopardyQuestions.includes(qData.question)) {
         usedJeopardyQuestions.push(qData.question);
     }
@@ -1111,7 +1102,7 @@ function openStudyLibrary(mode, diff) {
 // 11. MAIN QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
-    sessionCancelToken++; // Kills ghost timers
+    sessionCancelToken++; 
     masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     
