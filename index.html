@@ -56,7 +56,7 @@
            🚨 MODERN UI FOR "THE ARENA" (GLASSMORPHISM & NEON) 🚨 
            ======================================================== */
         .arena-glow-text { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 15px #ef4444, 0 0 30px #ef4444; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px; }
-        .arena-card { background: rgba(15, 15, 20, 0.95); border: 1px solid #333; border-top: 1px solid #555; border-radius: 16px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; position: relative; overflow: hidden; }
+        .arena-card { background: rgba(15, 15, 20, 0.95); border: 1px solid #333; border-top: 1px solid #555; border-radius: 16px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; position: relative; overflow: hidden; }
         .arena-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #ef4444, #f59e0b, #ef4444); }
         
         .modern-wager-input { width: 100%; max-width: 300px; background: #050505; border: 2px solid #333; color: #fff; font-size: 40px; font-weight: 900; text-align: center; padding: 15px; border-radius: 12px; margin: 20px auto; display: block; outline: none; transition: border-color 0.3s, box-shadow 0.3s; }
@@ -201,10 +201,23 @@
             
             <div id="a-lobby-view" style="width: 100%;">
                 <div class="arena-glow-text">THE ARENA</div>
-                <div class="arena-card" style="margin-bottom: 30px;">
-                    <h2 style="color: white; margin-bottom: 10px; text-transform: uppercase;">Searching for Challenger...</h2>
-                    <p style="font-size: 28px; color: #10b981; font-weight: bold;"><span id="a-lobby-count">1</span> / 2 Found</p>
+                
+                <div class="arena-card" style="margin-bottom: 30px; text-align: left; padding: 25px;">
+                    <h3 style="color: #ef4444; margin-top: 0; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-size: 22px; letter-spacing: 1px;">How To Play</h3>
+                    <ul style="color: #cbd5e1; font-size: 15px; line-height: 1.6; padding-left: 0; list-style: none; margin-bottom: 20px;">
+                        <li style="margin-bottom: 10px;"><strong style="color: white;">1. The Wager:</strong> Bet your points against a live opponent.</li>
+                        <li style="margin-bottom: 10px;"><strong style="color: white;">2. The Duel:</strong> Both players face the exact same high-level question blindly.</li>
+                        <li style="margin-bottom: 10px;"><strong style="color: #10b981;">3. Victory:</strong> Answer correctly while they miss, and you <span style="color: #10b981; text-decoration: underline;">STEAL</span> their wager.</li>
+                        <li style="margin-bottom: 10px;"><strong style="color: #aaa;">4. Stalemate:</strong> Both correct? No points lost.</li>
+                        <li><strong style="color: #ef4444;">5. Double K.O.:</strong> Both wrong? You both lose your bet.</li>
+                    </ul>
+                    
+                    <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+                        <h2 style="color: white; margin-bottom: 5px; font-size: 18px; text-transform: uppercase;">Searching for Challenger...</h2>
+                        <p style="font-size: 26px; color: #10b981; font-weight: bold; margin: 0;"><span id="a-lobby-count">1</span> / 2 Found</p>
+                    </div>
                 </div>
+
                 <button id="a-ready-btn" class="option-btn" onclick="sendArenaReady()" style="background-color: #ef4444 !important; border-color: #ef4444 !important; color: white !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; box-shadow: 0 0 20px rgba(239,68,68,0.5) !important;">ENTER</button>
                 <br><button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; width: 150px; margin-top: 20px; margin: 20px auto;">Back</button>
             </div>
@@ -359,11 +372,11 @@
         <div class="modal-content">
             <h2 style="color: var(--gold); text-align: center;">Difficulty</h2>
             <div class="options-grid">
-                <button class="option-btn" style="border-color: #10b981 !important; color: #10b981 !important; font-weight: bold;" onclick="selectDifficulty('easy')">Easy</button>
-                <button class="option-btn" style="border-color: #f59e0b !important; color: #f59e0b !important; font-weight: bold;" onclick="selectDifficulty('medium')">Medium</button>
-                <button class="option-btn" style="border-color: #ef4444 !important; color: #ef4444 !important; font-weight: bold;" onclick="selectDifficulty('hard')">Hard</button>
-                <button class="option-btn" style="border-color: #a855f7 !important; color: #d8b4fe !important; font-weight: bold;" onclick="selectDifficulty('extreme')">Extreme</button>
-                <button class="option-btn" style="border-color: #555 !important; color: white !important; font-weight: bold;" onclick="closeDifficulty()">Cancel</button>
+                <button class="option-btn diff-easy" onclick="selectDifficulty('easy')">Easy</button>
+                <button class="option-btn diff-med" onclick="selectDifficulty('medium')">Medium</button>
+                <button class="option-btn diff-hard" onclick="selectDifficulty('hard')">Hard</button>
+                <button class="option-btn diff-ext" onclick="selectDifficulty('extreme')">Extreme</button>
+                <button class="option-btn diff-cancel" onclick="closeDifficulty()">Cancel</button>
             </div>
         </div>
     </div>
@@ -373,8 +386,8 @@
             <h2 id="study-title" style="color: var(--gold); width: 100%; text-align: center;">Study</h2>
             <div id="study-text" class="study-text-box" style="text-align: center; width: 100%;"></div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width: 100%;">
-                <button class="option-btn" style="background-color: #333 !important; border-color: #444 !important; color: white !important;" onclick="returnToMenu()">Back</button>
-                <button class="option-btn" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important; font-weight: bold;" onclick="beginQuizFromStudy()">Begin</button>
+                <button class="option-btn diff-cancel" onclick="returnToMenu()">Back</button>
+                <button class="option-btn diff-easy" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important;" onclick="beginQuizFromStudy()">Begin</button>
             </div>
         </div>
     </div>
@@ -393,7 +406,7 @@
             <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
             
             <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-                <button class="option-btn" onclick="returnToMenu()" style="background-color: transparent !important; border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; margin: 0 auto;">Quit</button>
+                <button class="option-btn diff-cancel" onclick="returnToMenu()" style="background-color: transparent !important; border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; margin: 0 auto;">Quit</button>
             </div>
         </div>
     </div>
@@ -404,7 +417,7 @@
             <h2 id="final-score" style="font-size: 40px;">0/0</h2>
             <p style="color: var(--gold); font-weight: bold; font-size: 20px;">Points Earned: <span id="earned-points">0</span></p>
             <p id="rank-display">Rank: Student</p>
-            <button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; margin: 0 auto;">Back Home</button>
+            <button class="option-btn diff-cancel" onclick="returnToMenu()" style="margin: 0 auto;">Back Home</button>
         </div>
     </div>
     
@@ -412,7 +425,7 @@
         <div class="quiz-container">
             <h1 style="text-align: center;">🏆 Leaderboard</h1>
             <div id="leaderboard-list" style="width: 100%;"></div>
-            <button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; margin-top:20px; margin: 20px auto;">Back</button>
+            <button class="option-btn diff-cancel" onclick="returnToMenu()" style="margin-top:20px; margin: 20px auto;">Back</button>
         </div>
     </div>
 
