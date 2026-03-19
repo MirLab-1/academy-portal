@@ -736,7 +736,7 @@ socket.on('tug_game_over', (data) => {
 
 
 // ---------------------------------------------------------
-// 9. PRO JEOPARDY LOGIC (21 ROUNDS + VAULT)
+// 9. PRO JEOPARDY LOGIC (21 ROUNDS NO DUPLICATES)
 // ---------------------------------------------------------
 function startJeopardy() {
     sessionCancelToken++;
@@ -808,7 +808,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = [];
+    usedJeopardyQuestions = []; // Reset local log for a new game
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -833,18 +833,23 @@ socket.on('request_question', (data) => {
         const diffs = ['easy', 'medium', 'hard', 'extreme'];
         let randomQ = null;
         let randomCat = "";
+        
+        // Loop until we find a question that is NOT in the usedJeopardyQuestions log
         while (!randomQ) {
             randomCat = categories[Math.floor(Math.random() * categories.length)];
             const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
             const questions = quizData[randomCat][randomDiff];
             if (!questions) continue;
+            
             const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
             if (available.length > 0) {
                 randomQ = available[Math.floor(Math.random() * available.length)];
                 randomQ.categoryTitle = quizData[randomCat].title;
+            } else {
+                // If this specific category/difficulty is empty, the loop will just run again
             }
         }
-        usedJeopardyQuestions.push(randomQ.question);
+        
         socket.emit('start_round', randomQ); 
     }
 });
@@ -897,7 +902,7 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
-    // Zero Duplicate Sync: Ensure all clients log this question
+    // 🚨 ZERO DUPLICATES: Log the question locally as soon as it's broadcasted
     if (!usedJeopardyQuestions.includes(qData.question)) {
         usedJeopardyQuestions.push(qData.question);
     }
