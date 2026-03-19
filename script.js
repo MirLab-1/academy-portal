@@ -9,8 +9,7 @@
  * 5. EXTREME MODE (240 Questions)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. Correct Answer Green Highlight Restored
- * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
- * 9. Victory Confetti & Dynamic Forfeit Handlers Added
+ * 8. Fixed Back/Quit Buttons globally
  */
 
 const socket = io();
@@ -662,7 +661,6 @@ socket.on('tug_muddy', () => {
     }, 3000);
 });
 
-// 🚨 THE VICTORY FIX 🚨
 socket.on('tug_game_over', (data) => {
     sessionCancelToken++;
     document.getElementById('t-game-view').style.display = 'none';
@@ -673,7 +671,7 @@ socket.on('tug_game_over', (data) => {
     
     if (data.winner === currentUser) {
         wText.innerText = "VICTORY!";
-        wText.style.color = "#10b981"; // Green win
+        wText.style.color = "#10b981"; 
         
         if (data.reason === "forfeit" || data.reason === "disconnect") {
             subText.innerText = "Your opponent fled the battlefield! You win by default.";
@@ -683,7 +681,6 @@ socket.on('tug_game_over', (data) => {
             speak("You have captured the flag. Outstanding victory.");
         }
         
-        // Massive Confetti Explosion for the Winner!
         if (typeof confetti !== 'undefined') {
             var end = Date.now() + 3000;
             (function frame() {
@@ -695,7 +692,7 @@ socket.on('tug_game_over', (data) => {
         
     } else {
         wText.innerText = "DEFEAT";
-        wText.style.color = "#ef4444"; // Red loss
+        wText.style.color = "#ef4444"; 
         subText.innerText = "Your opponent overpowered you.";
         speak("Your opponent has won the war.");
     }
