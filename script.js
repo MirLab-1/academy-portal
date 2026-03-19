@@ -8,7 +8,7 @@
  * 4. Triple-Point Golden Questions
  * 5. Pressure Bar Timer SFX
  * 6. Mobile Audio Wakeup Hardware Bypass
- * 7. Screen Management System (Fixed Sticky Mobile Hover & Centering)
+ * 7. Schwartzian Transform Randomizer (Fixes Middle-Option Bug)
  * 8. EXTREME MODE ADDED (60 New Deep-Cut Questions + 1000pt Multiplier)
  * * DATABASE: 240 Total Questions across 7 Paths
  */
@@ -366,7 +366,19 @@ let activeQuestions = [];
 let usedJeopardyQuestions = [];
 
 // ---------------------------------------------------------
-// 3. MASTER SCREEN MANAGEMENT (Fixes Loading & Scroll)
+// 3. TRUE UNBIASED RANDOMIZER (Fixes middle-option bias)
+// ---------------------------------------------------------
+function trueShuffle(array) {
+    let newArr = [...array];
+    // Schwartzian Transform algorithm for 100% true randomization
+    return newArr
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+}
+
+// ---------------------------------------------------------
+// 4. MASTER SCREEN MANAGEMENT 
 // ---------------------------------------------------------
 function switchScreen(screenId) {
     const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen'];
@@ -382,7 +394,7 @@ function switchScreen(screenId) {
 }
 
 // ---------------------------------------------------------
-// 4. RANK BADGES, AVATARS & BOUNTY RENDERER
+// 5. RANK BADGES, AVATARS & BOUNTY RENDERER
 // ---------------------------------------------------------
 function getRankBadge(points) {
     if (points >= 15000) return "🟡 Captain";
@@ -408,7 +420,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
 }
 
 // ---------------------------------------------------------
-// 5. RESTORED WORKING AUDIO ENGINE
+// 6. RESTORED WORKING AUDIO ENGINE 
 // ---------------------------------------------------------
 function masterUnlockAudio() {
     if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
@@ -479,7 +491,7 @@ function speak(text) {
 }
 
 // ---------------------------------------------------------
-// 6. INITIALIZATION & LOGIN
+// 7. INITIALIZATION & LOGIN
 // ---------------------------------------------------------
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
@@ -520,7 +532,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC
+// 8. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -697,7 +709,7 @@ socket.on('new_question', (qData) => {
         btn.innerText = "BUZZ!";
     }
     if (optBox) optBox.style.display = "none";
-    window.currentJeopardyOptions = qData.options;
+    window.currentJeopardyOptions = trueShuffle(qData.options); // Unbiased Jeopardy Shuffle
 });
 
 function sendBuzz() {
@@ -740,7 +752,7 @@ socket.on('player_buzzed', (data) => {
         if (optBox) {
             optBox.style.display = "grid";
             optBox.innerHTML = "";
-            let shuffled = [...window.currentJeopardyOptions].sort(() => Math.random() - 0.5); 
+            let shuffled = trueShuffle(window.currentJeopardyOptions); 
             shuffled.forEach(opt => {
                 const obtn = document.createElement('button');
                 obtn.className = 'option-btn';
@@ -757,6 +769,8 @@ socket.on('player_buzzed', (data) => {
 function submitJeopardyAnswer(selectedAnswer) {
     const box = document.getElementById('j-options-box');
     if (box) {
+        // Stop hovering immediately
+        box.classList.add('locked');
         const btns = box.querySelectorAll('.option-btn');
         btns.forEach(b => b.disabled = true);
     }
@@ -776,7 +790,10 @@ socket.on('answer_result', (data) => {
         if (qBox) qBox.innerText = `${data.name} was incorrect.`;
         speak(`Incorrect.`);
     }
-    if (optBox) optBox.style.display = "none";
+    if (optBox) {
+        optBox.style.display = "none";
+        optBox.classList.remove('locked');
+    }
 });
 
 socket.on('reset_buzzer', () => {
@@ -846,7 +863,7 @@ socket.on('game_over', (finalScores) => {
 });
 
 // ---------------------------------------------------------
-// 8. EXTREME DIFFICULTY & STUDY LOGIC
+// 9. EXTREME DIFFICULTY & STUDY LOGIC
 // ---------------------------------------------------------
 let selectedModeTemp = "";
 function showDifficulty(mode) { 
@@ -880,7 +897,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (MOBILE HOVER KILLED + GREEN RESTORED)
+// 10. ORIGINAL QUIZ LOGIC (FIXED SCHWARTZIAN SHUFFLE & HOVER STATE)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -897,10 +914,7 @@ function beginQuizFromStudy() {
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
     if (currentPath !== 'adults') {
-        for (let i = activeQuestions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [activeQuestions[i], activeQuestions[j]] = [activeQuestions[j], activeQuestions[i]];
-        }
+        activeQuestions = trueShuffle(activeQuestions);
     }
     
     switchScreen('quiz-screen');
@@ -926,15 +940,13 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // Completely wipe the container to guarantee the browser drops hover physics
+    // Remove the lock and completely rebuild HTML so mobile phones drop focus
+    optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
     if (currentPath !== 'adults') {
-        for (let i = shuffledOptions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
-        }
+        shuffledOptions = trueShuffle(shuffledOptions);
     }
     
     shuffledOptions.forEach(opt => {
@@ -943,9 +955,6 @@ function loadQuestion() {
         btn.innerText = opt;
         
         btn.onclick = () => { 
-            // Final JS brute force drop of mobile focus
-            if (document.activeElement) document.activeElement.blur();
-            masterUnlockAudio(); 
             checkAnswer(opt, btn, q.correct); 
         };
         optionsDiv.appendChild(btn);
@@ -956,12 +965,13 @@ function checkAnswer(selected, btn, correct) {
     masterUnlockAudio();
     const optionsDiv = document.getElementById('options');
     
-    // Disable buttons and kill focus
     if (optionsDiv) {
+        // This physically blocks any remaining hover interactions
+        optionsDiv.classList.add('locked');
+        
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
-            b.blur(); 
         });
     }
     
@@ -974,7 +984,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // This makes the correct answer flash green when you guess wrong
+        // This turns the correct answer green if they guess wrong
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
@@ -983,7 +993,6 @@ function checkAnswer(selected, btn, correct) {
                 }
             });
         }
-        
         sfx.wrong();
     }
     
@@ -998,7 +1007,7 @@ function checkAnswer(selected, btn, correct) {
 }
 
 // ---------------------------------------------------------
-// 10. REAL-TIME GLOBAL LEADERBOARD
+// 11. REAL-TIME GLOBAL LEADERBOARD
 // ---------------------------------------------------------
 function showResults() {
     switchScreen('result-screen');
@@ -1052,7 +1061,7 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 11. MASTER NAVIGATION
+// 12. MASTER NAVIGATION
 // ---------------------------------------------------------
 function returnToMenu() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -1061,7 +1070,7 @@ function returnToMenu() {
 }
 
 // ---------------------------------------------------------
-// 12. MODERN LOBBY CHAT LOGIC
+// 13. MODERN LOBBY CHAT LOGIC
 // ---------------------------------------------------------
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
