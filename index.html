@@ -4,274 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Knowledge Portal | V4.3 Academy</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <style>
-        /* 🚨 PERFECT MOBILE CENTERING & CLICK FIX 🚨 */
-        * { 
-            box-sizing: border-box !important; 
-            -webkit-tap-highlight-color: transparent !important; 
-        }
-        body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; background-color: #050505; font-family: sans-serif;}
-        
-        button { 
-            -webkit-appearance: none !important; 
-            appearance: none !important; 
-            outline: none !important; 
-            user-select: none; 
-            cursor: pointer;
-            touch-action: manipulation !important; /* FIXES THE BROKEN MOBILE CLICKS */
-        }
-        
-        .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh; z-index: 2;}
-        
-        .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .options-grid.locked { pointer-events: none !important; } 
-        
-        /* ========================================================
-           🚨 INTENSE BUTTON PRESS ANIMATION (NO COLORS) 🚨 
-           ======================================================== */
-        .option-btn { 
-            width: 100%; max-width: 100%; margin: 0 auto; 
-            transition: transform 0.05s ease-in-out, opacity 0.05s ease-in-out !important; 
-            border-radius: 8px;
-            font-weight: bold;
-        }
-        
-        /* THE HEAVY SHRINK ANIMATION */
-        .option-btn:active { 
-            transform: scale(0.92) !important; 
-            opacity: 0.7 !important;
-        }
-        
-        .option-btn:disabled { opacity: 1 !important; transform: scale(1) !important; }
-
-        /* ========================================================
-           🚨 THE QUIZ BUTTON COLOR LOCK 🚨 
-           (Forces answers to stay dark grey until evaluated)
-           ======================================================== */
-        #options .option-btn, #t-options-box .option-btn, #j-options-box .option-btn, #a-options-box .option-btn {
-            background-color: #111 !important;
-            border: 2px solid #333 !important;
-            color: white !important;
-            padding: 15px;
-        }
-
-        /* 🚨 RESULT STATES: GREEN & RED OVERRIDE 🚨 */
-        button.option-btn.correct, button.option-btn.correct:hover, button.option-btn.correct:focus, button.option-btn.correct:active, button.option-btn.correct:disabled { 
-            border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.15) !important; color: #10b981 !important; -webkit-text-fill-color: #10b981 !important; opacity: 1 !important; transform: scale(1) !important;
-        }
-        button.option-btn.wrong, button.option-btn.wrong:hover, button.option-btn.wrong:focus, button.option-btn.wrong:active, button.option-btn.wrong:disabled { 
-            border-color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.15) !important; color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important; opacity: 1 !important; transform: scale(1) !important;
-        }
-
-        /* ========================================================
-           🚨 MODERN UI FOR "THE ARENA" (GLASSMORPHISM & NEON) 🚨 
-           ======================================================== */
-        .arena-glow-text { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 15px #ef4444, 0 0 30px #ef4444; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px; }
-        .arena-card { background: rgba(15, 15, 20, 0.95); border: 1px solid #333; border-top: 1px solid #555; border-radius: 16px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; position: relative; overflow: hidden; }
-        .arena-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #ef4444, #f59e0b, #ef4444); }
-        
-        .modern-wager-input { width: 100%; max-width: 300px; background: #050505; border: 2px solid #333; color: #fff; font-size: 40px; font-weight: 900; text-align: center; padding: 15px; border-radius: 12px; margin: 20px auto; display: block; outline: none; transition: border-color 0.3s, box-shadow 0.3s; }
-        .modern-wager-input:focus { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-        
-        .quick-bet-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
-        .quick-bet-btn { background: #222; border: 1px solid #444; color: #aaa; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .quick-bet-btn:active { transform: scale(0.90); background: #444; color: #fff; }
-        
-        .modern-btn-red { width: 100%; max-width: 300px; background: linear-gradient(135deg, #ef4444, #991b1b); color: white; border: none; padding: 18px; font-size: 20px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); transition: transform 0.05s; margin: 0 auto; display: block; }
-        .modern-btn-red:active { transform: scale(0.90); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); }
-
-        .arena-vs-header { display: flex; justify-content: space-between; align-items: center; background: #0a0a0c; border: 1px solid #222; border-radius: 16px; padding: 15px; margin-bottom: 25px; box-shadow: inset 0 0 20px rgba(0,0,0,1); }
-        .player-plate { display: flex; flex-direction: column; padding: 10px 15px; border-radius: 10px; width: 40%; }
-        .player-plate.blue { border-left: 4px solid #3b82f6; background: linear-gradient(90deg, rgba(59,130,246,0.15), transparent); text-align: left; }
-        .player-plate.red { border-right: 4px solid #ef4444; background: linear-gradient(-90deg, rgba(239,68,68,0.15), transparent); text-align: right; }
-        .player-name { font-size: 16px; font-weight: 900; color: white; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .wager-amount { font-size: 16px; font-weight: bold; color: #f59e0b; margin-top: 4px; }
-        .vs-badge { font-size: 22px; font-weight: 900; font-style: italic; background: linear-gradient(to bottom, #fff, #aaa); -webkit-background-clip: text; color: transparent; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-
-        /* ========================================================
-           🚨 NEW IMAGE ENHANCEMENTS (DRY AREAS) 🚨 
-           ======================================================== */
-        #login-screen {
-            background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.90)), 
-                        url('http://googleusercontent.com/image_collection/image_retrieval/7952212576853516846_0');
-            background-size: cover; background-position: center;
-        }
-        
-        .study-header-img {
-            width: 100%; max-width: 500px; height: 180px; 
-            border-radius: 12px; margin-bottom: 20px;
-            object-fit: cover; border: 2px solid var(--gold);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
-        }
-
-        .result-hero-img {
-            width: 130px; height: 130px; border-radius: 50%;
-            border: 3px solid var(--gold); margin-bottom: 15px;
-            object-fit: cover; box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
-        }
-
-        /* ======================================================== */
-        .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
-        .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
-
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 20px 0; margin: 0 auto; width: 100%; max-width: 1200px; }
-        .pioneer-card { margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
-
-        /* TUG OF WAR CSS */
-        .tug-rope-container { width: 100%; height: 20px; background: #222; border-radius: 10px; position: relative; margin: 30px 0; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
-        .tug-rope-line { position: absolute; top: 50%; left: 0; width: 100%; height: 4px; background: #555; transform: translateY(-50%); }
-        .tug-flag { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 30px; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 5; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-        .muddy-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(60, 40, 20, 0.85); backdrop-filter: blur(12px) sepia(80%); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: #facc15; font-size: 40px; font-weight: 900; text-transform: uppercase; text-shadow: 0 5px 15px rgba(0,0,0,1); }
-
-        @keyframes pulseBuzzer {
-            0% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
-            50% { transform: scale(1.02); box-shadow: 0 10px 0 #7f1d1d, 0 0 40px rgba(239, 68, 68, 0.8); }
-            100% { transform: scale(1); box-shadow: 0 10px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4); }
-        }
-        .buzzer-ready { background: #ef4444 !important; border: 4px solid #f87171 !important; color: white !important; box-shadow: 0 10px 0 #7f1d1d, 0 15px 20px rgba(0,0,0,0.5) !important; animation: pulseBuzzer 1.5s infinite; cursor: pointer; transition: all 0.1s; }
-        .buzzer-ready:active { transform: translateY(10px) scale(0.98) !important; box-shadow: 0 0 0 #7f1d1d, 0 5px 10px rgba(0,0,0,0.5) !important; }
-        .buzzer-locked { background: #222 !important; border: 4px solid #444 !important; color: #555 !important; box-shadow: 0 10px 0 #111 !important; cursor: not-allowed; transform: translateY(0); }
-
-        .big-tv { background: radial-gradient(circle, #1e3a8a 0%, #020617 100%) !important; border: 4px solid var(--gold) !important; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3), inset 0 0 50px rgba(0,0,0,0.8) !important; color: white !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.9) !important; font-size: 32px !important; font-weight: 900 !important; letter-spacing: 1px; transition: all 0.3s; position: relative; }
-        .golden-tv { background: radial-gradient(circle, #b45309 0%, #450a0a 100%) !important; box-shadow: 0 0 50px rgba(245, 158, 11, 0.8), inset 0 0 50px rgba(0,0,0,0.8) !important; border-color: #fbbf24 !important; animation: pulseGolden 1s infinite alternate; }
-
-        @keyframes pulseGolden { from { box-shadow: 0 0 20px #fbbf24; } to { box-shadow: 0 0 60px #f59e0b; } }
-        @keyframes fireGlow { 0% { box-shadow: 0 0 10px #f97316, 0 0 20px #ef4444; border-color: #f97316; } 100% { box-shadow: 0 0 20px #facc15, 0 0 40px #ef4444; border-color: #facc15; } }
-        
-        .on-fire-avatar { animation: fireGlow 0.8s infinite alternate !important; }
-        .rank-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 10px; border: 1px solid #444; margin-left: 8px; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="muddy-overlay" class="muddy-overlay">
         <div>💩 SABOTAGED! 💩</div>
-        <div style="font-size: 16px; color: white; margin-top: 10px; font-weight: normal;">Your opponent hit a 3-streak.</div>
+        <div style="font-size: 16px; color: white; margin-top: 10px; font-weight: normal; font-family: var(--font-body);">Your opponent hit a 3-streak.</div>
     </div>
 
     <div id="login-screen" class="screen active">
-        <div class="quiz-container text-center" style="background: rgba(0,0,0,0.6); padding: 40px; border-radius: 20px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);">
-            <img src="logo.png" alt="Logo" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--gold); margin-bottom: 20px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/100/000000/d4af37?text=Portal'">
-            <h1 style="color: var(--gold); font-size: 32px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">The Knowledge Portal</h1>
-            <p style="color: #ddd; margin-bottom: 30px; font-weight: bold;">Enter your name to begin your journey.</p>
-            
-            <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center; outline: none;">
-            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b) !important; color: black !important; font-weight: bold; border: none !important; padding: 15px;">ENTER ACADEMY</button>
+        <div class="main-container text-center">
+            <div class="glass-panel" style="max-width: 400px;">
+                <img src="logo.png" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--primary-gold); margin-bottom: 20px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/100/0f172a/d4af37?text=Portal'">
+                <h1 class="gold-text" style="font-size: 28px; margin-bottom: 5px;">The Knowledge Portal</h1>
+                <p class="muted-text mb-20">Enter your name to begin your journey.</p>
+                
+                <input type="text" id="username-input" class="modern-input mb-20" placeholder="Student Name">
+                <button class="btn-primary" onclick="registerUser()">Enter Academy</button>
+            </div>
         </div>
     </div>
 
     <div id="home-screen" class="screen">
-        <div style="width: 100%; max-width: 1200px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;">
-            <header style="width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
-                <div class="user-profile" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="user-info" style="text-align: left;">
-                        <h2 id="display-name" style="margin: 0; color: white;">Student</h2>
-                        <p style="margin: 5px 0 0 0; color: var(--gold); font-weight: bold;">Total Points: <span id="display-points">0</span></p>
+        <nav class="top-nav">
+            <div class="nav-profile">
+                <div id="nav-avatar-container"></div>
+                <div class="nav-stats">
+                    <div class="stat-pill"><span class="gold">🏆</span> <span id="display-points">0</span></div>
+                    <div class="stat-pill"><span class="fire">🔥</span> Streak: <span id="display-streak">1</span></div>
+                </div>
+            </div>
+            <button class="btn-action" onclick="showLeaderboard()">📊 Leaderboard</button>
+        </nav>
+
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; padding-bottom: 40px;">
+            <h2 class="heading-font gold-text" style="font-size: 28px; margin-bottom: 30px;">Select Your Path</h2>
+
+            <div class="bento-grid">
+                <div class="bento-card" onclick="showDifficulty('kids')">
+                    <img src="fard.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Junior'">
+                    <div class="bento-content">
+                        <h3>Junior Vanguard</h3>
+                        <span class="bento-badge">Ages 5 - 12</span>
                     </div>
-                    <button class="action-btn" onclick="showLeaderboard()">🏆 Leaderboard</button>
-                </div>
-                <h1 style="text-align: center; margin-top: 20px;">Select Your Path</h1>
-            </header>
-
-            <div class="gallery">
-                <div class="pioneer-card" onclick="showDifficulty('kids')">
-                    <img src="fard.png" alt="Junior Vanguard" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Junior+Vanguard'">
-                    <h3>Junior Vanguard</h3>
-                    <p class="badge">Ages 5 - 12</p>
-                </div>
-                <div class="pioneer-card" onclick="showDifficulty('teens')">
-                    <img src="elijah.png" alt="The Awakening" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=The+Awakening'">
-                    <h3>The Awakening</h3>
-                    <p class="badge">Ages 13 - 19</p>
-                </div>
-                <div class="pioneer-card" onclick="openStudyLibrary('adults', 'exact')">
-                    <img src="registration.png" alt="Registration" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Registration'">
-                    <h3>Registration Track</h3>
-                    <p class="badge">Student Enrollment</p>
-                </div>
-                <div class="pioneer-card" onclick="openStudyLibrary('actualfacts', 'exact')">
-                    <img src="actualfacts.jpg" alt="Actual Facts" onerror="this.src='https://via.placeholder.com/250x200/1a1a1a/d4af37?text=Actual+Facts'">
-                    <h3>Actual Facts</h3>
-                    <p class="badge" style="background: #10b981; color: white; border: none;">Mathematical</p>
                 </div>
                 
-                <div class="pioneer-card new-mode" onclick="showDifficulty('training')">
-                    <img src="training.png" alt="Training" onerror="this.src='https://via.placeholder.com/250x200/064e3b/d4af37?text=M.G.T.+%26+F.O.I.'">
-                    <h3>M.G.T. & F.O.I.</h3>
-                    <p class="badge">Discipline</p>
-                </div>
-                <div class="pioneer-card new-mode" onclick="showDifficulty('lessons')">
-                    <img src="lessons.png" alt="Lessons" onerror="this.src='https://via.placeholder.com/250x200/000000/d4af37?text=The+52+Lessons'">
-                    <h3>The 52 Lessons</h3>
-                    <p class="badge">Advanced Science</p>
-                </div>
-                <div class="pioneer-card new-mode" onclick="showDifficulty('health')">
-                    <img src="health.png" alt="Health" onerror="this.src='https://via.placeholder.com/250x200/1e3a8a/d4af37?text=Eat+To+Live'">
-                    <h3>How to Eat to Live</h3>
-                    <p class="badge">Health & Law</p>
+                <div class="bento-card" onclick="showDifficulty('teens')">
+                    <img src="elijah.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Awakening'">
+                    <div class="bento-content">
+                        <h3>The Awakening</h3>
+                        <span class="bento-badge">Ages 13 - 19</span>
+                    </div>
                 </div>
                 
-                <div class="pioneer-card new-mode" onclick="startArena()" style="border: 2px solid #ef4444; background: linear-gradient(to bottom, #111, #450a0a); box-shadow: 0 0 20px rgba(239,68,68,0.3);">
-                    <div style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">DUEL</div>
-                    <img src="logo.png" alt="The Arena" onerror="this.src='https://via.placeholder.com/250x200/450a0a/ffffff?text=THE+ARENA'">
-                    <h3 style="color: #f8fafc;">The Arena</h3>
-                    <p class="badge" style="background: #ef4444; color: white; border: none;">High Stakes Betting</p>
+                <div class="bento-card" onclick="openStudyLibrary('adults', 'exact')">
+                    <img src="registration.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Enrollment'">
+                    <div class="bento-content">
+                        <h3>Registration Track</h3>
+                        <span class="bento-badge">Student Enrollment</span>
+                    </div>
+                </div>
+                
+                <div class="bento-card" onclick="openStudyLibrary('actualfacts', 'exact')" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <img src="actualfacts.jpg" onerror="this.src='https://via.placeholder.com/400x300/064e3b/10b981?text=Facts'">
+                    <div class="bento-content">
+                        <h3 style="color: var(--accent-green);">Actual Facts</h3>
+                        <span class="bento-badge" style="background: var(--accent-green); color: #fff;">Mathematical</span>
+                    </div>
+                </div>
+                
+                <div class="bento-card" onclick="showDifficulty('training')">
+                    <img src="training.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Training'">
+                    <div class="bento-content">
+                        <h3>M.G.T. & F.O.I.</h3>
+                        <span class="bento-badge">Discipline</span>
+                    </div>
+                </div>
+                
+                <div class="bento-card" onclick="showDifficulty('lessons')">
+                    <img src="lessons.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Lessons'">
+                    <div class="bento-content">
+                        <h3>The 52 Lessons</h3>
+                        <span class="bento-badge">Advanced Science</span>
+                    </div>
+                </div>
+                
+                <div class="bento-card" onclick="showDifficulty('health')">
+                    <img src="health.png" onerror="this.src='https://via.placeholder.com/400x300/1e293b/d4af37?text=Health'">
+                    <div class="bento-content">
+                        <h3>How to Eat to Live</h3>
+                        <span class="bento-badge">Health & Law</span>
+                    </div>
+                </div>
+                
+                <div class="bento-card" onclick="startArena()" style="border-color: var(--accent-red); box-shadow: 0 0 20px var(--accent-red-glow);">
+                    <div class="bento-tag" style="background: var(--accent-red); color: #fff;">DUEL</div>
+                    <img src="logo.png" onerror="this.src='https://via.placeholder.com/400x300/450a0a/ef4444?text=Arena'">
+                    <div class="bento-content">
+                        <h3 style="color: #fff;">The Arena</h3>
+                        <span class="bento-badge" style="background: var(--accent-red); color: #fff;">High Stakes Betting</span>
+                    </div>
                 </div>
 
-                <div class="pioneer-card new-mode" onclick="startTugOfWar()" style="border: 2px solid #eab308; background: linear-gradient(to bottom, #1a1a1a, #713f12);">
-                    <div style="position: absolute; top: 10px; right: 10px; background: #eab308; color: black; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">1V1</div>
-                    <img src="logo.png" alt="Tug of War" onerror="this.src='https://via.placeholder.com/250x200/713f12/ffffff?text=TUG+OF+WAR'">
-                    <h3>Tug of War</h3>
-                    <p class="badge" style="background: #eab308; color: black;">Social Battle</p>
+                <div class="bento-card" onclick="startTugOfWar()" style="border-color: var(--accent-yellow);">
+                    <div class="bento-tag" style="background: var(--accent-yellow); color: #000;">1V1</div>
+                    <img src="logo.png" onerror="this.src='https://via.placeholder.com/400x300/713f12/eab308?text=Tug'">
+                    <div class="bento-content">
+                        <h3 style="color: #fff;">Tug of War</h3>
+                        <span class="bento-badge" style="background: var(--accent-yellow); color: #000;">Social Battle</span>
+                    </div>
                 </div>
 
-                <div class="pioneer-card" onclick="startJeopardy()" style="border: 2px solid #3b82f6; background: linear-gradient(to bottom, #1a1a1a, #1e3a8a);">
-                    <div style="position: absolute; top: 10px; right: 10px; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite;">LIVE</div>
-                    <img src="jeopardy.png" alt="Jeopardy" onerror="this.src='https://via.placeholder.com/250x200/1e3a8a/ffffff?text=JEOPARDY'">
-                    <h3>Live Jeopardy</h3>
-                    <p class="badge" style="background: #3b82f6; color: white; border: none;">Multiplayer Arena</p>
+                <div class="bento-card" onclick="startJeopardy()" style="border-color: var(--accent-blue);">
+                    <div class="bento-tag" style="background: var(--accent-blue); color: #fff;">LIVE</div>
+                    <img src="jeopardy.png" onerror="this.src='https://via.placeholder.com/400x300/1e3a8a/3b82f6?text=Jeopardy'">
+                    <div class="bento-content">
+                        <h3 style="color: #fff;">Live Jeopardy</h3>
+                        <span class="bento-badge" style="background: var(--accent-blue); color: #fff;">Multiplayer Arena</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="arena-screen" class="screen">
-        <div class="quiz-container text-center" style="max-width: 800px; width: 100%;">
-            
+        <div class="main-container text-center">
             <div id="a-lobby-view" style="width: 100%;">
                 <div class="arena-glow-text">THE ARENA</div>
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/4110939330651484878_0" style="width:100%; height:180px; object-fit:cover; border-radius:16px; margin-bottom:20px; border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239,68,68,0.3);" alt="The Arena">
-                
-                <div class="arena-card" style="margin-bottom: 30px; text-align: left; padding: 25px;">
-                    <h3 style="color: #ef4444; margin-top: 0; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-size: 22px; letter-spacing: 1px;">How To Play</h3>
-                    <ul style="color: #cbd5e1; font-size: 15px; line-height: 1.6; padding-left: 0; list-style: none; margin-bottom: 20px;">
-                        <li style="margin-bottom: 10px;"><strong style="color: white;">1. The Wager:</strong> Bet your points against a live opponent.</li>
-                        <li style="margin-bottom: 10px;"><strong style="color: white;">2. The Duel:</strong> Both players face the exact same high-level question blindly.</li>
-                        <li style="margin-bottom: 10px;"><strong style="color: #10b981;">3. Victory:</strong> Answer correctly while they miss, and you <span style="color: #10b981; text-decoration: underline;">STEAL</span> their wager.</li>
-                        <li style="margin-bottom: 10px;"><strong style="color: #aaa;">4. Stalemate:</strong> Both correct? No points lost.</li>
-                        <li><strong style="color: #ef4444;">5. Double K.O.:</strong> Both wrong? You both lose your bet.</li>
+                <div class="arena-card mb-20 text-left">
+                    <h3 style="color: var(--accent-red); margin-top: 0; margin-bottom: 15px; text-align: center; text-transform: uppercase; font-size: 20px;">How To Play</h3>
+                    <ul style="color: var(--text-muted); font-size: 15px; line-height: 1.6; padding-left: 0; list-style: none; margin-bottom: 20px;">
+                        <li class="mb-10"><strong style="color: white;">1. The Wager:</strong> Bet your points against a live opponent.</li>
+                        <li class="mb-10"><strong style="color: white;">2. The Duel:</strong> Face the exact same high-level question blindly.</li>
+                        <li class="mb-10"><strong style="color: var(--accent-green);">3. Victory:</strong> Answer correctly while they miss to <span style="text-decoration: underline;">STEAL</span> their wager.</li>
+                        <li class="mb-10"><strong style="color: #aaa;">4. Stalemate:</strong> Both correct? No points lost.</li>
+                        <li><strong style="color: var(--accent-red);">5. Double K.O.:</strong> Both wrong? You both lose your bet.</li>
                     </ul>
-                    
-                    <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;">
-                        <h2 style="color: white; margin-bottom: 5px; font-size: 18px; text-transform: uppercase;">Searching for Challenger...</h2>
-                        <p style="font-size: 26px; color: #10b981; font-weight: bold; margin: 0;"><span id="a-lobby-count">1</span> / 2 Found</p>
+                    <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px;">
+                        <h2 style="color: white; margin-bottom: 5px; font-size: 16px; text-transform: uppercase;">Searching for Challenger...</h2>
+                        <p style="font-size: 26px; color: var(--accent-green); font-weight: bold; margin: 0;"><span id="a-lobby-count">1</span> / 2 Found</p>
                     </div>
                 </div>
-
-                <button id="a-ready-btn" class="option-btn" onclick="sendArenaReady()" style="background-color: #ef4444 !important; border-color: #ef4444 !important; color: white !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; box-shadow: 0 0 20px rgba(239,68,68,0.5) !important; border-radius: 12px;">ENTER</button>
-                <br><button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; width: 150px; padding: 15px; margin-top: 20px; margin: 20px auto; border-radius: 8px;">Back</button>
+                <button id="a-ready-btn" class="btn-danger mb-20" onclick="sendArenaReady()">ENTER</button>
+                <br><button class="btn-secondary" onclick="returnToMenu()">Back</button>
             </div>
 
             <div id="a-wager-view" style="display: none; width: 100%;">
-                <div class="arena-glow-text" style="font-size: 32px; color: #ef4444;">SET YOUR WAGER</div>
-                <p style="color: #aaa; margin-bottom: 20px;">Winner steals all. Loser goes home empty.</p>
+                <div class="arena-glow-text" style="font-size: 32px;">SET YOUR WAGER</div>
+                <p class="muted-text mb-20">Winner steals all. Loser goes home empty.</p>
                 
-                <div class="arena-card" style="margin-bottom: 30px;">
-                    <p style="color: var(--gold); font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Available Points: <span id="a-available-points">0</span></p>
-                    
+                <div class="arena-card mb-20">
+                    <p class="gold-text heading-font mb-10">Available Points: <span id="a-available-points">0</span></p>
                     <input type="number" id="arena-wager-input" class="modern-wager-input" placeholder="0" min="10">
                     
                     <div class="quick-bet-row">
@@ -279,9 +169,8 @@
                         <button class="quick-bet-btn" onclick="setWager('half')">HALF</button>
                         <button class="quick-bet-btn" onclick="setWager('max')">MAX</button>
                     </div>
-
-                    <button id="a-submit-wager-btn" class="modern-btn-red" onclick="submitArenaWager()">LOCK WAGER</button>
-                    <p id="a-wager-status" style="color: #10b981; font-weight: bold; margin-top: 15px; display: none;">Wager Locked. Waiting for Opponent...</p>
+                    <button id="a-submit-wager-btn" class="btn-danger" style="margin: 0 auto; display: block;" onclick="submitArenaWager()">LOCK WAGER</button>
+                    <p id="a-wager-status" style="color: var(--accent-green); font-weight: bold; margin-top: 15px; display: none;">Wager Locked. Waiting for Opponent...</p>
                 </div>
             </div>
 
@@ -297,39 +186,36 @@
                         <span class="wager-amount" id="a-p2-bet">0</span>
                     </div>
                 </div>
-
-                <div id="a-question-box" class="big-tv" style="min-height: 120px; margin-bottom: 25px; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; border-color: #ef4444 !important; box-shadow: 0 0 30px rgba(239,68,68,0.2) !important;">Waiting for question...</div>
-                
-                <div id="a-options-box" class="options-grid" style="margin-bottom: 30px;"></div>
-                <p id="a-waiting-answer" style="color: #aaa; font-style: italic; display: none;">Waiting for opponent to answer...</p>
+                <div id="a-question-box" class="big-tv" style="border-color: var(--accent-red) !important; box-shadow: 0 0 30px var(--accent-red-glow) !important;">Waiting for question...</div>
+                <div id="a-options-box" class="options-grid mb-20"></div>
+                <p id="a-waiting-answer" style="color: var(--text-muted); font-style: italic; display: none;">Waiting for opponent to answer...</p>
             </div>
 
             <div id="a-results-view" style="display: none; padding: 40px 0; width: 100%;">
-                <h1 id="a-winner-text" style="color: #eab308; font-size: 55px; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);">RESULT</h1>
-                <p id="a-results-subtext" style="color: white; margin-bottom: 30px; font-size: 24px; font-weight: bold;">Calculating...</p>
-                <button class="option-btn" onclick="returnToMenu()" style="background-color: #ef4444 !important; border-color: #ef4444 !important; color: white !important; font-weight: bold; width: 100%; max-width: 300px; padding: 15px; margin: 0 auto; border-radius: 8px;">Leave Arena</button>
+                <h1 id="a-winner-text" class="heading-font" style="color: var(--accent-yellow); font-size: 55px; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);">RESULT</h1>
+                <p id="a-results-subtext" style="color: white; margin-bottom: 30px; font-size: 20px; font-weight: bold;">Calculating...</p>
+                <button class="btn-danger" onclick="returnToMenu()">Leave Arena</button>
             </div>
         </div>
     </div>
 
     <div id="tug-screen" class="screen">
-        <div class="quiz-container text-center" style="max-width: 800px; width: 100%;">
-            
+        <div class="main-container text-center">
             <div id="t-lobby-view" style="width: 100%;">
-                <h1 style="color: #eab308; font-size: 40px; margin-bottom: 20px; text-transform: uppercase;">Tug of War Lobby</h1>
-                <div style="background: #111; border: 2px solid #333; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
-                    <h2 style="color: white; margin-bottom: 10px;">Waiting for Challenger...</h2>
-                    <p style="font-size: 28px; color: #10b981; font-weight: bold;"><span id="t-lobby-count">1</span> / 2 Players Ready</p>
+                <h1 class="heading-font gold-text mb-20" style="font-size: 32px;">Tug of War Lobby</h1>
+                <div class="glass-panel mb-20">
+                    <h2 style="color: white; margin-bottom: 10px; font-size: 20px;">Waiting for Challenger...</h2>
+                    <p style="font-size: 28px; color: var(--accent-green); font-weight: bold;"><span id="t-lobby-count">1</span> / 2 Players Ready</p>
                 </div>
-                <button id="t-ready-btn" class="option-btn" onclick="sendTugReady()" style="background-color: #eab308 !important; border-color: #eab308 !important; color: black !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; border-radius: 12px;">I'M READY</button>
-                <br><button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; width: 150px; padding: 15px; margin-top: 20px; margin: 20px auto; border-radius: 8px;">Back</button>
+                <button id="t-ready-btn" class="btn-primary mb-20" style="background: linear-gradient(135deg, var(--accent-yellow), #a16207);" onclick="sendTugReady()">I'M READY</button>
+                <br><button class="btn-secondary" onclick="returnToMenu()">Back</button>
             </div>
 
             <div id="t-game-view" style="display: none; width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; font-weight: bold; font-size: 18px;">
-                    <span id="t-p1-name" style="color: #3b82f6;">You</span>
-                    <span style="color: #aaa; font-size: 12px;">PULL THE FLAG TO YOUR SIDE!</span>
-                    <span id="t-p2-name" style="color: #ef4444;">Opponent</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; font-weight: bold; font-size: 16px;">
+                    <span id="t-p1-name" style="color: var(--accent-blue);">You</span>
+                    <span style="color: var(--text-muted); font-size: 12px; font-family: var(--font-heading);">PULL THE FLAG!</span>
+                    <span id="t-p2-name" style="color: var(--accent-red);">Opponent</span>
                 </div>
                 
                 <div class="tug-rope-container">
@@ -338,146 +224,151 @@
                 </div>
 
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px; width: 100%;">
-                    <div style="color: #3b82f6; font-size: 12px; font-weight: bold;">Streak: <span id="t-streak-p1">0</span></div>
-                    <div style="color: #ef4444; font-size: 12px; font-weight: bold;">Streak: <span id="t-streak-p2">0</span></div>
+                    <div style="color: var(--accent-blue); font-size: 12px; font-weight: bold;">Streak: <span id="t-streak-p1">0</span></div>
+                    <div style="color: var(--accent-red); font-size: 12px; font-weight: bold;">Streak: <span id="t-streak-p2">0</span></div>
                 </div>
 
-                <div id="t-question-box" class="big-tv" style="min-height: 120px; margin-bottom: 25px; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; border-color: #eab308 !important;">Get Ready...</div>
+                <div id="t-question-box" class="big-tv" style="border-color: var(--accent-yellow) !important; box-shadow: 0 0 30px rgba(234, 179, 8, 0.2) !important;">Get Ready...</div>
+                <div id="t-options-box" class="options-grid mb-20"></div>
                 
-                <div id="t-options-box" class="options-grid" style="margin-bottom: 30px;"></div>
-                
-                <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-                    <button class="option-btn" onclick="returnToMenu()" style="background-color: transparent !important; border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; padding: 15px; margin: 0 auto; border-radius: 8px;">Forfeit</button>
+                <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px; width: 100%;">
+                    <button class="btn-action" style="margin: 0 auto; color: var(--accent-red);" onclick="returnToMenu()">Forfeit Match</button>
                 </div>
             </div>
 
             <div id="t-results-view" style="display: none; padding: 40px 0; width: 100%;">
-                <h1 id="t-winner-text" style="color: #eab308; font-size: 55px; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);">WINNER!</h1>
-                <p id="t-results-subtext" style="color: #aaa; margin-bottom: 30px; font-size: 18px; font-weight: bold;">The flag has been captured.</p>
-                <button class="option-btn" onclick="returnToMenu()" style="background-color: #eab308 !important; border-color: #eab308 !important; color: black !important; font-weight: bold; width: 100%; max-width: 300px; padding: 15px; margin: 0 auto; border-radius: 8px;">Return Dashboard</button>
+                <h1 id="t-winner-text" class="heading-font" style="color: var(--accent-yellow); font-size: 55px; margin-bottom: 10px;">WINNER!</h1>
+                <p id="t-results-subtext" class="muted-text mb-20" style="font-size: 18px;">The flag has been captured.</p>
+                <button class="btn-primary" onclick="returnToMenu()">Return Dashboard</button>
             </div>
         </div>
     </div>
 
     <div id="jeopardy-screen" class="screen">
-        <div class="quiz-container text-center" style="max-width: 1000px; background: #0f0f0f; border-color: #222;">
+        <div class="main-container text-center" style="max-width: 1000px;">
             <div id="j-lobby-view" style="width: 100%;">
-                <h1 style="color: #3b82f6; font-size: 40px; margin-bottom: 20px; text-transform: uppercase;">Jeopardy Lobby</h1>
-                
-                <img src="http://googleusercontent.com/image_collection/image_retrieval/4110939330651484878_0" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:20px; border: 2px solid #3b82f6; box-shadow: 0 0 20px rgba(59,130,246,0.3);" alt="Jeopardy">
-
-                <div style="background: #111; border: 2px solid #333; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
-                    <h2 style="color: white; margin-bottom: 10px;">Waiting for Players...</h2>
-                    <p style="font-size: 28px; color: #10b981; font-weight: bold;"><span id="lobby-ready-count">0</span> / <span id="lobby-total-count">0</span> Ready</p>
+                <h1 class="heading-font mb-20" style="color: var(--accent-blue); font-size: 32px;">Jeopardy Lobby</h1>
+                <div class="glass-panel mb-20">
+                    <h2 style="color: white; margin-bottom: 10px; font-size: 20px;">Waiting for Players...</h2>
+                    <p style="font-size: 28px; color: var(--accent-green); font-weight: bold;"><span id="lobby-ready-count">0</span> / <span id="lobby-total-count">0</span> Ready</p>
                 </div>
-                <div id="chat-container" style="background: rgba(17, 17, 17, 0.9); border: 1px solid #333; border-radius: 12px; margin-bottom: 25px; text-align: left; display: flex; flex-direction: column; height: 280px; overflow: hidden;">
-                    <div id="chat-box" style="flex: 1; overflow-y: auto; padding: 15px; font-family: sans-serif; font-size: 14px; color: #eee; display: flex; flex-direction: column; gap: 8px;"></div>
-                    <div style="display: flex; background: #0a0a0a; padding: 10px; border-top: 1px solid #333;">
-                        <input type="text" id="chat-input" placeholder="Message..." style="flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: white; padding: 10px; outline: none;">
-                        <button onclick="sendChatMessage()" style="background: #3b82f6; border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: white; border-radius: 6px; margin-left: 10px;">SEND</button>
+                
+                <div class="chat-container">
+                    <div id="chat-box" class="chat-box"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Message..." style="flex: 1; background: var(--bg-main); border: 1px solid var(--border-heavy); border-radius: 6px; color: white; padding: 10px; outline: none;">
+                        <button onclick="sendChatMessage()" style="background: var(--accent-blue); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: white; border-radius: 6px; margin-left: 10px;">SEND</button>
                     </div>
                 </div>
-                <button id="ready-btn" class="option-btn" onclick="sendReady()" style="background-color: #3b82f6 !important; border-color: #3b82f6 !important; color: white !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; border-radius: 12px;">I'M READY</button>
-                <br><button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; width: 150px; padding: 15px; margin-top: 20px; margin: 20px auto; border-radius: 8px;">Back</button>
+
+                <button id="ready-btn" class="btn-primary mb-20" style="background: linear-gradient(135deg, var(--accent-blue), #1e3a8a); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onclick="sendReady()">I'M READY</button>
+                <br><button class="btn-secondary" onclick="returnToMenu()">Back</button>
             </div>
 
             <div id="j-game-view" style="display: none; width: 100%;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
-                    <h1 style="color: #3b82f6; margin: 0; font-size: 24px;">LIVE JEOPARDY</h1>
-                    <div style="background: #111; padding: 5px 15px; border-radius: 20px; color: #10b981; font-weight: bold;">Round: <span id="j-round-display" style="color: white;">1/21</span></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid var(--border-heavy); padding-bottom: 15px;">
+                    <h1 class="heading-font" style="color: var(--accent-blue); margin: 0; font-size: 24px;">LIVE JEOPARDY</h1>
+                    <div style="background: var(--bg-input); padding: 5px 15px; border-radius: 20px; color: var(--accent-green); font-weight: bold; font-size: 14px;">Round: <span id="j-round-display" style="color: white;">1/21</span></div>
                 </div>
 
-                <div class="jeopardy-flex-container" style="display: flex; gap: 30px; text-align: left; flex-wrap: wrap;">
+                <div style="display: flex; gap: 30px; text-align: left; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 300px; width: 100%;">
-                        <div id="j-timer-display" style="font-size: 20px; font-weight: bold; color: var(--gold); margin-bottom: 5px; text-align: center;">Waiting...</div>
-                        <div id="j-pressure-bar-container" style="width: 100%; height: 12px; background: #222; border-radius: 6px; margin-bottom: 20px; border: 1px solid #444; overflow: hidden;">
-                            <div id="pressure-bar" style="width: 100%; height: 100%; background: var(--gold); transition: width 1s linear;"></div>
-                        </div>
-                        <div id="j-question-box" class="big-tv" style="min-height: 150px; margin-bottom: 25px; padding: 30px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4;">Game starting...</div>
-                        <p id="buzzer-status" style="color: #aaa; margin-bottom: 20px; font-weight: bold; height: 20px; text-align: center; font-size: 20px; text-transform: uppercase;">...</p>
-                        <div id="buzzer-btn" class="buzzer-locked" onclick="sendBuzz()" style="width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; user-select: none;">LOCKED</div>
+                        <div id="j-timer-display" class="heading-font gold-text" style="font-size: 20px; text-align: center; margin-bottom: 5px;">Waiting...</div>
+                        <div class="progress-bar-container"><div id="pressure-bar"></div></div>
+                        
+                        <div id="j-question-box" class="big-tv">Game starting...</div>
+                        
+                        <p id="buzzer-status" style="color: var(--text-muted); font-weight: bold; text-align: center; margin-bottom: 15px; height: 20px;">...</p>
+                        <div id="buzzer-btn" class="buzzer-locked" onclick="sendBuzz()">LOCKED</div>
+                        
                         <div id="j-options-box" class="options-grid" style="display: none; margin-bottom: 30px;"></div>
-                        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;"><button class="option-btn" onclick="returnToMenu()" style="background-color: transparent !important; border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; padding: 15px; margin: 0 auto; border-radius: 8px;">Quit</button></div>
+                        <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px;">
+                            <button class="btn-action" style="margin: 0 auto; color: var(--accent-red);" onclick="returnToMenu()">Quit Match</button>
+                        </div>
                     </div>
-                    <div id="j-score-sidebar" style="flex: 1; min-width: 250px; background: #111; border: 2px solid #333; border-radius: 12px; padding: 20px; width: 100%;">
-                        <h3 style="color: var(--gold); margin-top: 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px;">LIVE SCORES</h3>
-                        <div id="j-live-scores"></div>
+                    <div style="flex: 1; min-width: 250px; width: 100%;">
+                        <div class="glass-panel" style="padding: 20px;">
+                            <h3 class="heading-font gold-text" style="margin-top: 0; text-align: center; border-bottom: 1px solid var(--border-heavy); padding-bottom: 15px;">LIVE SCORES</h3>
+                            <div id="j-live-scores"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="j-podium-view" style="display: none; padding: 40px 0; width: 100%;">
-                <h1 style="color: var(--gold); font-size: 60px; margin-bottom: 10px;">GAME OVER</h1>
-                <div id="podium-results" style="background: #111; border: 2px solid var(--gold); padding: 30px; border-radius: 15px; margin-bottom: 40px; text-align:left;"></div>
-                <button class="option-btn" onclick="returnToMenu()" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important; font-weight: bold; width: 100%; max-width: 300px; padding: 15px; margin: 0 auto; border-radius: 8px;">Return Dashboard</button>
+                <h1 class="heading-font gold-text" style="font-size: 48px; margin-bottom: 20px;">GAME OVER</h1>
+                <div id="podium-results" class="glass-panel mb-20" style="text-align:left;"></div>
+                <button class="btn-primary" onclick="returnToMenu()">Return Dashboard</button>
             </div>
         </div>
     </div>
 
     <div id="difficulty-modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: var(--gold); text-align: center;">Difficulty</h2>
+            <h2 class="heading-font gold-text text-center mb-20">Select Difficulty</h2>
             <div class="options-grid">
-                <button class="option-btn diff-easy" style="border-color: #10b981 !important; color: #10b981 !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('easy')">Easy</button>
-                <button class="option-btn diff-med" style="border-color: #f59e0b !important; color: #f59e0b !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('medium')">Medium</button>
-                <button class="option-btn diff-hard" style="border-color: #ef4444 !important; color: #ef4444 !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('hard')">Hard</button>
-                <button class="option-btn diff-ext" style="border-color: #a855f7 !important; color: #d8b4fe !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('extreme')">Extreme</button>
-                <button class="option-btn diff-cancel" style="border-color: #555 !important; color: white !important; padding: 15px; background: transparent !important;" onclick="closeDifficulty()">Cancel</button>
+                <button class="option-btn" style="border-color: var(--accent-green) !important; color: var(--accent-green) !important; background: transparent !important;" onclick="selectDifficulty('easy')">Easy</button>
+                <button class="option-btn" style="border-color: var(--accent-yellow) !important; color: var(--accent-yellow) !important; background: transparent !important;" onclick="selectDifficulty('medium')">Medium</button>
+                <button class="option-btn" style="border-color: var(--accent-red) !important; color: var(--accent-red) !important; background: transparent !important;" onclick="selectDifficulty('hard')">Hard</button>
+                <button class="option-btn" style="border-color: #a855f7 !important; color: #d8b4fe !important; background: transparent !important;" onclick="selectDifficulty('extreme')">Extreme</button>
+                <button class="option-btn mt-20" style="border-color: var(--border-heavy) !important; color: white !important; background: transparent !important;" onclick="closeDifficulty()">Cancel</button>
             </div>
         </div>
     </div>
     
     <div id="study-screen" class="screen">
-        <div class="study-container quiz-container">
-            <img id="study-img" class="study-header-img" src="" alt="Study Image">
-            <h2 id="study-title" style="color: var(--gold); width: 100%; text-align: center; margin-bottom: 10px;">Study</h2>
-            <div id="study-text" class="study-text-box" style="text-align: center; color: #ccc; margin-bottom: 30px; line-height: 1.5; width: 100%;"></div>
-            <div style="display:flex; gap:10px; justify-content:center; width: 100%;">
-                <button class="option-btn" style="background-color: #333 !important; border-color: #444 !important; color: white !important; padding: 15px;" onclick="returnToMenu()">Back</button>
-                <button class="option-btn" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important; padding: 15px; font-weight: bold;" onclick="beginQuizFromStudy()">Begin</button>
+        <div class="main-container text-center">
+            <div class="glass-panel">
+                <h2 id="study-title" class="heading-font gold-text mb-20">Study</h2>
+                <div id="study-text" style="font-size: 16px; line-height: 1.6; color: var(--text-muted); margin-bottom: 30px;"></div>
+                <div style="display:flex; gap:15px; justify-content:center;">
+                    <button class="btn-secondary" onclick="returnToMenu()">Back</button>
+                    <button class="btn-primary" onclick="beginQuizFromStudy()">Begin Lesson</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="quiz-screen" class="screen">
-        <div class="quiz-container">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width: 100%;">
-                <h2 id="mode-title" style="color: var(--gold); margin: 0;">Portal Academy</h2>
-                <div style="color: var(--gold); font-weight: bold; font-size: 16px;">Points: <span id="live-points">0</span></div>
+        <div class="main-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; width: 100%;">
+                <h2 id="mode-title" class="heading-font gold-text" style="margin: 0; font-size: 20px;">Portal Academy</h2>
+                <div class="stat-pill"><span class="gold">🏆</span> <span id="live-points">0</span></div>
             </div>
-            <div id="progress-text" style="color: #aaa; font-weight: bold; text-align: left; width: 100%; margin-bottom: 5px;">Question 1</div>
-            <div class="progress-bar-container" style="width: 100%;"><div id="progress-bar"></div></div>
+            <div id="progress-text" style="color: var(--text-muted); font-weight: 600; font-size: 14px; text-align: left; width: 100%; margin-bottom: 5px;">Question 1</div>
+            <div class="progress-bar-container"><div id="progress-bar"></div></div>
             
-            <div id="question" class="question" style="width: 100%; text-align: center; margin: 30px 0; font-size: 20px; font-weight: bold;">...</div>
+            <div id="question" style="width: 100%; text-align: center; font-size: 22px; font-weight: 600; margin-bottom: 30px; line-height: 1.4;">...</div>
+            <div id="options" class="options-grid mb-20"></div>
             
-            <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
-            
-            <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-                <button class="option-btn" onclick="returnToMenu()" style="background-color: transparent !important; border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; padding: 15px; margin: 0 auto;">Quit</button>
+            <div style="text-align: center; border-top: 1px solid var(--border-heavy); padding-top: 20px; width: 100%;">
+                <button class="btn-action" style="margin: 0 auto; color: var(--accent-red);" onclick="returnToMenu()">Quit Lesson</button>
             </div>
         </div>
     </div>
 
     <div id="result-screen" class="screen">
-        <div class="quiz-container text-center">
-            <img id="result-img" class="result-hero-img" src="" alt="Result Image">
-            <h1>COMPLETE</h1>
-            <h2 id="final-score" style="font-size: 40px; margin-bottom: 5px;">0/0</h2>
-            <p style="color: var(--gold); font-weight: bold; font-size: 20px; margin-bottom: 20px;">Points Earned: <span id="earned-points">0</span></p>
-            <p id="rank-display" style="margin-bottom: 30px;">Rank: Student</p>
-            <button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; padding: 15px; margin: 0 auto; border-radius: 8px;">Back Home</button>
+        <div class="main-container text-center">
+            <div class="glass-panel">
+                <h1 class="heading-font mb-20" style="color: white;">LESSON COMPLETE</h1>
+                <h2 id="final-score" style="font-size: 48px; color: var(--accent-green); margin-bottom: 10px;">0/0</h2>
+                <p class="gold-text mb-10" style="font-weight: 800; font-size: 18px;">Points Earned: +<span id="earned-points">0</span></p>
+                <p id="rank-display" class="muted-text mb-20">Rank: Student</p>
+                <button class="btn-primary" onclick="returnToMenu()">Return Home</button>
+            </div>
         </div>
     </div>
     
     <div id="leaderboard-screen" class="screen">
-        <div class="quiz-container">
-            <h1 style="text-align: center;">🏆 Leaderboard</h1>
-            <div id="leaderboard-list" style="width: 100%;"></div>
-            <button class="option-btn" onclick="returnToMenu()" style="background-color: #333 !important; border-color: #444 !important; color: white !important; padding: 15px; margin-top:20px; margin: 20px auto; border-radius: 8px;">Back</button>
+        <div class="main-container text-center">
+            <h1 class="heading-font gold-text mb-20">🏆 Leaderboard</h1>
+            <div class="glass-panel" style="padding: 15px;">
+                <div id="leaderboard-list" style="width: 100%;"></div>
+            </div>
+            <button class="btn-secondary mt-20" onclick="returnToMenu()">Back</button>
         </div>
     </div>
-
-    <script src="/socket.io/socket.io.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
