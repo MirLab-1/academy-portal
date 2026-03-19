@@ -2,10 +2,10 @@
  * The Knowledge Portal - V4.3 AAA FULL BUILD
  */
 
-// 🚨 BULLETPROOF SOCKET INITIALIZATION 🚨
+// 🚨 FORCED WEBSOCKETS TO KILL INFINITE BROWSER LOADING SPINNER 🚨
 let socket;
 try {
-    socket = (typeof io !== 'undefined') ? io() : { emit: () => {}, on: () => {}, id: 'offline' };
+    socket = (typeof io !== 'undefined') ? io({ transports: ['websocket'], upgrade: false }) : { emit: () => {}, on: () => {}, id: 'offline' };
 } catch(e) {
     console.warn("Socket.io offline. Loading single-player elements only.");
     socket = { emit: () => {}, on: () => {}, id: 'offline' };
@@ -565,27 +565,32 @@ function checkDailyStreak() {
     }
 }
 
+// REMOVED: try-catch block from window.onload so it actually works properly.
 window.onload = () => {
-    try {
-        const savedUser = localStorage.getItem('noi_user');
-        const savedPoints = localStorage.getItem('noi_points');
-        const savedStreak = localStorage.getItem('noi_streak');
-        if (savedUser && savedUser.trim() !== "") {
-            currentUser = savedUser;
-            currentPoints = savedPoints && !isNaN(parseInt(savedPoints)) ? parseInt(savedPoints) : 0;
-            currentStreak = savedStreak && !isNaN(parseInt(savedStreak)) ? parseInt(savedStreak) : 1;
-            document.getElementById('display-points').innerText = currentPoints;
-            document.getElementById('display-streak').innerText = currentStreak;
-            document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
-            socket.emit('join_game', { name: currentUser, points: currentPoints });
-            checkDailyStreak(); 
-            switchScreen('home-screen');
-            // Fetch updated leaderboard from server DB
-            socket.emit('get_leaderboard');
-        } else {
-            switchScreen('login-screen');
-        }
-    } catch(err) { switchScreen('login-screen'); }
+    const savedUser = localStorage.getItem('noi_user');
+    const savedPoints = localStorage.getItem('noi_points');
+    const savedStreak = localStorage.getItem('noi_streak');
+    
+    if (savedUser && savedUser.trim() !== "") {
+        currentUser = savedUser;
+        currentPoints = parseInt(savedPoints, 10);
+        if(isNaN(currentPoints)) currentPoints = 0;
+        currentStreak = parseInt(savedStreak, 10);
+        if(isNaN(currentStreak)) currentStreak = 1;
+
+        document.getElementById('display-points').innerText = currentPoints;
+        document.getElementById('display-streak').innerText = currentStreak;
+        document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+        
+        socket.emit('join_game', { name: currentUser, points: currentPoints });
+        checkDailyStreak(); 
+        switchScreen('home-screen');
+        
+        // Fetch updated leaderboard from persistent server DB
+        socket.emit('get_leaderboard');
+    } else {
+        switchScreen('login-screen');
+    }
 };
 
 function registerUser() {
@@ -599,8 +604,10 @@ function registerUser() {
     const savedUser = localStorage.getItem('noi_user');
     if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
         currentUser = savedUser;
-        currentPoints = parseInt(localStorage.getItem('noi_points')) || 0;
-        currentStreak = parseInt(localStorage.getItem('noi_streak')) || 1;
+        currentPoints = parseInt(localStorage.getItem('noi_points'), 10);
+        if(isNaN(currentPoints)) currentPoints = 0;
+        currentStreak = parseInt(localStorage.getItem('noi_streak'), 10);
+        if(isNaN(currentStreak)) currentStreak = 1;
         setTimeout(() => { showToast("Profile Recovered! Your points are safe."); }, 500);
     } else {
         currentUser = nameVal; 
@@ -970,6 +977,7 @@ function submitArenaWager() {
     socket.emit('arena_wager', { wager: wager });
 }
 
+// 🚨 FIXED: ARENA QUESTION IS NOW GENERATED SERVER-SIDE 🚨
 socket.on('arena_start_question', (data) => {
     document.getElementById('a-wager-view').style.display = 'none';
     document.getElementById('a-game-view').style.display = 'block';
@@ -979,16 +987,7 @@ socket.on('arena_start_question', (data) => {
     document.getElementById('a-p2-name').innerText = data.p2Name;
     document.getElementById('a-p2-bet').innerText = data.p2Wager;
     
-    let deepCuts = [];
-    for (let path in quizData) {
-        if (path !== 'adults' && path !== 'actualfacts') {
-            if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
-            if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
-        }
-    }
-    deepCuts = trueShuffle(deepCuts);
-    arenaActiveQuestion = deepCuts[0];
-    
+    arenaActiveQuestion = data.question; // Pulled straight from server to ensure match
     document.getElementById('a-question-box').innerText = arenaActiveQuestion.question;
     
     const optBox = document.getElementById('a-options-box');
@@ -1326,30 +1325,6 @@ socket.on('game_starting', () => {
 socket.on('round_update', (data) => {
     const rd = document.getElementById('j-round-display');
     if (rd) rd.innerText = `${data.round}/${data.max}`;
-});
-
-socket.on('request_question', (data) => {
-    if (socket.id === data.hostId) {
-        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
-        const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
-        let randomQ = null;
-        let randomCat = "";
-        
-        while (!randomQ) {
-            randomCat = categories[Math.floor(Math.random() * categories.length)];
-            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-            const questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : null;
-            if (!questions) continue;
-            
-            const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
-            if (available.length > 0) {
-                randomQ = available[Math.floor(Math.random() * available.length)];
-                randomQ.categoryTitle = quizData[randomCat].title;
-            }
-        }
-        
-        socket.emit('start_round', randomQ); 
-    }
 });
 
 socket.on('golden_alert', () => {
