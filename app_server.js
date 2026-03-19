@@ -20,7 +20,7 @@ let readyPlayers = new Set();
 // --- JEOPARDY STATE ---
 let gameActive = false;
 let currentRound = 0;
-const MAX_ROUNDS = 21; // 🚨 CHANGED TO 21 ROUNDS 🚨
+const MAX_ROUNDS = 21;
 let roundTimer = null;
 let canBuzz = false;
 let currentCorrectAnswer = "";
@@ -130,6 +130,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // THE FORFEIT FIX: It actively checks who stayed and gives them the win
     socket.on('leave_tug', () => {
         if (socket.currentTugRoom && tugRooms[socket.currentTugRoom]) {
             const room = tugRooms[socket.currentTugRoom];
