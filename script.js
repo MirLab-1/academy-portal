@@ -2,10 +2,10 @@
  * The Knowledge Portal - V4.3 AAA FULL BUILD
  */
 
-// 🚨 BULLETPROOF RAILWAY WEBSOCKET INITIALIZATION 🚨
+// 🚨 BULLETPROOF SOCKET INITIALIZATION 🚨
 let socket;
 try {
-    socket = (typeof io !== 'undefined') ? io({ transports: ['websocket', 'polling'] }) : { emit: () => {}, on: () => {}, id: 'offline' };
+    socket = (typeof io !== 'undefined') ? io() : { emit: () => {}, on: () => {}, id: 'offline' };
 } catch(e) {
     console.warn("Socket.io offline. Loading single-player elements only.");
     socket = { emit: () => {}, on: () => {}, id: 'offline' };
@@ -356,6 +356,26 @@ const quizData = {
     }
 };
 
+// ---------------------------------------------------------
+// 2. SYSTEM STATE & ACCOUNTS
+// ---------------------------------------------------------
+let currentPoints = 0;
+let currentStreak = 1;
+let currentPath = "";
+let currentDiff = "";
+let currentIdx = 0;
+let correctAnswers = 0;
+let pointsThisSession = 0;
+let pointMultiplier = 100;
+let activeQuestions = []; 
+let usedJeopardyQuestions = [];
+let tugActiveQs = [];
+let tugIdx = 0;
+let sessionCancelToken = 0;
+
+// ---------------------------------------------------------
+// 3. TRUE UNBIASED RANDOMIZER
+// ---------------------------------------------------------
 function trueShuffle(array) {
     return [...array]
         .map(value => ({ value, sort: Math.random() }))
@@ -364,65 +384,225 @@ function trueShuffle(array) {
 }
 
 // ---------------------------------------------------------
-// 7. INITIALIZATION, LOGIN & DATA RECOVERY
+// 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
+// ---------------------------------------------------------
+function switchScreen(screenId) {
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen'];
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+}
+
+function showToast(msg) {
+    masterUnlockAudio();
+    sfx.correct(); 
+    const toast = document.getElementById('toast-notification');
+    const toastMsg = document.getElementById('toast-msg');
+    if(toast && toastMsg) {
+        toastMsg.innerHTML = msg;
+        toast.classList.add('show');
+        if (typeof confetti !== 'undefined' && msg.includes('earned')) {
+            confetti({ particleCount: 60, spread: 70, origin: { y: 0.2 }, zIndex: 10000 });
+        }
+        setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+}
+
+// ---------------------------------------------------------
+// 5. RANK BADGES & AVATARS
+// ---------------------------------------------------------
+function getRankBadge(points) {
+    if (points >= 15000) return "🟡 Captain";
+    if (points >= 5000) return "🔵 Builder";
+    return "🟢 Student";
+}
+
+function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "Student";
+    const colors = ['var(--accent-red)', 'var(--accent-blue)', 'var(--accent-green)', 'var(--accent-yellow)', '#8b5cf6', '#ec4899'];
+    const color = colors[safeName.length % colors.length];
+    const initial = safeName.charAt(0).toUpperCase();
+    const fireClass = isOnFire ? "on-fire-avatar" : "";
+    const rank = getRankBadge(points || 0);
+    const bountyStyle = hasBounty ? 'color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);' : '';
+    const bountyIcon = hasBounty ? '🎯' : '';
+    
+    return `<div style="display:flex; align-items:center;">
+        <div class="${fireClass}" style="width:36px; height:36px; min-width:36px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:18px; border:2px solid var(--primary-gold); margin-right:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+            ${isOnFire ? '🔥' : initial}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start;">
+            <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${safeName}</span>
+            <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
+        </div>
+    </div>`;
+}
+
+// ---------------------------------------------------------
+// 6. AUDIO ENGINE
+// ---------------------------------------------------------
+function masterUnlockAudio() {
+    if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const wakeup = new SpeechSynthesisUtterance("Welcome");
+            wakeup.volume = 0.1;
+            window.speechSynthesis.speak(wakeup);
+        }
+        voiceUnlocked = true;
+    } catch(e) { console.error("Audio Bypass Failed", e); }
+}
+
+document.addEventListener('touchstart', masterUnlockAudio, { once: true });
+document.addEventListener('click', masterUnlockAudio, { once: true });
+
+const sfx = {
+    playTone: (freq, type, duration) => {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    },
+    buzz: () => sfx.playTone(400, 'square', 0.2),    
+    tick: () => sfx.playTone(800, 'sine', 0.05),    
+    correct: () => { sfx.playTone(523, 'sine', 0.1); setTimeout(() => sfx.playTone(659, 'sine', 0.2), 100); },   
+    wrong: () => sfx.playTone(150, 'sawtooth', 0.4),
+    heartbeat: () => { sfx.playTone(100, 'sine', 0.1); setTimeout(() => sfx.playTone(100, 'sine', 0.1), 150); },
+    siren: () => {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
+            osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 2);
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 2);
+        } catch(e) {}
+    }
+};
+
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+        if (preferredVoice) msg.voice = preferredVoice;
+        msg.rate = 0.95; 
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        window.speechSynthesis.speak(msg);
+    }
+}
+
+// ---------------------------------------------------------
+// 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & STREAK LOGIC 🚨
 // ---------------------------------------------------------
 function checkDailyStreak() {
-    const today = new Date().toLocaleDateString('en-CA'); 
+    const today = new Date().toLocaleDateString('en-CA'); // Safely grabs "YYYY-MM-DD" local time
     const lastDate = localStorage.getItem('noi_last_date');
 
     if (!lastDate) {
+        // First time running the streak engine
         localStorage.setItem('noi_last_date', today);
         return;
     }
-    if (today === lastDate) return;
+
+    if (today === lastDate) {
+        // Already logged in today. Do nothing.
+        return;
+    }
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString('en-CA');
 
     if (lastDate === yesterdayStr) {
+        // Streak Continues!
         currentStreak++;
         let bonus = 100;
         let msg = `Welcome Back!<br><span style="color:var(--primary-gold);">Daily Streak: ${currentStreak} 🔥</span><br>You earned +100 points!`;
-        if (currentStreak % 7 === 0) { bonus = 500; msg = `7-DAY STREAK ACHIEVED! 🔥<br><span style="color:var(--accent-green);">You earned a massive +500 points!</span>`; }
+        
+        if (currentStreak % 7 === 0) {
+            bonus = 500;
+            msg = `7-DAY STREAK ACHIEVED! 🔥<br><span style="color:var(--accent-green);">You earned a massive +500 points!</span>`;
+        }
         
         currentPoints += bonus;
-        try { localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_points', currentPoints); localStorage.setItem('noi_last_date', today); } catch(e) {}
+        
+        try {
+            localStorage.setItem('noi_streak', currentStreak);
+            localStorage.setItem('noi_points', currentPoints);
+            localStorage.setItem('noi_last_date', today);
+        } catch(e) {}
         
         document.getElementById('display-points').innerText = currentPoints;
         document.getElementById('display-streak').innerText = currentStreak;
         document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+        
+        // Slight delay so the screen transition finishes first
         setTimeout(() => { showToast(msg); }, 1000);
+        
     } else {
+        // Streak Broken
         currentStreak = 1;
-        try { localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_last_date', today); } catch(e) {}
+        try {
+            localStorage.setItem('noi_streak', currentStreak);
+            localStorage.setItem('noi_last_date', today);
+        } catch(e) {}
+        
         document.getElementById('display-streak').innerText = currentStreak;
-        setTimeout(() => { showToast(`Welcome Back!<br><span style="color:var(--text-muted); font-size:12px;">Your streak reset to 1. Come back tomorrow to build it up!</span>`); }, 1000);
+        
+        setTimeout(() => { 
+            showToast(`Welcome Back!<br><span style="color:var(--text-muted); font-size:12px;">Your streak reset to 1. Come back tomorrow to build it up!</span>`); 
+        }, 1000);
     }
 }
 
 window.onload = () => {
-    const savedUser = localStorage.getItem('noi_user');
-    const savedPoints = localStorage.getItem('noi_points');
-    const savedStreak = localStorage.getItem('noi_streak');
-    
-    if (savedUser && savedUser.trim() !== "") {
-        currentUser = savedUser;
-        currentPoints = parseInt(savedPoints, 10);
-        if(isNaN(currentPoints)) currentPoints = 0;
-        currentStreak = parseInt(savedStreak, 10);
-        if(isNaN(currentStreak)) currentStreak = 1;
-
-        document.getElementById('display-points').innerText = currentPoints;
-        document.getElementById('display-streak').innerText = currentStreak;
-        document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+    try {
+        const savedUser = localStorage.getItem('noi_user');
+        const savedPoints = localStorage.getItem('noi_points');
+        const savedStreak = localStorage.getItem('noi_streak');
         
-        socket.emit('join_game', { name: currentUser, points: currentPoints });
-        checkDailyStreak(); 
-        switchScreen('home-screen');
-        
-        socket.emit('get_leaderboard');
-    } else {
+        if (savedUser && savedUser.trim() !== "") {
+            currentUser = savedUser;
+            currentPoints = savedPoints && !isNaN(parseInt(savedPoints)) ? parseInt(savedPoints) : 0;
+            currentStreak = savedStreak && !isNaN(parseInt(savedStreak)) ? parseInt(savedStreak) : 1;
+            
+            document.getElementById('display-points').innerText = currentPoints;
+            document.getElementById('display-streak').innerText = currentStreak;
+            document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+            
+            socket.emit('join_game', { name: currentUser, points: currentPoints });
+            
+            checkDailyStreak(); // Process daily rewards
+            switchScreen('home-screen');
+        } else {
+            switchScreen('login-screen');
+        }
+    } catch(err) {
+        console.error("Local storage load failed. Safe fallback executed:", err);
         switchScreen('login-screen');
     }
 };
@@ -434,365 +614,31 @@ function registerUser() {
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
     
-    const savedUser = localStorage.getItem('noi_user');
-    if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
-        currentUser = savedUser;
-        currentPoints = parseInt(localStorage.getItem('noi_points'), 10);
-        if(isNaN(currentPoints)) currentPoints = 0;
-        currentStreak = parseInt(localStorage.getItem('noi_streak'), 10);
-        if(isNaN(currentStreak)) currentStreak = 1;
-        setTimeout(() => { showToast("Profile Recovered! Your points are safe."); }, 500);
-    } else {
-        currentUser = nameVal; 
-        currentPoints = 0; 
-        currentStreak = 1;
-    }
-    
+    currentUser = nameVal;
+    currentPoints = 0;
+    currentStreak = 1;
     const today = new Date().toLocaleDateString('en-CA');
-    try { 
-        localStorage.setItem('noi_user', currentUser); 
-        localStorage.setItem('noi_points', currentPoints); 
-        localStorage.setItem('noi_streak', currentStreak); 
-        localStorage.setItem('noi_last_date', today); 
-    } catch(e) {}
+    
+    try {
+        localStorage.setItem('noi_user', currentUser);
+        localStorage.setItem('noi_points', currentPoints);
+        localStorage.setItem('noi_streak', currentStreak);
+        localStorage.setItem('noi_last_date', today); // Start tracking
+    } catch(e) { console.warn("Could not save to localStorage."); }
     
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('display-streak').innerText = currentStreak;
     document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+    
     switchScreen('home-screen');
-}
-
-// ---------------------------------------------------------
-// MASTER NAVIGATION & CHAT
-// ---------------------------------------------------------
-let sessionCancelToken = 0;
-
-function returnToMenu() {
-    sessionCancelToken++; 
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    clearInterval(sqTimerInt);
-    clearInterval(arenaTimerInt);
-    socket.emit('sq_leave_room');
-    socket.emit('leave_arena');
-    socket.emit('leave_jeopardy');
-    socket.emit('leave_tug');
-    sqIsHost = false;
-    sqRoomCode = "";
-    switchScreen('home-screen');
-}
-
-function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    if (!input) return;
-    const msg = input.value.trim();
-    if (msg !== "") {
-        socket.emit('send_chat', { name: currentUser, message: msg });
-        input.value = "";
-    }
-}
-
-socket.on('receive_chat', (data) => {
-    const box = document.getElementById('chat-box');
-    if (!box) return;
-    const msgDiv = document.createElement('div');
-    const isSystem = data.name === "SYSTEM";
-    const isMe = data.name === currentUser;
-    
-    if (isSystem) {
-        msgDiv.style.textAlign = "center";
-        msgDiv.style.margin = "10px 0";
-        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:12px; font-size:12px; color:var(--text-muted);">${data.message}</span>`;
-    } else {
-        msgDiv.style.display = "flex";
-        msgDiv.style.margin = "10px 0";
-        msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
-        
-        let bubble = `<div style="background:${isMe ? 'var(--primary-gold-glow)' : 'var(--bg-card)'}; border:1px solid var(--border-light); padding:10px 15px; border-radius:12px; max-width:80%;">
-            <div style="font-size:11px; font-weight:800; color:var(--primary-gold); margin-bottom:4px; text-transform:uppercase; font-family:var(--font-heading);">${data.name}</div>
-            <div style="color:white; font-size:14px; line-height:1.4; word-break:break-word;">${data.message}</div>
-        </div>`;
-        
-        msgDiv.innerHTML = isMe ? bubble : getAvatar(data.name, data.globalPoints) + bubble;
-    }
-
-    box.appendChild(msgDiv);
-    box.scrollTop = box.scrollHeight; 
-});
-
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') {
-        sendChatMessage();
-    }
-});
-
-// ---------------------------------------------------------
-// 🚀 THE 4 SQUARES (FAMILY GAME) LOGIC 🚀
-// ---------------------------------------------------------
-let sqRoomCode = "";
-let sqIsHost = false;
-let sqTimerInt = null;
-
-function openSquaresLobbyMenu() {
-    masterUnlockAudio();
-    document.getElementById('squares-room-input').value = "";
-    document.getElementById('squares-join-modal').classList.add('active');
-}
-
-function closeSquaresLobbyMenu() {
-    document.getElementById('squares-join-modal').classList.remove('active');
-}
-
-function switchSqView(viewId) {
-    const views = ['sq-lobby-view', 'sq-game-view', 'sq-results-view'];
-    views.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.style.display = 'none';
-    });
-    const target = document.getElementById(viewId);
-    if(target) target.style.display = 'block';
-}
-
-function hostSquaresGame() {
-    masterUnlockAudio();
-    closeSquaresLobbyMenu();
-    sqIsHost = true;
-    showToast("Connecting to Server...");
-    socket.emit('sq_create_room', { name: currentUser });
-}
-
-function joinSquaresGame() {
-    masterUnlockAudio();
-    const code = document.getElementById('squares-room-input').value.trim().toUpperCase();
-    if(code.length !== 4) return alert("Enter a valid 4-digit code.");
-    closeSquaresLobbyMenu();
-    sqIsHost = false;
-    showToast("Connecting to Server...");
-    socket.emit('sq_join_room', { name: currentUser, code: code });
-}
-
-socket.on('sq_room_created', (code) => {
-    sqRoomCode = code;
-    switchScreen('squares-game-screen');
-    switchSqView('sq-lobby-view');
-    document.getElementById('sq-room-code-display').innerText = code;
-    document.getElementById('sq-host-start-btn').style.display = 'block';
-    document.getElementById('sq-wait-msg').style.display = 'none';
-    updateSqLobbyPlayers([]);
-});
-
-socket.on('sq_joined_successfully', (data) => {
-    sqRoomCode = data.code;
-    switchScreen('squares-game-screen');
-    switchSqView('sq-lobby-view');
-    document.getElementById('sq-room-code-display').innerText = data.code;
-    document.getElementById('sq-host-start-btn').style.display = 'none';
-    document.getElementById('sq-wait-msg').style.display = 'block';
-});
-
-socket.on('sq_join_error', (msg) => {
-    alert(msg);
-    if (!sqRoomCode) openSquaresLobbyMenu();
-});
-
-socket.on('sq_lobby_update', (players) => {
-    updateSqLobbyPlayers(players);
-});
-
-socket.on('sq_host_left', () => {
-    clearInterval(sqTimerInt);
-    alert("🚨 The Host has left the game. The investigation is closed.");
-    sqIsHost = false;
-    sqRoomCode = "";
-    switchScreen('home-screen');
-});
-
-function updateSqLobbyPlayers(players) {
-    const list = document.getElementById('sq-lobby-players');
-    if(!list) return;
-    list.innerHTML = "";
-    players.forEach(p => {
-        list.innerHTML += `<div class="sq-player-row">
-            <div style="display:flex; align-items:center;">
-                <div style="width:28px; height:28px; border-radius:50%; background:#000; color:#06b6d4; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:14px; border:1px solid #06b6d4; margin-right:10px;">
-                    ${p.name.charAt(0).toUpperCase()}
-                </div>
-                <span class="white-text" style="font-weight: bold; font-size:13px; text-transform: uppercase;">${p.name}</span>
-            </div>
-            <span style="color:#06b6d4; font-size:10px; font-weight:bold;">READY</span>
-        </div>`;
-    });
-}
-
-function leaveSquaresRoom() {
-    sessionCancelToken++;
-    clearInterval(sqTimerInt);
-    socket.emit('sq_leave_room');
-    sqIsHost = false;
-    sqRoomCode = "";
-    switchScreen('home-screen');
-}
-
-function hostStartSquaresGame() {
-    masterUnlockAudio();
-    socket.emit('sq_start_game');
-}
-
-socket.on('sq_start_round', (data) => {
-    switchSqView('sq-game-view');
-    
-    document.getElementById('sq-round-display').innerText = `ROUND ${data.round}/${data.maxRounds}`;
-    document.getElementById('sq-waiting-msg').style.display = 'none';
-    
-    const grid = document.getElementById('sq-grid');
-    grid.innerHTML = "";
-    data.clues.forEach((clue, index) => {
-        let content = '';
-        if (clue.startsWith("IMG:")) {
-            const prompt = clue.replace("IMG:", "");
-            const url = `https://image.pollinations.ai/prompt/${prompt}?width=400&height=400&nologo=true`;
-            content = `<img src="${url}" alt="clue" onerror="this.style.display='none'">`;
-        } else if (clue.startsWith("TEXT:")) {
-            const txt = clue.replace("TEXT:", "");
-            content = `<span class="fs-clue-text">${txt}</span>`;
-        }
-        
-        grid.innerHTML += `
-            <div class="fs-clue-wrapper" style="animation-delay: ${index * 0.2}s">
-                <div class="fs-clue-badge">EVIDENCE 0${index + 1}</div>
-                <div class="fs-clue-box">${content}</div>
-            </div>
-        `;
-    });
-    
-    const optBox = document.getElementById('sq-options-box');
-    optBox.innerHTML = "";
-    optBox.classList.remove('locked');
-    
-    data.options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.innerText = opt;
-        btn.onclick = function(e) {
-            e.preventDefault();
-            this.blur();
-            submitSqAnswer(opt, this);
-        };
-        optBox.appendChild(btn);
-    });
-    
-    speak("Analyze the board.");
-    startSqTimer('sq-timer-display', 'sq-pressure-bar', 20, () => {
-        optBox.classList.add('locked');
-    });
-});
-
-function submitSqAnswer(selectedAnswer, btn) {
-    masterUnlockAudio();
-    const optBox = document.getElementById('sq-options-box');
-    optBox.classList.add('locked');
-    
-    const btns = optBox.querySelectorAll('.option-btn');
-    btns.forEach(b => b.classList.add('locked'));
-    btn.classList.add('selected');
-    
-    socket.emit('sq_submit_answer', { answer: selectedAnswer });
-    document.getElementById('sq-waiting-msg').style.display = 'block';
-    sfx.buzz();
-}
-
-socket.on('sq_round_results', (data) => {
-    clearInterval(sqTimerInt);
-    const optBox = document.getElementById('sq-options-box');
-    const btns = optBox.querySelectorAll('.option-btn');
-    
-    btns.forEach(b => {
-        if (b.innerText === data.correctAnswer) {
-            b.classList.add('correct');
-        } else if (b.classList.contains('selected')) {
-            b.classList.add('wrong');
-        }
-    });
-
-    if (data.iGotItRight) {
-        sfx.correct();
-        showToast("Correct! +1000 Points");
-    } else {
-        sfx.wrong();
-        showToast("Incorrect. The answer was " + data.correctAnswer);
-    }
-});
-
-socket.on('sq_game_over', (data) => {
-    clearInterval(sqTimerInt);
-    switchSqView('sq-results-view');
-    
-    document.getElementById('sq-reveal-avatar-container').innerHTML = getAvatar(data.winnerName, 10000); 
-    document.getElementById('sq-winner-name').innerText = data.winnerName;
-    
-    speak(`The match is over. The ultimate detective is ${data.winnerName}.`);
-    
-    const scoreList = document.getElementById('sq-scores-list');
-    scoreList.innerHTML = "";
-    
-    data.scores.forEach(s => {
-        scoreList.innerHTML += `
-            <div class="sq-score-row">
-                <div style="display:flex; align-items:center;">
-                    ${getAvatar(s.name, 0)}
-                </div>
-                <div class="score-badge ${s.score > 0 ? 'score-positive' : 'score-negative'}">
-                    ${s.score} pts
-                </div>
-            </div>
-        `;
-        
-        if(s.name === currentUser) {
-            currentPoints += s.score;
-            if(currentPoints < 0) currentPoints = 0;
-            
-            if(s.name === data.winnerName && data.winnerName !== "Nobody") {
-                currentPoints += 5000;
-                showToast("🏆 You won the match! +5000 Bonus Points!");
-                if (typeof confetti !== 'undefined') confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
-            }
-            
-            try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
-            document.getElementById('display-points').innerText = currentPoints;
-            socket.emit('update_global_score', { name: currentUser, points: currentPoints });
-        }
-    });
-});
-
-function startSqTimer(textId, barId, duration, onEnd) {
-    clearInterval(sqTimerInt);
-    let timer = duration;
-    const tDisplay = document.getElementById(textId);
-    const bDisplay = document.getElementById(barId);
-    
-    sqTimerInt = setInterval(() => {
-        timer--;
-        if(tDisplay) tDisplay.innerText = timer + "s";
-        
-        if(bDisplay) {
-            const pct = (timer / duration) * 100;
-            bDisplay.style.width = pct + "%";
-            if(pct < 30) bDisplay.style.background = "var(--accent-red)";
-            else bDisplay.style.background = "#06b6d4";
-        }
-        
-        if (timer <= 0) {
-            clearInterval(sqTimerInt);
-            if(onEnd) onEnd();
-        }
-    }, 1000);
 }
 
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
 // ---------------------------------------------------------
-let arenaTimerInt = null;
+let arenaActiveQuestion = null;
 
 function startArena() {
     sessionCancelToken++;
@@ -880,14 +726,24 @@ socket.on('arena_start_question', (data) => {
     document.getElementById('a-p2-name').innerText = data.p2Name;
     document.getElementById('a-p2-bet').innerText = data.p2Wager;
     
-    document.getElementById('a-question-box').innerText = data.question.question;
+    let deepCuts = [];
+    for (let path in quizData) {
+        if (path !== 'adults' && path !== 'actualfacts') {
+            if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
+            if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
+        }
+    }
+    deepCuts = trueShuffle(deepCuts);
+    arenaActiveQuestion = deepCuts[0];
+    
+    document.getElementById('a-question-box').innerText = arenaActiveQuestion.question;
     
     const optBox = document.getElementById('a-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     document.getElementById('a-waiting-answer').style.display = 'none';
     
-    let options = data.question.options;
+    let options = trueShuffle(arenaActiveQuestion.options);
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -895,30 +751,14 @@ socket.on('arena_start_question', (data) => {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitArenaAnswer(opt, this, data.question.correct);
+            submitArenaAnswer(opt, this, arenaActiveQuestion.correct);
         };
         optBox.appendChild(btn);
     });
-
-    let timeLeft = 15;
-    document.getElementById('a-waiting-answer').innerText = `Time left: ${timeLeft}s`;
-    document.getElementById('a-waiting-answer').style.display = 'block';
-    
-    clearInterval(arenaTimerInt);
-    arenaTimerInt = setInterval(() => {
-        timeLeft--;
-        if(!optBox.classList.contains('locked')) {
-            document.getElementById('a-waiting-answer').innerText = `Time left: ${timeLeft}s`;
-        }
-        if(timeLeft <= 0) {
-            clearInterval(arenaTimerInt);
-        }
-    }, 1000);
 });
 
 function submitArenaAnswer(selected, btn, correct) {
     masterUnlockAudio();
-    clearInterval(arenaTimerInt);
     const optBox = document.getElementById('a-options-box');
     optBox.classList.add('locked');
     
@@ -930,20 +770,17 @@ function submitArenaAnswer(selected, btn, correct) {
         b.blur();
     });
     
-    if (btn) {
-        if (selected === correct) {
-            btn.classList.add('correct');
-            sfx.correct();
-        } else {
-            btn.classList.add('wrong');
-            quizBtns.forEach(b => {
-                if (b.innerText === correct) b.classList.add('correct');
-            });
-            sfx.wrong();
-        }
+    if (selected === correct) {
+        btn.classList.add('correct');
+        sfx.correct();
+    } else {
+        btn.classList.add('wrong');
+        quizBtns.forEach(b => {
+            if (b.innerText === correct) b.classList.add('correct');
+        });
+        sfx.wrong();
     }
     
-    document.getElementById('a-waiting-answer').innerText = 'Waiting for opponent to answer...';
     document.getElementById('a-waiting-answer').style.display = 'block';
     
     socket.emit('arena_answer', { correct: selected === correct });
@@ -951,7 +788,6 @@ function submitArenaAnswer(selected, btn, correct) {
 
 socket.on('arena_game_over', (data) => {
     sessionCancelToken++;
-    clearInterval(arenaTimerInt);
     document.getElementById('a-game-view').style.display = 'none';
     document.getElementById('a-results-view').style.display = 'block';
     
@@ -1020,22 +856,39 @@ socket.on('tug_lobby_update', (data) => {
     if (rc) rc.innerText = data.ready;
 });
 
-// 🚨 FIXED: STRICT SERVER-CONTROLLED TUG OF WAR 🚨
-socket.on('tug_start_round', (data) => {
+socket.on('tug_start', (data) => {
+    tugIdx = 0;
+    
     document.getElementById('t-p1-name').innerText = currentUser;
     document.getElementById('t-p2-name').innerText = data.opponentName;
+    document.getElementById('tug-flag').style.left = "50%";
     
+    document.getElementById('t-streak-p1').innerText = "0";
+    document.getElementById('t-streak-p2').innerText = "0";
+
     document.getElementById('t-lobby-view').style.display = 'none';
     document.getElementById('t-game-view').style.display = 'block';
     
-    if (data.isFirst) speak("The Tug of War has begun.");
+    speak("The Tug of War has begun.");
     
-    document.getElementById('t-question-box').innerText = data.question.question;
+    let allQs = [];
+    for (let path in quizData) if (path !== 'adults' && path !== 'actualfacts') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
+    tugActiveQs = trueShuffle(allQs);
+    
+    loadTugQuestion();
+});
+
+function loadTugQuestion() {
+    if (tugIdx >= tugActiveQs.length) return;
+    
+    const q = tugActiveQs[tugIdx];
+    document.getElementById('t-question-box').innerText = q.question;
+    
     const optBox = document.getElementById('t-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     
-    let options = data.question.options;
+    let options = trueShuffle(q.options);
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -1043,11 +896,11 @@ socket.on('tug_start_round', (data) => {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitTugAnswer(opt, this, data.question.correct);
+            submitTugAnswer(opt, this, q.correct);
         };
         optBox.appendChild(btn);
     });
-});
+}
 
 function submitTugAnswer(selected, btn, correct) {
     masterUnlockAudio();
@@ -1073,7 +926,14 @@ function submitTugAnswer(selected, btn, correct) {
         sfx.wrong();
     }
     
-    socket.emit('tug_answer', { correct: selected === correct });
+    socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
+    
+    let currentToken = sessionCancelToken;
+    setTimeout(() => {
+        if (currentToken !== sessionCancelToken) return;
+        tugIdx++;
+        loadTugQuestion();
+    }, 1500);
 }
 
 socket.on('tug_update', (data) => {
@@ -1196,6 +1056,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
+    usedJeopardyQuestions = []; 
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -1212,6 +1073,30 @@ socket.on('game_starting', () => {
 socket.on('round_update', (data) => {
     const rd = document.getElementById('j-round-display');
     if (rd) rd.innerText = `${data.round}/${data.max}`;
+});
+
+socket.on('request_question', (data) => {
+    if (socket.id === data.hostId) {
+        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
+        const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
+        let randomQ = null;
+        let randomCat = "";
+        
+        while (!randomQ) {
+            randomCat = categories[Math.floor(Math.random() * categories.length)];
+            const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
+            const questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : null;
+            if (!questions) continue;
+            
+            const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
+            if (available.length > 0) {
+                randomQ = available[Math.floor(Math.random() * available.length)];
+                randomQ.categoryTitle = quizData[randomCat].title;
+            }
+        }
+        
+        socket.emit('start_round', randomQ); 
+    }
 });
 
 socket.on('golden_alert', () => {
@@ -1262,6 +1147,10 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
+    if (!usedJeopardyQuestions.includes(qData.question)) {
+        usedJeopardyQuestions.push(qData.question);
+    }
+    
     const qBox = document.getElementById('j-question-box');
     const bStatus = document.getElementById('buzzer-status');
     const btn = document.getElementById('buzzer-btn');
@@ -1279,7 +1168,7 @@ socket.on('new_question', (qData) => {
         btn.innerText = "BUZZ!";
     }
     if (optBox) optBox.style.display = "none";
-    window.currentJeopardyOptions = qData.options;
+    window.currentJeopardyOptions = trueShuffle(qData.options);
 });
 
 function sendBuzz() {
@@ -1322,8 +1211,8 @@ socket.on('player_buzzed', (data) => {
         if (optBox) {
             optBox.style.display = "flex";
             optBox.innerHTML = "";
-            let options = window.currentJeopardyOptions; 
-            options.forEach(opt => {
+            let shuffled = trueShuffle(window.currentJeopardyOptions); 
+            shuffled.forEach(opt => {
                 const obtn = document.createElement('button');
                 obtn.className = 'option-btn';
                 obtn.innerText = opt;
@@ -1628,4 +1517,63 @@ socket.on('leaderboard_data', (data) => {
         `;
         listDiv.appendChild(row);
     });
+});
+
+// ---------------------------------------------------------
+// 13. MASTER NAVIGATION
+// ---------------------------------------------------------
+function returnToMenu() {
+    sessionCancelToken++; 
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    socket.emit('leave_arena');
+    socket.emit('leave_jeopardy');
+    socket.emit('leave_tug');
+    switchScreen('home-screen');
+}
+
+// ---------------------------------------------------------
+// 14. MODERN LOBBY CHAT LOGIC
+// ---------------------------------------------------------
+function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (msg !== "") {
+        socket.emit('send_chat', { name: currentUser, message: msg });
+        input.value = "";
+    }
+}
+
+socket.on('receive_chat', (data) => {
+    const box = document.getElementById('chat-box');
+    if (!box) return;
+    const msgDiv = document.createElement('div');
+    const isSystem = data.name === "SYSTEM";
+    const isMe = data.name === currentUser;
+    
+    if (isSystem) {
+        msgDiv.style.textAlign = "center";
+        msgDiv.style.margin = "10px 0";
+        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:12px; font-size:12px; color:var(--text-muted);">${data.message}</span>`;
+    } else {
+        msgDiv.style.display = "flex";
+        msgDiv.style.margin = "10px 0";
+        msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
+        
+        let bubble = `<div style="background:${isMe ? 'var(--primary-gold-glow)' : 'var(--bg-card)'}; border:1px solid var(--border-light); padding:10px 15px; border-radius:12px; max-width:80%;">
+            <div style="font-size:11px; font-weight:800; color:var(--primary-gold); margin-bottom:4px; text-transform:uppercase; font-family:var(--font-heading);">${data.name}</div>
+            <div style="color:white; font-size:14px; line-height:1.4; word-break:break-word;">${data.message}</div>
+        </div>`;
+        
+        msgDiv.innerHTML = isMe ? bubble : getAvatar(data.name, data.globalPoints) + bubble;
+    }
+
+    box.appendChild(msgDiv);
+    box.scrollTop = box.scrollHeight; 
+});
+
+document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') {
+        sendChatMessage();
+    }
 });
