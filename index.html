@@ -8,26 +8,25 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* PERFECT MOBILE CENTERING FIX (UNTOUCHED) */
-        * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent !important; }
+        /* 🚨 ULTIMATE MOBILE HIGHLIGHT KILLER 🚨 */
+        * { 
+            box-sizing: border-box !important; 
+            -webkit-tap-highlight-color: transparent !important; /* Kills the grey flash */
+            -webkit-touch-callout: none !important; /* Kills the native popup menu */
+        }
+        
         body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; }
-        button { -webkit-appearance: none !important; appearance: none !important; outline: none !important; }
+        button { -webkit-appearance: none !important; appearance: none !important; outline: none !important; user-select: none; -webkit-user-select: none; }
         
         .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh; }
         
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .options-grid.locked { pointer-events: none !important; } 
         
-        /* ========================================================
-           🚨 THE ULTIMATE COLOR LOCK (KILLS YELLOW & GREY) 🚨 
-           ======================================================== */
-        
-        /* 1. Base Button - Only allows shrinking, NO color fading */
+        /* 1. Base Button - Only allows shrinking */
         .option-btn { 
             width: 100%; max-width: 100%; margin: 0 auto; 
             transition: transform 0.1s ease !important; 
-            -webkit-tap-highlight-color: transparent !important;
-            outline: none !important;
         }
         .option-btn:active { transform: scale(0.96) !important; }
         .option-btn:disabled { opacity: 1 !important; }
@@ -38,30 +37,39 @@
             border: 1px solid #333 !important;
             color: white !important;
         }
-        .options-grid .option-btn:hover,
-        .options-grid .option-btn:focus,
-        .options-grid .option-btn:active {
-            background-color: #111 !important; 
-            border-color: #333 !important;
-            color: white !important;
-            box-shadow: none !important;
+        
+        /* Blocks ALL hover/focus color changes on mobile */
+        @media (max-width: 1024px) {
+            .options-grid .option-btn:hover,
+            .options-grid .option-btn:focus,
+            .options-grid .option-btn:active {
+                background-color: #111 !important; 
+                border-color: #333 !important;
+                color: white !important;
+                box-shadow: none !important;
+            }
         }
 
-        /* 3. Difficulty Buttons - Locked to their exact colors (Never Yellow) */
+        /* Desktop safe hover */
+        @media (hover: hover) and (pointer: fine) {
+            .options-grid .option-btn:hover { border-color: var(--gold) !important; background-color: rgba(212, 175, 55, 0.1) !important; }
+        }
+
+        /* 3. Difficulty Buttons - Locked to their exact colors */
         .diff-easy { border-color: #10b981 !important; background-color: #111 !important; color: white !important; }
-        .diff-easy:hover, .diff-easy:focus, .diff-easy:active { border-color: #10b981 !important; background-color: #111 !important; }
+        .diff-easy:active { border-color: #10b981 !important; background-color: #111 !important; }
 
         .diff-med { border-color: #f59e0b !important; background-color: #111 !important; color: white !important; }
-        .diff-med:hover, .diff-med:focus, .diff-med:active { border-color: #f59e0b !important; background-color: #111 !important; }
+        .diff-med:active { border-color: #f59e0b !important; background-color: #111 !important; }
 
         .diff-hard { border-color: #ef4444 !important; background-color: #111 !important; color: white !important; }
-        .diff-hard:hover, .diff-hard:focus, .diff-hard:active { border-color: #ef4444 !important; background-color: #111 !important; }
+        .diff-hard:active { border-color: #ef4444 !important; background-color: #111 !important; }
 
         .diff-ext { border-color: #a855f7 !important; background-color: #111 !important; color: #d8b4fe !important; }
-        .diff-ext:hover, .diff-ext:focus, .diff-ext:active { border-color: #a855f7 !important; background-color: #111 !important; color: #d8b4fe !important; }
+        .diff-ext:active { border-color: #a855f7 !important; background-color: #111 !important; color: #d8b4fe !important; }
 
         .diff-cancel { border-color: #333 !important; background-color: #333 !important; color: white !important; }
-        .diff-cancel:hover, .diff-cancel:focus, .diff-cancel:active { border-color: #333 !important; background-color: #333 !important; }
+        .diff-cancel:active { border-color: #333 !important; background-color: #333 !important; }
 
         /* 4. The RED & GREEN Result States (Overrides EVERYTHING) */
         button.option-btn.correct, button.option-btn.correct:hover, button.option-btn.correct:focus, button.option-btn.correct:active, button.option-btn.correct:disabled { 
@@ -118,7 +126,7 @@
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
             <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
-            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black !important; font-weight: bold; border: none !important;">ENTER ACADEMY</button>
+            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b) !important; color: black !important; font-weight: bold; border: none !important;">ENTER ACADEMY</button>
         </div>
     </div>
 
@@ -243,7 +251,7 @@
                     <div id="chat-box" style="flex: 1; overflow-y: auto; padding: 15px; font-family: sans-serif; font-size: 14px; color: #eee; display: flex; flex-direction: column; gap: 8px;"></div>
                     <div style="display: flex; background: #0a0a0a; padding: 10px; border-top: 1px solid #333;">
                         <input type="text" id="chat-input" placeholder="Message..." style="flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: white; padding: 10px;">
-                        <button onclick="sendChatMessage()" style="background: var(--gold); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: black; border-radius: 6px; margin-left: 10px;">SEND</button>
+                        <button onclick="sendChatMessage()" style="background: var(--gold) !important; color: black !important; font-weight: bold; border: none; padding: 0 20px; border-radius: 6px; margin-left: 10px;">SEND</button>
                     </div>
                 </div>
                 <button id="ready-btn" class="option-btn diff-easy" onclick="sendReady()" style="background-color: var(--gold) !important; color: black !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; border-color: var(--gold) !important;">I'M READY</button>
