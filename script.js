@@ -374,6 +374,19 @@ let tugIdx = 0;
 let sessionCancelToken = 0;
 
 // ---------------------------------------------------------
+// 🚀 FAMILY GAME (MOTHER PLANE) STATE 🚀
+// ---------------------------------------------------------
+let familyRoomCode = "";
+let isHost = false;
+let myFamilyRole = ""; 
+let familyActiveQuestion = null;
+let discussionTimerInt = null;
+let votingTimerInt = null;
+let hasLockedTriviaVote = false;
+let hasLockedAccuseVote = false;
+let currentPhase = ""; 
+
+// ---------------------------------------------------------
 // 3. TRUE UNBIASED RANDOMIZER
 // ---------------------------------------------------------
 function trueShuffle(array) {
@@ -387,7 +400,7 @@ function trueShuffle(array) {
 // 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
 // ---------------------------------------------------------
 function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen'];
+    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'family-game-screen'];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -401,7 +414,7 @@ function switchScreen(screenId) {
 
 function showToast(msg) {
     masterUnlockAudio();
-    sfx.correct(); 
+    if(sfx.correct) sfx.correct(); 
     const toast = document.getElementById('toast-notification');
     const toastMsg = document.getElementById('toast-msg');
     if(toast && toastMsg) {
@@ -441,6 +454,22 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
             <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${safeName}</span>
             <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
         </div>
+    </div>`;
+}
+
+function getPlaneAvatar(name, isReady = false) {
+    const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "CREW";
+    const initial = safeName.charAt(0).toUpperCase();
+    const readyClass = isReady ? "ready" : "";
+    
+    return `<div class="plane-player-row ${readyClass}">
+        <div style="display:flex; align-items:center;">
+            <div style="width:32px; height:32px; border-radius:50%; background:#000; color:var(--plane-cyan); display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:16px; border:1px solid var(--plane-cyan); margin-right:10px; box-shadow: 0 0 10px var(--plane-cyan-glow);">
+                ${initial}
+            </div>
+            <span class="white-text" style="font-weight: bold; font-size:14px;">${safeName}</span>
+        </div>
+        ${isReady ? '<span class="cyan-text" style="font-size:10px; font-weight:bold;">STANDBY</span>' : '<span class="muted-text" style="font-size:10px;">CONNECTING</span>'}
     </div>`;
 }
 
@@ -499,6 +528,11 @@ const sfx = {
             osc.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 2);
         } catch(e) {}
+    },
+    alarm: () => {
+        sfx.playTone(900, 'sawtooth', 0.1);
+        setTimeout(() => sfx.playTone(700, 'sawtooth', 0.1), 100);
+        setTimeout(() => sfx.playTone(900, 'sawtooth', 0.1), 200);
     }
 };
 
@@ -519,63 +553,37 @@ function speak(text) {
 // 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & STREAK LOGIC 🚨
 // ---------------------------------------------------------
 function checkDailyStreak() {
-    const today = new Date().toLocaleDateString('en-CA'); // Safely grabs "YYYY-MM-DD" local time
+    const today = new Date().toLocaleDateString('en-CA'); 
     const lastDate = localStorage.getItem('noi_last_date');
 
     if (!lastDate) {
-        // First time running the streak engine
         localStorage.setItem('noi_last_date', today);
         return;
     }
-
-    if (today === lastDate) {
-        // Already logged in today. Do nothing.
-        return;
-    }
+    if (today === lastDate) return;
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString('en-CA');
 
     if (lastDate === yesterdayStr) {
-        // Streak Continues!
         currentStreak++;
         let bonus = 100;
         let msg = `Welcome Back!<br><span style="color:var(--primary-gold);">Daily Streak: ${currentStreak} 🔥</span><br>You earned +100 points!`;
-        
-        if (currentStreak % 7 === 0) {
-            bonus = 500;
-            msg = `7-DAY STREAK ACHIEVED! 🔥<br><span style="color:var(--accent-green);">You earned a massive +500 points!</span>`;
-        }
+        if (currentStreak % 7 === 0) { bonus = 500; msg = `7-DAY STREAK ACHIEVED! 🔥<br><span style="color:var(--accent-green);">You earned a massive +500 points!</span>`; }
         
         currentPoints += bonus;
-        
-        try {
-            localStorage.setItem('noi_streak', currentStreak);
-            localStorage.setItem('noi_points', currentPoints);
-            localStorage.setItem('noi_last_date', today);
-        } catch(e) {}
+        try { localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_points', currentPoints); localStorage.setItem('noi_last_date', today); } catch(e) {}
         
         document.getElementById('display-points').innerText = currentPoints;
         document.getElementById('display-streak').innerText = currentStreak;
         document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
-        
-        // Slight delay so the screen transition finishes first
         setTimeout(() => { showToast(msg); }, 1000);
-        
     } else {
-        // Streak Broken
         currentStreak = 1;
-        try {
-            localStorage.setItem('noi_streak', currentStreak);
-            localStorage.setItem('noi_last_date', today);
-        } catch(e) {}
-        
+        try { localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_last_date', today); } catch(e) {}
         document.getElementById('display-streak').innerText = currentStreak;
-        
-        setTimeout(() => { 
-            showToast(`Welcome Back!<br><span style="color:var(--text-muted); font-size:12px;">Your streak reset to 1. Come back tomorrow to build it up!</span>`); 
-        }, 1000);
+        setTimeout(() => { showToast(`Welcome Back!<br><span style="color:var(--text-muted); font-size:12px;">Your streak reset to 1. Come back tomorrow to build it up!</span>`); }, 1000);
     }
 }
 
@@ -584,27 +592,20 @@ window.onload = () => {
         const savedUser = localStorage.getItem('noi_user');
         const savedPoints = localStorage.getItem('noi_points');
         const savedStreak = localStorage.getItem('noi_streak');
-        
         if (savedUser && savedUser.trim() !== "") {
             currentUser = savedUser;
             currentPoints = savedPoints && !isNaN(parseInt(savedPoints)) ? parseInt(savedPoints) : 0;
             currentStreak = savedStreak && !isNaN(parseInt(savedStreak)) ? parseInt(savedStreak) : 1;
-            
             document.getElementById('display-points').innerText = currentPoints;
             document.getElementById('display-streak').innerText = currentStreak;
             document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
-            
             socket.emit('join_game', { name: currentUser, points: currentPoints });
-            
-            checkDailyStreak(); // Process daily rewards
+            checkDailyStreak(); 
             switchScreen('home-screen');
         } else {
             switchScreen('login-screen');
         }
-    } catch(err) {
-        console.error("Local storage load failed. Safe fallback executed:", err);
-        switchScreen('login-screen');
-    }
+    } catch(err) { switchScreen('login-screen'); }
 };
 
 function registerUser() {
@@ -613,27 +614,348 @@ function registerUser() {
     if (!nameInput) return;
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
-    
-    currentUser = nameVal;
-    currentPoints = 0;
-    currentStreak = 1;
+    currentUser = nameVal; currentPoints = 0; currentStreak = 1;
     const today = new Date().toLocaleDateString('en-CA');
-    
-    try {
-        localStorage.setItem('noi_user', currentUser);
-        localStorage.setItem('noi_points', currentPoints);
-        localStorage.setItem('noi_streak', currentStreak);
-        localStorage.setItem('noi_last_date', today); // Start tracking
-    } catch(e) { console.warn("Could not save to localStorage."); }
-    
+    try { localStorage.setItem('noi_user', currentUser); localStorage.setItem('noi_points', currentPoints); localStorage.setItem('noi_streak', currentStreak); localStorage.setItem('noi_last_date', today); } catch(e) {}
     socket.emit('join_game', { name: currentUser, points: currentPoints });
-    
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('display-streak').innerText = currentStreak;
     document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
-    
     switchScreen('home-screen');
 }
+
+// ---------------------------------------------------------
+// 🚀 THE MOTHER PLANE SHOWDOWN (Family Game) LOGIC 🚀
+// ---------------------------------------------------------
+function openFamilyLobbyMenu() {
+    masterUnlockAudio();
+    document.getElementById('family-room-input').value = "";
+    document.getElementById('family-join-modal').classList.add('active');
+}
+
+function closeFamilyLobbyMenu() {
+    document.getElementById('family-join-modal').classList.remove('active');
+}
+
+function switchFamilyView(viewId) {
+    const views = ['p-lobby-view', 'p-role-view', 'p-game-view', 'p-voting-view', 'p-results-view'];
+    views.forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+}
+
+function hostFamilyGame() {
+    masterUnlockAudio();
+    closeFamilyLobbyMenu();
+    isHost = true;
+    socket.emit('create_family_room', { name: currentUser });
+}
+
+function joinFamilyGame() {
+    masterUnlockAudio();
+    const code = document.getElementById('family-room-input').value.trim().toUpperCase();
+    if(code.length !== 4) return alert("Enter a valid 4-digit code.");
+    closeFamilyLobbyMenu();
+    isHost = false;
+    socket.emit('join_family_room', { name: currentUser, code: code });
+}
+
+socket.on('family_room_created', (code) => {
+    familyRoomCode = code;
+    switchScreen('family-game-screen');
+    switchFamilyView('p-lobby-view');
+    document.querySelector('#p-lobby-view strong.white-text').innerText = code;
+    document.getElementById('p-host-start-btn').style.display = 'block';
+    document.getElementById('p-wait-msg').style.display = 'none';
+    updateCrewList([]);
+});
+
+socket.on('family_joined_successfully', (data) => {
+    familyRoomCode = data.code;
+    switchScreen('family-game-screen');
+    switchFamilyView('p-lobby-view');
+    document.querySelector('#p-lobby-view strong.white-text').innerText = data.code;
+    document.getElementById('p-host-start-btn').style.display = 'none';
+    document.getElementById('p-wait-msg').style.display = 'block';
+});
+
+socket.on('family_join_error', (msg) => {
+    alert(msg);
+    openFamilyLobbyMenu();
+});
+
+socket.on('family_lobby_update', (players) => {
+    updateCrewList(players);
+});
+
+function updateCrewList(players) {
+    const list = document.getElementById('p-lobby-players');
+    list.innerHTML = "";
+    players.forEach(p => {
+        list.innerHTML += getPlaneAvatar(p.name, p.isReady);
+    });
+}
+
+function leaveFamilyRoom() {
+    sessionCancelToken++;
+    clearInterval(discussionTimerInt);
+    clearInterval(votingTimerInt);
+    socket.emit('leave_family_room');
+    isHost = false;
+    familyRoomCode = "";
+    switchScreen('home-screen');
+}
+
+function hostStartFamilyGame() {
+    masterUnlockAudio();
+    socket.emit('host_start_family_game');
+}
+
+socket.on('family_assign_role', (role) => {
+    myFamilyRole = role; 
+    currentPhase = "role_reveal";
+    switchFamilyView('p-role-view');
+    
+    const icon = document.getElementById('p-role-icon');
+    const text = document.getElementById('p-role-text');
+    const subtext = document.getElementById('p-role-subtext');
+    
+    icon.innerText = "?";
+    icon.className = "scanner-icon";
+    text.innerText = "SCANNING...";
+    text.className = "plane-big-text muted-text";
+    
+    speak("Scanning neural patterns. Confirming identity.");
+    
+    setTimeout(() => {
+        if(myFamilyRole === "vanguard") {
+            icon.innerText = "🛡️";
+            icon.className = "scanner-icon cyanglow";
+            text.innerText = "VANGUARD";
+            text.className = "plane-big-text cyan-text";
+            subtext.innerHTML = "You are Original Crew.<br>Discuss FaceTime to solve the Question.";
+            speak("Welcome aboard, Vanguard. Protect the Plane.");
+            sfx.correct();
+        } else {
+            icon.innerText = "💀";
+            icon.className = "scanner-icon redglow plane-shake";
+            text.innerText = "INFILTRATOR";
+            text.className = "plane-big-text red-text";
+            subtext.innerHTML = "SYSTEM ERROR.<br>corrupted. lying is your weapon.";
+            speak("WARNING. 85er detected on board.");
+            sfx.alarm();
+        }
+    }, 3000);
+});
+
+socket.on('family_start_discussion', (qData) => {
+    currentPhase = "discussion";
+    familyActiveQuestion = qData;
+    switchFamilyView('p-game-view');
+    
+    const vQ = document.getElementById('p-vanguard-q');
+    const iQ = document.getElementById('p-infiltrator-q');
+    const instruct = document.getElementById('p-instruction-card');
+    
+    vQ.style.display = 'none';
+    iQ.style.display = 'none';
+    
+    if(myFamilyRole === "vanguard") {
+        vQ.style.display = 'block';
+        document.getElementById('p-actual-question').innerText = familyActiveQuestion.question;
+        
+        const opts = document.getElementById('p-vanguard-options');
+        opts.innerHTML = "";
+        familyActiveQuestion.options.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = "plane-opt-btn";
+            b.innerText = opt;
+            b.disabled = true; 
+            opts.appendChild(b);
+        });
+        
+        instruct.className = "plane-glass-card text-center accent-border-cyan";
+        instruct.innerHTML = `<h4 class="cyan-text heading-font mb-10">VANGUARD MISSION</h4>
+                              <p class="muted-text">Solve the Query. Watch for hesitation. The 85er is guessing.</p>`;
+        
+    } else {
+        iQ.style.display = 'block';
+        sfx.alarm(); 
+        instruct.className = "plane-glass-card text-center accent-border-red plane-shake";
+        instruct.innerHTML = `<h4 class="red-text heading-font mb-10">INFILTRATOR MISSION</h4>
+                              <p class="muted-text">SYSTEM MALFUNCTION. Lie. Smooth-talk. trick them into selecting WRONG.</p>`;
+    }
+    
+    startPlaneTimer('p-discussion-timer', 60, () => {
+        speak(" Discussion time is over. Input final decisions.");
+    });
+});
+
+function startPlaneTimer(id, duration, onEnd) {
+    clearInterval(discussionTimerInt);
+    clearInterval(votingTimerInt); 
+    
+    let timer = duration, minutes, seconds;
+    const display = document.getElementById(id);
+    
+    discussionTimerInt = setInterval(function () {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+        display.innerText = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            clearInterval(discussionTimerInt);
+            if(onEnd) onEnd();
+        }
+        
+        if(timer < 10) {
+            display.style.color = "var(--accent-red)";
+            sfx.tick();
+        } else {
+            display.style.color = "white";
+        }
+    }, 1000);
+}
+
+socket.on('family_start_voting', (data) => {
+    currentPhase = "voting";
+    switchFamilyView('p-voting-view');
+    speak("Deception detected. Alarms blaring.");
+    sfx.siren();
+    
+    hasLockedTriviaVote = false;
+    hasLockedAccuseVote = false;
+    document.getElementById('p-trivia-voted-msg').style.display = 'none';
+    document.getElementById('p-accuse-voted-msg').style.display = 'none';
+    
+    const tMsg = document.getElementById('p-trivia-vote-msg');
+    const aMsg = document.getElementById('p-traitor-vote-msg');
+    const tOpts = document.getElementById('p-vote-options-box');
+    const aOpts = document.getElementById('p-accuse-options-box');
+    
+    tOpts.innerHTML = "";
+    aOpts.innerHTML = "";
+    
+    if(myFamilyRole === "vanguard") {
+        tMsg.innerText = "Vote for the CORRECT answer to the query.";
+        trueShuffle(familyActiveQuestion.options).forEach(opt => {
+            const b = document.createElement('button');
+            b.className = "p-vote-btn";
+            b.innerText = opt;
+            b.onclick = function() { submitTriviaVote(opt, b); };
+            tOpts.appendChild(b);
+        });
+        
+    } else {
+        tMsg.innerHTML = `<span class="red-text">Sabotage Protocol.</span> Vote for a WRONG answer to trick them.`;
+        ['A', 'B', 'C', 'D'].forEach((opt, idx) => {
+            const b = document.createElement('button');
+            b.className = "p-vote-btn plane-pulse";
+            b.innerText = `Fake Option ${opt}`;
+            b.onclick = function() { submitTriviaVote(opt, b); }; 
+            tOpts.appendChild(b);
+        });
+    }
+    
+    aMsg.innerText = "Identify the player you believe is the 85er.";
+    data.players.forEach(p => {
+        if(p.name !== currentUser) { 
+            const b = document.createElement('button');
+            b.className = "p-accuse-btn";
+            b.innerHTML = `
+                <span class="white-text">${p.name}</span>
+                <span class="muted-text" style="font-size:10px;">Select to Accuse</span>
+            `;
+            b.onclick = function() { submitAccuseVote(p.id, b); };
+            aOpts.appendChild(b);
+        }
+    });
+    
+    startPlaneTimer('p-voting-timer', 20, () => {
+        sfx.wrong(); 
+    });
+});
+
+function submitTriviaVote(answer, btn) {
+    if(hasLockedTriviaVote) return;
+    masterUnlockAudio();
+    hasLockedTriviaVote = true;
+    
+    const card = document.getElementById('p-trivia-vote-card');
+    const btns = card.querySelectorAll('.p-vote-btn');
+    btns.forEach(b => b.classList.add('locked'));
+    btn.classList.add('selected');
+    
+    socket.emit('family_vote_trivia', { answer: answer });
+    document.getElementById('p-trivia-voted-msg').style.display = 'flex';
+}
+
+function submitAccuseVote(playerId, btn) {
+    if(hasLockedAccuseVote) return;
+    masterUnlockAudio();
+    hasLockedAccuseVote = true;
+    
+    const card = document.getElementById('p-accuse-options-box');
+    const btns = card.querySelectorAll('.p-accuse-btn');
+    btns.forEach(b => b.classList.add('locked'));
+    btn.classList.add('selected');
+    
+    socket.emit('family_vote_accuse', { accuseId: playerId });
+    document.getElementById('p-accuse-voted-msg').style.display = 'flex';
+}
+
+socket.on('family_round_results', (data) => {
+    currentPhase = "results";
+    switchFamilyView('p-results-view');
+    speak("System decryption complete. The Infiltrator has been revealed.");
+    
+    document.getElementById('p-reveal-avatar-container').innerHTML = getAvatar(data.traitorName, 10000); 
+    document.getElementById('p-reveal-name').innerText = data.traitorName;
+    
+    if(data.vanguardWonRound) {
+        speak("Justice is served. The original nation stands strong.");
+        sfx.correct();
+        if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    } else {
+        speak("Sabotage successful. The system has failed.");
+        sfx.alarm();
+        document.getElementById('p-results-view').classList.add('plane-shake');
+        setTimeout(() => document.getElementById('p-results-view').classList.remove('plane-shake'), 1000);
+    }
+    
+    const scoreList = document.getElementById('p-round-scores-list');
+    scoreList.innerHTML = "";
+    data.scores.sort((a,b) => b.roundScore - a.roundScore).forEach(s => {
+        const isPositive = s.roundScore >= 0;
+        const pts = s.roundScore.toLocaleString();
+        
+        scoreList.innerHTML += `
+            <div class="plane-score-row">
+                <div style="display:flex; align-items:center;">
+                    ${getAvatar(s.name, 0)}
+                    ${s.wasTraitor ? '<span class="red-text" style="font-size:10px; margin-left:10px; font-weight:bold;">85er</span>' : ''}
+                </div>
+                <div class="score-badge ${isPositive ? 'score-positive' : 'score-negative'}">
+                    ${isPositive ? '+' : ''}${pts}
+                </div>
+            </div>
+        `;
+        
+        if(s.name === currentUser) {
+            currentPoints += s.roundScore;
+            if(currentPoints < 0) currentPoints = 0;
+            try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
+            document.getElementById('display-points').innerText = currentPoints;
+        }
+    });
+    
+    if(isHost) {
+        document.getElementById('p-host-next-btn').style.display = 'block';
+    } else {
+        document.getElementById('p-host-next-btn').style.display = 'none';
+    }
+});
 
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
@@ -1525,9 +1847,14 @@ socket.on('leaderboard_data', (data) => {
 function returnToMenu() {
     sessionCancelToken++; 
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    clearInterval(discussionTimerInt);
+    clearInterval(votingTimerInt);
+    socket.emit('leave_family_room');
     socket.emit('leave_arena');
     socket.emit('leave_jeopardy');
     socket.emit('leave_tug');
+    isHost = false;
+    familyRoomCode = "";
     switchScreen('home-screen');
 }
 
