@@ -1,26 +1,22 @@
 /**
  * The Knowledge Portal - V4.3 AAA FULL BUILD
- * VERSION: 4.3.0-ARENA
- * FEATURES: 
- * 1. Post-Game Analytics & Bounties
- * 2. Sudden Death Elimination Logic
- * 3. Modernized UX/UI (Phase 1/4)
- * 4. Schwartzian Transform Randomizer
- * 5. UNIQUE OVERHAULED DATABASE (Fact-Checked NOI Teachings, 0 Duplicates)
- * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
- * 7. THE ARENA ADDED (High Stakes Wager Duel)
- * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
- * 9. ACTUAL FACTS CATEGORY ADDED
- * 10. EXACT STUDENT ENROLLMENT INCORPORATED (Word for Word)
  */
 
-const socket = io();
+// 🚨 BULLETPROOF SOCKET INITIALIZATION 🚨
+let socket;
+try {
+    socket = (typeof io !== 'undefined') ? io() : { emit: () => {}, on: () => {}, id: 'offline' };
+} catch(e) {
+    console.warn("Socket.io offline. Loading single-player elements only.");
+    socket = { emit: () => {}, on: () => {}, id: 'offline' };
+}
+
 let currentUser = "";
 let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (No Duplicates, Fact-Checked)
+// 1. FULL MASSIVE QUESTION DATABASE
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -283,9 +279,6 @@ const quizData = {
             { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" }
         ]
     },
-    // ==========================================
-    // 🚨 100% ACCURATE STUDENT ENROLLMENT (RULES OF ISLAM) 🚨
-    // ==========================================
     adults: { 
         title: "Registration Track", 
         studyText: "The Student Enrollment. You must memorize these 10 exact questions and answers word-for-word.", 
@@ -302,9 +295,6 @@ const quizData = {
             { question: "What is the said birth record of nations other than Islam?", options: ["Buddhism is 35,000 years old and Christianity is 551 years old.", "Buddhism is 35,000 years old and Christianity is 550 years old.", "Buddhism is 35,000 years old and Christianity is 555 years old."], correct: "Buddhism is 35,000 years old and Christianity is 551 years old." } 
         ] 
     },
-    // ==========================================
-    // 🚨 100% ACCURATE ACTUAL FACTS 🚨
-    // ==========================================
     actualfacts: { 
         title: "Actual Facts", 
         studyText: "Memorize these 20 mathematical facts of our planet and universe.", 
@@ -410,7 +400,7 @@ function switchScreen(screenId) {
 }
 
 // ---------------------------------------------------------
-// 5. RANK BADGES, AVATARS & BOUNTY RENDERER
+// 5. RANK BADGES & AVATARS
 // ---------------------------------------------------------
 function getRankBadge(points) {
     if (points >= 15000) return "🟡 Captain";
@@ -419,9 +409,12 @@ function getRankBadge(points) {
 }
 
 function getAvatar(name, points, isOnFire = false, hasBounty = false) {
+    // Safety check just in case name is undefined or empty
+    const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "Student";
+    
     const colors = ['var(--accent-red)', 'var(--accent-blue)', 'var(--accent-green)', 'var(--accent-yellow)', '#8b5cf6', '#ec4899'];
-    const color = colors[name.length % colors.length];
-    const initial = name.charAt(0).toUpperCase();
+    const color = colors[safeName.length % colors.length];
+    const initial = safeName.charAt(0).toUpperCase();
     const fireClass = isOnFire ? "on-fire-avatar" : "";
     const rank = getRankBadge(points || 0);
     const bountyStyle = hasBounty ? 'color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);' : '';
@@ -432,7 +425,7 @@ function getAvatar(name, points, isOnFire = false, hasBounty = false) {
             ${isOnFire ? '🔥' : initial}
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-start;">
-            <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${name}</span>
+            <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${safeName}</span>
             <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
         </div>
     </div>`;
@@ -510,25 +503,30 @@ function speak(text) {
 }
 
 // ---------------------------------------------------------
-// 7. INITIALIZATION & LOGIN
+// 🚨 7. BULLETPROOF INITIALIZATION & LOGIN 🚨
 // ---------------------------------------------------------
 window.onload = () => {
-    const savedUser = localStorage.getItem('noi_user');
-    const savedPoints = localStorage.getItem('noi_points');
-    const savedStreak = localStorage.getItem('noi_streak');
-    
-    if (savedUser) {
-        currentUser = savedUser;
-        currentPoints = savedPoints ? parseInt(savedPoints) : 0;
-        currentStreak = savedStreak ? parseInt(savedStreak) : 1;
+    try {
+        const savedUser = localStorage.getItem('noi_user');
+        const savedPoints = localStorage.getItem('noi_points');
+        const savedStreak = localStorage.getItem('noi_streak');
         
-        document.getElementById('display-points').innerText = currentPoints;
-        document.getElementById('display-streak').innerText = currentStreak;
-        document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
-        
-        socket.emit('join_game', { name: currentUser, points: currentPoints });
-        switchScreen('home-screen');
-    } else {
+        if (savedUser && savedUser.trim() !== "") {
+            currentUser = savedUser;
+            currentPoints = savedPoints && !isNaN(parseInt(savedPoints)) ? parseInt(savedPoints) : 0;
+            currentStreak = savedStreak && !isNaN(parseInt(savedStreak)) ? parseInt(savedStreak) : 1;
+            
+            document.getElementById('display-points').innerText = currentPoints;
+            document.getElementById('display-streak').innerText = currentStreak;
+            document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
+            
+            socket.emit('join_game', { name: currentUser, points: currentPoints });
+            switchScreen('home-screen');
+        } else {
+            switchScreen('login-screen');
+        }
+    } catch(err) {
+        console.error("Local storage load failed. Safe fallback executed:", err);
         switchScreen('login-screen');
     }
 };
@@ -544,9 +542,11 @@ function registerUser() {
     currentPoints = 0;
     currentStreak = 1;
     
-    localStorage.setItem('noi_user', currentUser);
-    localStorage.setItem('noi_points', currentPoints);
-    localStorage.setItem('noi_streak', currentStreak);
+    try {
+        localStorage.setItem('noi_user', currentUser);
+        localStorage.setItem('noi_points', currentPoints);
+        localStorage.setItem('noi_streak', currentStreak);
+    } catch(e) { console.warn("Could not save to localStorage. Running in temporary session mode."); }
     
     socket.emit('join_game', { name: currentUser, points: currentPoints });
     
@@ -741,7 +741,7 @@ socket.on('arena_game_over', (data) => {
     currentPoints += myResult;
     if (currentPoints < 0) currentPoints = 0; 
     
-    localStorage.setItem('noi_points', currentPoints);
+    try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
     document.getElementById('display-points').innerText = currentPoints;
     document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
@@ -911,7 +911,7 @@ socket.on('tug_game_over', (data) => {
 });
 
 // ---------------------------------------------------------
-// 9. PRO JEOPARDY LOGIC (21 ROUNDS NO DUPLICATES)
+// 9. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     sessionCancelToken++;
@@ -978,7 +978,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = []; // Reset local log for a new game
+    usedJeopardyQuestions = []; 
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -999,7 +999,7 @@ socket.on('round_update', (data) => {
 
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
-        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history', 'jeopardyVault', 'actualfacts']; 
+        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'actualfacts', 'jeopardyVault']; 
         const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
         let randomQ = null;
         let randomCat = "";
@@ -1007,7 +1007,7 @@ socket.on('request_question', (data) => {
         while (!randomQ) {
             randomCat = categories[Math.floor(Math.random() * categories.length)];
             const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
-            const questions = quizData[randomCat][randomDiff];
+            const questions = quizData[randomCat] ? quizData[randomCat][randomDiff] : null;
             if (!questions) continue;
             
             const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
@@ -1279,7 +1279,7 @@ function openStudyLibrary(mode, diff) {
 // 11. MAIN QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
-    sessionCancelToken++; // Kills ghost timers
+    sessionCancelToken++; 
     masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     
@@ -1293,7 +1293,6 @@ function beginQuizFromStudy() {
     
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
-    // Exact memorization tracks should NOT shuffle questions, but regular ones should.
     if (currentPath !== 'adults' && currentPath !== 'actualfacts') {
         activeQuestions = trueShuffle(activeQuestions);
     }
@@ -1324,7 +1323,6 @@ function loadQuestion() {
     optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
-    // 🚨 1st OPTION FIX: We ALWAYS shuffle the options for EVERY question now! 🚨
     let shuffledOptions = trueShuffle([...q.options]);
     
     shuffledOptions.forEach(opt => {
@@ -1411,7 +1409,7 @@ function showResults() {
     
     if (rDisp) rDisp.innerText = `Rank Earned: ${rank}`;
     
-    localStorage.setItem('noi_points', currentPoints);
+    try { localStorage.setItem('noi_points', currentPoints); } catch(e){}
     if (dPts) dPts.innerText = currentPoints;
     document.getElementById('nav-avatar-container').innerHTML = getAvatar(currentUser, currentPoints);
     socket.emit('update_global_score', { name: currentUser, points: currentPoints });
@@ -1444,7 +1442,7 @@ socket.on('leaderboard_data', (data) => {
 });
 
 // ---------------------------------------------------------
-// 13. MASTER NAVIGATION & GLOBAL QUIT FIX
+// 13. MASTER NAVIGATION
 // ---------------------------------------------------------
 function returnToMenu() {
     sessionCancelToken++; 
