@@ -189,12 +189,6 @@ button {
     color: var(--accent-red) !important; transform: scale(1) !important;
 }
 
-.option-btn.selected {
-    border-color: #06b6d4 !important;
-    background-color: rgba(6, 182, 212, 0.2) !important;
-    color: #fff !important;
-}
-
 .modern-input {
     width: 100%; max-width: 300px; padding: 16px; border-radius: 12px;
     border: 1px solid var(--border-heavy); background: var(--bg-input);
@@ -207,17 +201,10 @@ button {
 #progress-bar { height: 100%; background: var(--primary-gold); transition: width 0.3s ease; width: 0%; }
 
 .text-center { text-align: center; }
-.mt-10 { margin-top: 10px; }
 .mt-20 { margin-top: 20px; }
-.mb-5 { margin-bottom: 5px; }
-.mb-10 { margin-bottom: 10px; }
-.mb-15 { margin-bottom: 15px; }
 .mb-20 { margin-bottom: 20px; }
 .gold-text { color: var(--primary-gold); }
 .muted-text { color: var(--text-muted); }
-.cyan-text { color: #06b6d4; }
-.red-text { color: var(--accent-red); }
-.white-text { color: white; }
 
 .arena-glow-text { font-family: var(--font-heading); font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 15px var(--accent-red), 0 0 30px var(--accent-red); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 2px; text-align: center; }
 
@@ -271,7 +258,7 @@ button {
 .modal.active { display: flex; }
 .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px solid var(--border-light); width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
 
-/* 🚨 TOAST STYLING 🚨 */
+/* 🚨 NEW TOAST STYLING 🚨 */
 .toast {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150px);
     background: var(--bg-card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -281,91 +268,3 @@ button {
     text-align: center; color: white; min-width: 250px;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
-
-/* 🚀 THE 4 SQUARES (FAMILY GAME) STYLING 🚀 */
-.fs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto 30px;
-}
-
-.fs-clue-wrapper {
-    position: relative;
-    animation: slideUpFade 0.6s ease backwards;
-}
-
-.fs-clue-badge {
-    position: absolute;
-    top: -12px;
-    left: -10px;
-    background: #06b6d4;
-    color: #000;
-    font-size: 10px;
-    font-weight: 900;
-    padding: 5px 10px;
-    border-radius: 6px;
-    z-index: 10;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.8);
-    letter-spacing: 1px;
-    border: 1px solid #fff;
-}
-
-.fs-clue-box {
-    background: #000;
-    border: 2px solid #06b6d4;
-    border-radius: 12px;
-    aspect-ratio: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 5px 20px rgba(6, 182, 212, 0.2);
-}
-
-.fs-clue-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.8) contrast(1.2);
-    transition: transform 0.3s;
-}
-
-.fs-clue-box:hover img {
-    transform: scale(1.05);
-}
-
-.fs-clue-text {
-    font-family: var(--font-heading);
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-    text-transform: uppercase;
-    text-align: center;
-    padding: 15px;
-    text-shadow: 0 0 15px #06b6d4;
-}
-
-.sq-player-row {
-    display: flex;
-    align-items: center;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid #06b6d4;
-    border-radius: 8px;
-    padding: 8px 12px;
-    width: 45%;
-    min-width: 150px;
-}
-
-.sq-score-row {
-    display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-heavy);
-}
-.sq-score-row:last-child { border-bottom: none; }
-
-@keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
