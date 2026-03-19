@@ -379,11 +379,11 @@
         <div class="modal-content">
             <h2 style="color: var(--gold); text-align: center;">Difficulty</h2>
             <div class="options-grid">
-                <button class="option-btn" style="border-color: #10b981 !important; color: #10b981 !important; padding: 15px;" onclick="selectDifficulty('easy')">Easy</button>
-                <button class="option-btn" style="border-color: #f59e0b !important; color: #f59e0b !important; padding: 15px;" onclick="selectDifficulty('medium')">Medium</button>
-                <button class="option-btn" style="border-color: #ef4444 !important; color: #ef4444 !important; padding: 15px;" onclick="selectDifficulty('hard')">Hard</button>
-                <button class="option-btn" style="border-color: #a855f7 !important; color: #d8b4fe !important; padding: 15px;" onclick="selectDifficulty('extreme')">Extreme</button>
-                <button class="option-btn" style="border-color: #555 !important; color: white !important; padding: 15px;" onclick="closeDifficulty()">Cancel</button>
+                <button class="option-btn diff-easy" style="border-color: #10b981 !important; color: #10b981 !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('easy')">Easy</button>
+                <button class="option-btn diff-med" style="border-color: #f59e0b !important; color: #f59e0b !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('medium')">Medium</button>
+                <button class="option-btn diff-hard" style="border-color: #ef4444 !important; color: #ef4444 !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('hard')">Hard</button>
+                <button class="option-btn diff-ext" style="border-color: #a855f7 !important; color: #d8b4fe !important; padding: 15px; background: transparent !important;" onclick="selectDifficulty('extreme')">Extreme</button>
+                <button class="option-btn diff-cancel" style="border-color: #555 !important; color: white !important; padding: 15px; background: transparent !important;" onclick="closeDifficulty()">Cancel</button>
             </div>
         </div>
     </div>
@@ -394,7 +394,7 @@
             <div id="study-text" class="study-text-box" style="text-align: center; width: 100%;"></div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width: 100%;">
                 <button class="option-btn" style="background-color: #333 !important; border-color: #444 !important; color: white !important; padding: 15px;" onclick="returnToMenu()">Back</button>
-                <button class="option-btn" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important; padding: 15px;" onclick="beginQuizFromStudy()">Begin</button>
+                <button class="option-btn" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important; padding: 15px; font-weight: bold;" onclick="beginQuizFromStudy()">Begin</button>
             </div>
         </div>
     </div>
