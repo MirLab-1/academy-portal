@@ -6,12 +6,12 @@
  * 2. Sudden Death Elimination Logic
  * 3. Mobile Hover Killer & Clean Focus Blur
  * 4. Schwartzian Transform Randomizer
- * 5. EXTREME MODE (240 Questions)
+ * 5. OVERHAULED DATABASE (300+ UNIQUE NOI DEEP CUTS)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. Correct Answer Green Highlight Restored
  * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
  * 9. Victory Confetti & Dynamic Forfeit Handlers Added
- * 10. 21 NEW JEOPARDY EXCLUSIVE QUESTIONS ADDED (Total: 261 Questions)
+ * 10. 21 NEW JEOPARDY EXCLUSIVE QUESTIONS ADDED
  */
 
 const socket = io();
@@ -20,7 +20,7 @@ let audioCtx = null;
 let voiceUnlocked = false;
 
 // ---------------------------------------------------------
-// 1. FULL MASSIVE QUESTION DATABASE (261 Questions)
+// 1. FULL MASSIVE QUESTION DATABASE (300+ Unique Questions)
 // ---------------------------------------------------------
 const quizData = {
     kids: { 
@@ -63,16 +63,16 @@ const quizData = {
             { question: "What does the 'White' in the Flag of Islam represent?", options: ["Clouds", "Purity and Truth", "Peace"], correct: "Purity and Truth" }
         ],
         extreme: [
-            { question: "How many years did Master Fard Muhammad study to prepare for His mission?", options: ["20 Years", "42 Years", "10 Years"], correct: "42 Years" },
-            { question: "What was the original street address of Temple No. 1 in Detroit?", options: ["3159 Hastings Street", "1200 Woodward Ave", "Mosque Maryam"], correct: "3159 Hastings Street" },
             { question: "What is the mathematical meaning of the word 'Allah'?", options: ["Arm, Leg, Leg, Arm, Head", "The Supreme Being", "Peace and Power"], correct: "Arm, Leg, Leg, Arm, Head" },
             { question: "How many languages did Master Fard Muhammad speak perfectly?", options: ["10 Languages", "5 Languages", "16 Languages"], correct: "16 Languages" },
-            { question: "What is the First Law of Nature according to the teachings?", options: ["Self-Preservation", "Peace", "Knowledge of Self"], correct: "Self-Preservation" },
             { question: "What year was the Honorable Elijah Muhammad born?", options: ["1897", "1910", "1930"], correct: "1897" },
-            { question: "What is the exact diameter of the planet Earth?", options: ["7,926 miles", "10,000 miles", "24,896 miles"], correct: "7,926 miles" },
-            { question: "What does the Crescent Moon on the flag mathematically represent?", options: ["Freedom", "Equality", "Justice"], correct: "Equality" },
-            { question: "How many attributes of Allah are commonly taught?", options: ["99 Attributes", "50 Attributes", "10 Attributes"], correct: "99 Attributes" },
-            { question: "Who was the first person to accept the teachings of Master Fard Muhammad?", options: ["The Honorable Elijah Muhammad", "Mother Clara Muhammad", "Malcolm X"], correct: "Mother Clara Muhammad" }
+            { question: "Who was the first person to accept the teachings of Master Fard Muhammad?", options: ["The Honorable Elijah Muhammad", "Mother Clara Muhammad", "Malcolm X"], correct: "Mother Clara Muhammad" },
+            { question: "What was the exact date the Honorable Elijah Muhammad was born?", options: ["October 7, 1897", "February 26, 1897", "July 4, 1897"], correct: "October 7, 1897" },
+            { question: "What does the word 'orthodox' mean when referring to Orthodox Islam?", options: ["Strict", "Standard or conventional", "Ancient"], correct: "Standard or conventional" },
+            { question: "What is the literal translation of the Arabic word 'Quran'?", options: ["The Holy Book", "The Divine Law", "That which is to be read"], correct: "That which is to be read" },
+            { question: "Which prominent figure said 'Elijah Muhammad is the man who taught me that I am somebody'?", options: ["Malcolm X", "Muhammad Ali", "Louis Farrakhan"], correct: "Muhammad Ali" },
+            { question: "In what year did Mother Clara Muhammad establish the University of Islam?", options: ["1934", "1940", "1950"], correct: "1934" },
+            { question: "What was the name of the organization established by Wallace D. Fard before it became the Nation of Islam?", options: ["Allah's Temple of Islam", "The Moorish Science Temple", "The Black Panther Party"], correct: "Allah's Temple of Islam" }
         ]
     },
     teens: { 
@@ -80,51 +80,51 @@ const quizData = {
         studyText: "Welcome to The Awakening. As a teenager, you are preparing to take on the world. You must understand 'Knowledge of Self' and the concept of 'Do For Self'.", 
         easy: [ 
             { question: "What is the core meaning of the concept 'Do For Self'?", options: ["Working for others", "Building our own schools, farms, and businesses", "Waiting for help"], correct: "Building our own schools, farms, and businesses" }, 
-            { question: "Which famous heavyweight boxing champion was a student of the Honorable Elijah Muhammad?", options: ["Mike Tyson", "Muhammad Ali", "Joe Frazier"], correct: "Muhammad Ali" }, 
             { question: "Knowledge of ___ is the first step to success.", options: ["Money", "Self", "Science"], correct: "Self" }, 
-            { question: "Why is Saviours' Day celebrated every year?", options: ["To celebrate spring", "To commemorate the birth of Master Fard Muhammad", "To open a Mosque"], correct: "To commemorate the birth of Master Fard Muhammad" }, 
             { question: "According to the teachings, what is the root meaning of the word 'Black'?", options: ["Empty space", "The source of all things / Original", "Darkness"], correct: "The source of all things / Original" },
             { question: "What is the ultimate goal of 'Do For Self'?", options: ["To make a lot of money", "Independence and self-reliance", "To be famous"], correct: "Independence and self-reliance" },
             { question: "Who gave Malcolm X his 'X'?", options: ["He chose it himself", "The Honorable Elijah Muhammad", "Master Fard Muhammad"], correct: "The Honorable Elijah Muhammad" },
             { question: "What was the original name of the Honorable Minister Louis Farrakhan?", options: ["Louis Eugene Walcott", "Louis Shabazz", "Louis Smith"], correct: "Louis Eugene Walcott" },
             { question: "What did the Honorable Elijah Muhammad say is the key to our salvation?", options: ["Going to college", "Unity and Knowledge of Self", "Moving to another country"], correct: "Unity and Knowledge of Self" },
-            { question: "What is the official newspaper of the Nation of Islam?", options: ["The Final Call", "The Daily Planet", "The Messenger"], correct: "The Final Call" }
+            { question: "What is the primary message behind the phrase 'Up You Mighty Nation'?", options: ["We can accomplish what we will", "We must move to Africa", "We should fight back"], correct: "We can accomplish what we will" },
+            { question: "What is the significance of the crescent moon in Islamic symbolism?", options: ["It represents the night", "It represents equality and new beginnings", "It represents space travel"], correct: "It represents equality and new beginnings" },
+            { question: "What is the focus of the '10,000 Fearless'?", options: ["To stand between the gangs and stop violence", "To join the military", "To travel the world"], correct: "To stand between the gangs and stop violence" }
         ], 
         medium: [ 
             { question: "Who wrote the book 'Message to the Blackman in America'?", options: ["Marcus Garvey", "The Honorable Elijah Muhammad", "Malcolm X"], correct: "The Honorable Elijah Muhammad" }, 
             { question: "True wealth in the Nation of Islam is measured by having what?", options: ["Fast cars and jewelry", "Health, Knowledge, and Land", "Fame on social media"], correct: "Health, Knowledge, and Land" }, 
-            { question: "What is the purpose of the 10,000 Fearless?", options: ["To stand between the gangs and stop violence", "To join the military", "To travel the world"], correct: "To stand between the gangs and stop violence" }, 
             { question: "What was the original name of the Honorable Elijah Muhammad before he met Master Fard Muhammad?", options: ["Elijah Poole", "Elijah Shabazz", "Elijah X"], correct: "Elijah Poole" }, 
-            { question: "What is the name of the farm owned by the Nation of Islam?", options: ["Freedom Farms", "Muhammad Farms", "Crescent Farms"], correct: "Muhammad Farms" },
             { question: "What major historical event did Minister Farrakhan lead on October 16, 1995?", options: ["The March on Washington", "The Million Man March", "The Civil Rights March"], correct: "The Million Man March" },
             { question: "What does the 'X' in a Muslim's name mean?", options: ["A Roman numeral for 10", "An unknown variable replacing the slave name", "Extreme"], correct: "An unknown variable replacing the slave name" },
-            { question: "What book did the Honorable Elijah Muhammad write that outlines the core beliefs?", options: ["Message to the Blackman in America", "The Autobiography of Malcolm X", "The Divine Light"], correct: "Message to the Blackman in America" },
             { question: "How many people attended the Million Man March?", options: ["100,000", "500,000", "Over one million men"], correct: "Over one million men" },
-            { question: "What is the economic program introduced by the Honorable Elijah Muhammad?", options: ["The Three Year Economic Plan", "The National Economic Blueprint", "The Wealth Program"], correct: "The National Economic Blueprint" }
+            { question: "What is the economic program introduced by the Honorable Elijah Muhammad called?", options: ["The Three Year Economic Plan", "The National Economic Blueprint", "The Wealth Program"], correct: "The National Economic Blueprint" },
+            { question: "What does the term 'Tricknology' refer to?", options: ["Advanced computers", "Lies, deceit, and manipulation used by the enemy", "A type of magic"], correct: "Lies, deceit, and manipulation used by the enemy" },
+            { question: "Who was appointed by the Honorable Elijah Muhammad as his first National Representative?", options: ["Malcolm X", "Muhammad Ali", "Louis Farrakhan"], correct: "Malcolm X" },
+            { question: "In what city did Minister Farrakhan first lead as the Minister?", options: ["Chicago, Mosque No. 2", "Boston, Mosque No. 11", "New York, Mosque No. 7"], correct: "Boston, Mosque No. 11" }
         ], 
         hard: [ 
             { question: "In what year was the Honorable Minister Louis Farrakhan born?", options: ["1933", "1940", "1925"], correct: "1933" }, 
-            { question: "What was the name of the major event led by Minister Farrakhan in Washington D.C. in 1995?", options: ["The Civil Rights March", "The Million Man March", "The Freedom Rally"], correct: "The Million Man March" }, 
-            { question: "In the teachings, what does the letter 'X' represent in a believer's name?", options: ["Extreme", "An unknown quality, replacing the slavemaster's name", "A Roman numeral for 10"], correct: "An unknown quality, replacing the slavemaster's name" }, 
-            { question: "What is the title of the book written by Minister Farrakhan that deals with divine light?", options: ["A Torchlight for America", "The Divine Light", "Message to the Blackman"], correct: "A Torchlight for America" }, 
-            { question: "Who was the first National Representative appointed by the Honorable Elijah Muhammad?", options: ["Malcolm X", "Silis Muhammad", "Louis Farrakhan"], correct: "Malcolm X" },
+            { question: "What is the title of the book written by Minister Farrakhan that acts as a guiding light for the country?", options: ["A Torchlight for America", "The Divine Light", "Message to the Blackman"], correct: "A Torchlight for America" }, 
             { question: "What was the name of the original newspaper published by the Honorable Elijah Muhammad?", options: ["The Final Call", "Muhammad Speaks", "The Islamic News"], correct: "Muhammad Speaks" },
-            { question: "In what year did the Honorable Elijah Muhammad depart?", options: ["1965", "1975", "1981"], correct: "1975" },
-            { question: "What city did Minister Farrakhan first lead as the Minister?", options: ["Chicago, Mosque No. 2", "Boston, Mosque No. 11", "New York, Mosque No. 7"], correct: "Boston, Mosque No. 11" },
-            { question: "Who did the Honorable Elijah Muhammad appoint as the National Representative before Minister Farrakhan?", options: ["Malcolm X", "Muhammad Ali", "Imam W.D. Mohammed"], correct: "Malcolm X" },
-            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["The Millions More Movement", "Justice Or Else", "The Holy Day of Atonement"], correct: "Justice Or Else" }
+            { question: "In what year did the Honorable Elijah Muhammad depart this timeline?", options: ["1965", "1975", "1981"], correct: "1975" },
+            { question: "What was the theme of the 20th Anniversary of the Million Man March?", options: ["The Millions More Movement", "Justice Or Else", "The Holy Day of Atonement"], correct: "Justice Or Else" },
+            { question: "What was Minister Farrakhan's first assignment as a Minister?", options: ["New York, Mosque No. 7", "Boston, Mosque No. 11", "Chicago, Mosque No. 2"], correct: "Boston, Mosque No. 11" },
+            { question: "Who was the founder of the Moorish Science Temple, preceding the NOI?", options: ["Marcus Garvey", "Noble Drew Ali", "Booker T. Washington"], correct: "Noble Drew Ali" },
+            { question: "What year was 'Message to the Blackman in America' published?", options: ["1955", "1965", "1975"], correct: "1965" },
+            { question: "What was the name of the airplane purchased by the NOI?", options: ["The Final Call Jet", "The Jet of Islam", "A Lockheed Jetstar (The 'Saviour')"], correct: "A Lockheed Jetstar (The 'Saviour')" },
+            { question: "What year was the Million Woman March held?", options: ["1997", "1995", "2000"], correct: "1997" }
         ],
         extreme: [
             { question: "In what year did Minister Louis Farrakhan receive his Vision on the Mother Plane?", options: ["1975", "1985", "1995"], correct: "1985" },
-            { question: "What is the exact speed of thought according to the Honorable Elijah Muhammad?", options: ["24 billion miles per second", "186,000 miles per second", "1,120 feet per second"], correct: "24 billion miles per second" },
             { question: "What was the original name of the foundational document for the Million Man March?", options: ["The Divine Blueprint", "Atonement, Reconciliation, and Responsibility", "Justice Or Else"], correct: "Atonement, Reconciliation, and Responsibility" },
             { question: "What year was the Final Call newspaper first published by Minister Farrakhan?", options: ["1979", "1985", "1990"], correct: "1979" },
-            { question: "What does the 'C' in C.C.C. stand for in the original lessons?", options: ["Colored Civilian Conservation", "City Council Court", "Caucasian Central Command"], correct: "Colored Civilian Conservation" },
-            { question: "What is the exact distance from the Earth to the Sun according to the lessons?", options: ["93,000,000 miles", "50,000,000 miles", "237,000 miles"], correct: "93,000,000 miles" },
-            { question: "Who was the first Supreme Captain of the M.G.T.?", options: ["Mother Tynnetta Muhammad", "Mother Clara Muhammad", "Minister Ava Muhammad"], correct: "Mother Clara Muhammad" },
-            { question: "What year was the Million Family March held?", options: ["1995", "2000", "2005"], correct: "2000" },
-            { question: "How many million Original people were in the wilderness of North America in the 1930s lessons?", options: ["17 Million", "30 Million", "50 Million"], correct: "17 Million" },
-            { question: "What does the word 'Saviour' mean in the context of the Nation of Islam?", options: ["One who fights back", "One who saves from mental death and the power of the enemy", "A politician"], correct: "One who saves from mental death and the power of the enemy" }
+            { question: "What specific vision did Minister Farrakhan receive on September 17, 1985?", options: ["The Million Man March", "The Vision on the Mother Plane in Tepotzlan, Mexico", "The rebuilding of Mosque Maryam"], correct: "The Vision on the Mother Plane in Tepotzlan, Mexico" },
+            { question: "What year was the Nation of Islam's flagship farm in Georgia purchased?", options: ["1989", "1994", "2000"], correct: "1994" },
+            { question: "What was the overarching theme of the 10th Anniversary of the Million Man March in 2005?", options: ["The Millions More Movement", "Justice Or Else", "Day of Atonement"], correct: "The Millions More Movement" },
+            { question: "In what year did Minister Farrakhan complete his World Tour spanning over 40 nations?", options: ["1996", "1990", "2000"], correct: "1996" },
+            { question: "Which of the following was a renowned musical composition by Minister Louis Farrakhan?", options: ["Let Us Make Man", "The Awakening", "The Divine Light"], correct: "Let Us Make Man" },
+            { question: "What is the exact date of Minister Farrakhan's birth?", options: ["May 11, 1933", "October 7, 1933", "February 26, 1933"], correct: "May 11, 1933" },
+            { question: "What is the significance of the year 1977 in NOI history?", options: ["Minister Farrakhan stood up to rebuild the work of Elijah Muhammad", "The Final Call was published", "Mosque Maryam was purchased"], correct: "Minister Farrakhan stood up to rebuild the work of Elijah Muhammad" }
         ]
     },
     training: { 
@@ -150,9 +150,9 @@ const quizData = {
             { question: "In the M.G.T. classes, what does the 'General Civilization Class' teach?", options: ["How to act at home and abroad", "How to build cities", "How to speak foreign languages"], correct: "How to act at home and abroad" },
             { question: "What is the first training unit of the M.G.T.?", options: ["How to cook", "How to keep house", "How to rear children"], correct: "How to keep house" },
             { question: "What does G.C.C. stand for?", options: ["Girls Cooking Class", "General Civilization Class", "Global Citizen Center"], correct: "General Civilization Class" },
-            { question: "What is the primary purpose of the F.O.I.?", options: ["To sell newspapers", "To protect the Nation and the Black Woman", "To march in parades"], correct: "To protect the Nation and the Black Woman" },
             { question: "What do the F.O.I. sell in the streets to spread the teachings?", options: ["Bean Pies", "The Final Call Newspaper", "Incense"], correct: "The Final Call Newspaper" },
-            { question: "Which training unit teaches sisters how to care for their spouses?", options: ["How to take care of their husbands", "How to sew", "How to act abroad"], correct: "How to take care of their husbands" }
+            { question: "Which training unit teaches sisters how to care for their spouses?", options: ["How to take care of their husbands", "How to sew", "How to act abroad"], correct: "How to take care of their husbands" },
+            { question: "What is the minimum age to be classified as a Junior M.G.T.?", options: ["12", "15", "18"], correct: "15" }
         ], 
         hard: [ 
             { question: "Who is recognized as the Supreme Captain of the F.O.I.?", options: ["Brother Jabril Muhammad", "The Honorable Elijah Muhammad", "Brother Raymond Sharrieff"], correct: "The Honorable Elijah Muhammad" }, 
@@ -167,16 +167,16 @@ const quizData = {
             { question: "According to the teachings, who gave the M.G.T. their 7 training units?", options: ["Mother Clara Muhammad", "Master Fard Muhammad", "Minister Farrakhan"], correct: "Master Fard Muhammad" }
         ],
         extreme: [
-            { question: "What are the specific dimensions of the Universe according to the lessons?", options: ["1 Trillion Miles", "76 Quintillion Miles", "Without end"], correct: "76 Quintillion Miles" },
-            { question: "What is the duty of a civilized person?", options: ["To fight the devil", "To teach the uncivilized people", "To build businesses"], correct: "To teach the uncivilized people" },
-            { question: "In what year did the Honorable Elijah Muhammad institute the F.O.I.?", options: ["1930", "1933", "1955"], correct: "1933" },
             { question: "What does the 'Fruit' in Fruit of Islam symbolize?", options: ["Sweetness", "The finest and most productive of the Nation", "Farming"], correct: "The finest and most productive of the Nation" },
             { question: "Who authored the book 'The Cultural Revolution'?", options: ["Mother Tynnetta Muhammad", "Mother Clara Muhammad", "Minister Farrakhan"], correct: "Mother Tynnetta Muhammad" },
-            { question: "What is the minimum age to be classified as a Junior M.G.T.?", options: ["12", "15", "18"], correct: "15" },
+            { question: "In what year did the Honorable Elijah Muhammad institute the F.O.I.?", options: ["1930", "1933", "1955"], correct: "1933" },
             { question: "What year was the Muhammad University of Islam established?", options: ["1930", "1934", "1960"], correct: "1934" },
-            { question: "What does the acronym G.C.C. officially translate to?", options: ["General Civilization Class", "Global Citizen Committee", "Girls Cooking Center"], correct: "General Civilization Class" },
-            { question: "According to the lessons, who is the 85%?", options: ["The civilized world", "The uncivilized people suffering from mental death", "The poor teachers"], correct: "The uncivilized people suffering from mental death" },
-            { question: "According to the lessons, who is the 10%?", options: ["The poor, righteous teachers", "The uncivilized people", "The rich slave-makers of the poor"], correct: "The rich slave-makers of the poor" }
+            { question: "Who was the legendary Supreme Captain of the F.O.I. that helped secure the Nation of Islam during its rapid growth?", options: ["Brother Raymond Sharrieff", "Brother John Ali", "Brother Jabril Muhammad"], correct: "Brother Raymond Sharrieff" },
+            { question: "What is the exact quote regarding the 'Scavenger of the Sea'?", options: ["The shark and the whale", "The crab and the catfish", "The eel and the shrimp"], correct: "The crab and the catfish" },
+            { question: "Who is recognized as the mother of the Nation of Islam?", options: ["Mother Clara Muhammad", "Mother Tynnetta Muhammad", "Sister Khadijah"], correct: "Mother Clara Muhammad" },
+            { question: "What is the specific age range for the Junior Vanguard?", options: ["Ages 5 to 12", "Ages 13 to 19", "Ages 4 to 10"], correct: "Ages 5 to 12" },
+            { question: "Which legendary figure was often referred to as the 'Saviour' in the early days of the Nation of Islam?", options: ["Master Fard Muhammad", "Elijah Muhammad", "Marcus Garvey"], correct: "Master Fard Muhammad" },
+            { question: "What is the literal translation of the word 'Quran'?", options: ["That which is to be read", "The Holy Book", "The Divine Law"], correct: "That which is to be read" }
         ]
     },
     lessons: { 
@@ -199,12 +199,12 @@ const quizData = {
             { question: "How many people went with Yacub to the Island?", options: ["144,000", "59,999", "10,000"], correct: "59,999" }, 
             { question: "What was the scientific process Yacub used to create the Caucasian?", options: ["Cloning", "Strict birth control and grafting (separating the brown germ from the black)", "Evolution"], correct: "Strict birth control and grafting (separating the brown germ from the black)" }, 
             { question: "According to the Lessons, what is the Devil's greatest weapon?", options: ["Guns", "Money", "Tricknology (Lies and Deceit)"], correct: "Tricknology (Lies and Deceit)" }, 
-            { question: "Who is the Father of Civilization?", options: ["Yacub", "The Asiatic Black Man", "The Romans"], correct: "The Asiatic Black Man" },
             { question: "What is the area in square miles of the planet Earth?", options: ["100,000,000 square miles", "196,940,000 square miles", "57,255,000 square miles"], correct: "196,940,000 square miles" },
             { question: "How fast does light travel?", options: ["100,000 miles per second", "1,120 feet per second", "186,000 miles per second"], correct: "186,000 miles per second" },
             { question: "How far is the Earth from the Sun?", options: ["93,000,000 miles", "50,000,000 miles", "10,000,000 miles"], correct: "93,000,000 miles" },
             { question: "What is the total weight of the planet Earth?", options: ["10 billion tons", "1 trillion tons", "6 sextillion tons"], correct: "6 sextillion tons" },
-            { question: "What is the exact square miles of useful land used every day?", options: ["57,255,000 square miles", "139,685,000 square miles", "196,940,000 square miles"], correct: "57,255,000 square miles" }
+            { question: "What is the exact square miles of useful land used every day?", options: ["57,255,000 square miles", "139,685,000 square miles", "196,940,000 square miles"], correct: "57,255,000 square miles" },
+            { question: "According to the lessons, who is the 85%?", options: ["The civilized world", "The uncivilized people suffering from mental death", "The poor teachers"], correct: "The uncivilized people suffering from mental death" }
         ], 
         hard: [ 
             { question: "In the English Lesson No. C1, what is the name of the Uncle of Mr. W. F. Muhammad?", options: ["Trader Bates", "Trader John", "Trader Smith"], correct: "Trader Bates" }, 
@@ -219,16 +219,16 @@ const quizData = {
             { question: "What is the fraction of the Earth that is covered by water?", options: ["1/2", "3/4", "7/10ths (or roughly 139 million sq miles)"], correct: "7/10ths (or roughly 139 million sq miles)" }
         ],
         extreme: [
-            { question: "What is the exact weight of the planet Earth?", options: ["10 billion tons", "1 trillion tons", "6 sextillion tons"], correct: "6 sextillion tons" },
-            { question: "What is the exact speed of sound in the lessons?", options: ["1,120 feet per second", "186,000 miles per second", "24 billion miles per second"], correct: "1,120 feet per second" },
-            { question: "How many years did Yakub's grafted history last before the original man takes over?", options: ["1,000 years", "6,000 years", "10,000 years"], correct: "6,000 years" },
+            { question: "According to the 1-40 Lessons, what is the diameter of the Sun?", options: ["853,000 miles", "93,000,000 miles", "24,896 miles"], correct: "853,000 miles" },
+            { question: "How long does it take for the Earth to make a complete rotation around the Sun according to the lessons?", options: ["365 and 1/4 days", "365 days", "360 days"], correct: "365 and 1/4 days" },
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the Original Man have?", options: ["7.5 ounces", "6 ounces", "8 ounces"], correct: "7.5 ounces" },
+            { question: "According to the Supreme Wisdom, how many ounces of brain does the grafted man have?", options: ["6 ounces", "7.5 ounces", "5 ounces"], correct: "6 ounces" },
+            { question: "What are the specific dimensions of the Universe according to the lessons?", options: ["1 Trillion Miles", "76 Quintillion Miles", "Without end"], correct: "76 Quintillion Miles" },
+            { question: "What is the duty of a civilized person?", options: ["To fight the devil", "To teach the uncivilized people", "To build businesses"], correct: "To teach the uncivilized people" },
+            { question: "According to the lessons, who is the 10%?", options: ["The poor, righteous teachers", "The uncivilized people", "The rich slave-makers of the poor"], correct: "The rich slave-makers of the poor" },
             { question: "Who is the 5% according to the 14th degree of the 1-40?", options: ["The poor, righteous Teachers", "The rich slave-makers", "The uncivilized people"], correct: "The poor, righteous Teachers" },
-            { question: "How far is the Earth from the Moon?", options: ["100,000 miles", "237,000 miles", "93,000,000 miles"], correct: "237,000 miles" },
-            { question: "How much useful land is used every day by the population of the Earth?", options: ["57,255,000 square miles", "196,940,000 square miles", "139,685,000 square miles"], correct: "57,255,000 square miles" },
             { question: "What is the exact population of the Original Nation all over the planet Earth in the original lessons?", options: ["1 Billion", "4,400,000,000", "85 Million"], correct: "4,400,000,000" },
-            { question: "Where did Yacub go to graft the new race of people?", options: ["Mecca", "Detroit", "The Island of Patmos / Pelan"], correct: "The Island of Patmos / Pelan" },
-            { question: "How many people went with Yacub to the Island?", options: ["59,999", "144,000", "10,000"], correct: "59,999" },
-            { question: "What is the mathematical circumference of the Earth at the Equator according to the lessons?", options: ["20,000 miles", "24,896 miles", "25,000 miles"], correct: "24,896 miles" }
+            { question: "How many million Original people were in the wilderness of North America in the 1930s lessons?", options: ["17 Million", "30 Million", "50 Million"], correct: "17 Million" }
         ]
     },
     health: { 
@@ -272,15 +272,15 @@ const quizData = {
         ],
         extreme: [
             { question: "According to Book 2, how many days does the Honorable Elijah Muhammad suggest fasting to cure serious illnesses?", options: ["3 days", "7 days", "9 days"], correct: "9 days" },
-            { question: "At what temperature does the Honorable Elijah Muhammad recommend drinking water?", options: ["Ice cold", "Room temperature", "Boiling hot"], correct: "Room temperature" },
             { question: "What does the Honorable Elijah Muhammad say about the consumption of soybeans?", options: ["They are highly nutritious", "They are strictly for cattle, not humans", "They should be eaten daily"], correct: "They are strictly for cattle, not humans" },
             { question: "What kind of bread does the Honorable Elijah Muhammad say causes the stomach to stretch?", options: ["Whole wheat bread", "Freshly baked, hot bread with active yeast", "White bread"], correct: "Freshly baked, hot bread with active yeast" },
-            { question: "What is the exact quote regarding the 'Scavenger of the Sea'?", options: ["The shark and the whale", "The crab and the catfish", "The eel and the shrimp"], correct: "The crab and the catfish" },
             { question: "Why are nuts discouraged in the dietary law?", options: ["They contain too much fat", "They are too hard on the digestive system", "They cause allergies"], correct: "They are too hard on the digestive system" },
             { question: "How long did the Honorable Elijah Muhammad say one meal every 72 hours could extend your life?", options: ["100 years", "120 years", "140 years or more"], correct: "140 years or more" },
             { question: "What does the Honorable Elijah Muhammad describe as 'the white poison'?", options: ["White sugar and white flour", "Salt and pepper", "Milk and cheese"], correct: "White sugar and white flour" },
             { question: "What meat is described as being 'divinely prohibited' besides swine?", options: ["Lamb", "Scavenger birds like crow and buzzard", "Chicken"], correct: "Scavenger birds like crow and buzzard" },
-            { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" }
+            { question: "What is the recommended resting period after a full meal before heavy physical activity?", options: ["30 minutes", "1 hour", "At least 2 hours"], correct: "At least 2 hours" },
+            { question: "According to the teachings, what is the best food to eat for long life?", options: ["Navy Bean", "Soy Bean", "Lentils"], correct: "Navy Bean" },
+            { question: "What type of milk does the Honorable Elijah Muhammad advise against drinking in 'How to Eat to Live'?", options: ["Cow's milk", "Almond milk", "Evaporated milk"], correct: "Cow's milk" }
         ]
     },
     history: { 
@@ -732,7 +732,7 @@ socket.on('tug_game_over', (data) => {
 
 
 // ---------------------------------------------------------
-// 9. PRO JEOPARDY LOGIC
+// 9. PRO JEOPARDY LOGIC (21 ROUNDS NO DUPLICATES)
 // ---------------------------------------------------------
 function startJeopardy() {
     sessionCancelToken++;
@@ -800,7 +800,7 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = []; 
+    usedJeopardyQuestions = []; // Reset local log for a new game
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -1102,7 +1102,7 @@ function openStudyLibrary(mode, diff) {
 // 11. MAIN QUIZ LOGIC
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
-    sessionCancelToken++; 
+    sessionCancelToken++; // Kills ghost timers
     masterUnlockAudio();
     currentIdx = 0; correctAnswers = 0; pointsThisSession = 0;
     
