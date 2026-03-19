@@ -520,7 +520,7 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
-// 7. PRO JEOPARDY LOGIC 
+// 7. PRO JEOPARDY LOGIC
 // ---------------------------------------------------------
 function startJeopardy() {
     masterUnlockAudio();
@@ -613,13 +613,14 @@ socket.on('round_update', (data) => {
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
         const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history']; 
-        const diffs = ['easy', 'medium', 'hard'];
+        const diffs = ['easy', 'medium', 'hard', 'extreme'];
         let randomQ = null;
         let randomCat = "";
         while (!randomQ) {
             randomCat = categories[Math.floor(Math.random() * categories.length)];
             const randomDiff = diffs[Math.floor(Math.random() * diffs.length)];
             const questions = quizData[randomCat][randomDiff];
+            if (!questions) continue;
             const available = questions.filter(q => !usedJeopardyQuestions.includes(q.question));
             if (available.length > 0) {
                 randomQ = available[Math.floor(Math.random() * available.length)];
@@ -879,7 +880,7 @@ function openStudyLibrary(mode, diff) {
 }
 
 // ---------------------------------------------------------
-// 9. ORIGINAL QUIZ LOGIC (FIXED MOBILE HOVER ISSUES)
+// 9. ORIGINAL QUIZ LOGIC (MOBILE HOVER KILLED + GREEN RESTORED)
 // ---------------------------------------------------------
 function beginQuizFromStudy() {
     masterUnlockAudio();
@@ -925,7 +926,7 @@ function loadQuestion() {
     
     if (!optionsDiv) return;
     
-    // CRITICAL JS FIX: Instantly destroy the old container HTML to ensure the browser drops all touch tracking
+    // Completely wipe the container to guarantee the browser drops hover physics
     optionsDiv.innerHTML = "";
     
     let shuffledOptions = [...q.options];
@@ -941,12 +942,11 @@ function loadQuestion() {
         btn.className = 'option-btn'; 
         btn.innerText = opt;
         
-        // This is a special fix that removes the hover state right before processing the click
-        btn.onclick = function(e) { 
-            e.preventDefault();
-            this.blur();
+        btn.onclick = () => { 
+            // Final JS brute force drop of mobile focus
+            if (document.activeElement) document.activeElement.blur();
             masterUnlockAudio(); 
-            checkAnswer(opt, this, q.correct); 
+            checkAnswer(opt, btn, q.correct); 
         };
         optionsDiv.appendChild(btn);
     });
@@ -956,11 +956,12 @@ function checkAnswer(selected, btn, correct) {
     masterUnlockAudio();
     const optionsDiv = document.getElementById('options');
     
-    // Disable all buttons to stop double tapping
+    // Disable buttons and kill focus
     if (optionsDiv) {
         const quizBtns = optionsDiv.querySelectorAll('.option-btn');
         quizBtns.forEach(b => {
             b.disabled = true;
+            b.blur(); 
         });
     }
     
@@ -973,7 +974,7 @@ function checkAnswer(selected, btn, correct) {
     } else {
         btn.classList.add('wrong');
         
-        // HIGHLIGHTS CORRECT ANSWER GREEN
+        // This makes the correct answer flash green when you guess wrong
         if (optionsDiv) {
             const quizBtns = optionsDiv.querySelectorAll('.option-btn');
             quizBtns.forEach(b => {
