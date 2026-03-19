@@ -4,14 +4,14 @@
  * FEATURES: 
  * 1. Post-Game Analytics & Bounties
  * 2. Sudden Death Elimination Logic
- * 3. Intense Press Animation (Zero Color Bleed)
+ * 3. Intense Press Animation (Zero Color Bleed / Fixed Mobile Tap)
  * 4. Schwartzian Transform Randomizer
  * 5. UNIQUE OVERHAULED DATABASE (Fact-Checked NOI Teachings, 0 Duplicates)
  * 6. TUG OF WAR MODE ADDED (1v1 Live Race with Sabotage)
  * 7. THE ARENA ADDED (High Stakes Wager Duel)
  * 8. Fixed Back/Quit Buttons globally (Ghost Timeout Killer Added)
- * 9. Victory Confetti & Dynamic Forfeit Handlers Added
- * 10. EXACT STUDENT ENROLLMENT INCORPORATED
+ * 9. ACTUAL FACTS CATEGORY ADDED
+ * 10. EXACT STUDENT ENROLLMENT INCORPORATED (Word for Word)
  */
 
 const socket = io();
@@ -290,16 +290,45 @@ const quizData = {
         title: "Registration Track", 
         studyText: "The Student Enrollment. You must memorize these 10 exact questions and answers word-for-word.", 
         exact: [ 
-            { question: "1. Who is the original man?", options: ["The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, God of the universe."], correct: "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe." }, 
-            { question: "2. Who is the colored man?", options: ["The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth.", "The colored man is the Caucasian white man or Yacub’s grafted devil.", "The colored man is the Caucasian white man, the Skunk of the planet Earth."], correct: "The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth." }, 
-            { question: "3. What is the population of the original nation in the wilderness of North America and all over the planet Earth?", options: ["The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 17,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 19,000,000; all over the planet Earth 4,000,000,000."], correct: "The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000." }, 
-            { question: "4. What is the population of the colored people in the wilderness of North America and all over the planet Earth?", options: ["The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000.", "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 4,000,000,000.", "The population of the colored people in the wilderness of North America is 100,000,000; all over the planet Earth 400,000,000."], correct: "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000." }, 
-            { question: "5. What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 196,940,000.", "The square mileage of the planet Earth is 139,685,000 square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
-            { question: "6. What is the exact square miles of useful land that’s used every day by the total population of the planet Earth?", options: ["The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 23,000,000 square miles."], correct: "The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles." }, 
-            { question: "7. How much useful land is used by the original man?", options: ["The original man uses 23,000,000 square miles.", "The original man uses 29,000,000 square miles.", "The original man uses 57,255,000 square miles."], correct: "The original man uses 23,000,000 square miles." }, 
-            { question: "8. How much useful land is used by the colored man?", options: ["The colored man uses 6,000,000 square miles.", "The colored man uses 23,000,000 square miles.", "The colored man uses 29,000,000 square miles."], correct: "The colored man uses 6,000,000 square miles." }, 
-            { question: "9. What is the said birth record of the Nation of Islam?", options: ["The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars.", "The Nation of Islam has no said birth record; it is older than the sun, moon and stars.", "The Nation of Islam has no beginning or ending; it is older than the sun, moon and stars."], correct: "The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars." }, 
-            { question: "10. What is the said birth record of nations other than Islam?", options: ["Buddhism is 35,000 years old and Christianity is 551 years old.", "Buddhism is 35,000 years old and Christianity is 550 years old.", "Buddhism is 35,000 years old and Christianity is 555 years old."], correct: "Buddhism is 35,000 years old and Christianity is 551 years old." } 
+            { question: "Who is the original man?", options: ["The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the father of civilization, God of the universe.", "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, God of the universe."], correct: "The original man is the Asiatic Blackman, the maker, the owner, the cream of the planet Earth, father of civilization, God of the universe." }, 
+            { question: "Who is the colored man?", options: ["The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth.", "The colored man is the Caucasian white man or Yacub’s grafted devil.", "The colored man is the Caucasian white man, the Skunk of the planet Earth."], correct: "The colored man is the Caucasian white man or Yacub’s grafted devil of the planet Earth." }, 
+            { question: "What is the population of the original nation in the wilderness of North America and all over the planet Earth?", options: ["The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 17,000,000; all over the planet Earth 4,400,000,000.", "The population of the original nation in the wilderness of North America is 19,000,000; all over the planet Earth 4,000,000,000."], correct: "The population of the original nation in the wilderness of North America is 17,000,000 with the 2,000,000 Indians makes it 19,000,000; all over the planet Earth 4,400,000,000." }, 
+            { question: "What is the population of the colored people in the wilderness of North America and all over the planet Earth?", options: ["The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000.", "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 4,000,000,000.", "The population of the colored people in the wilderness of North America is 100,000,000; all over the planet Earth 400,000,000."], correct: "The population of the colored people in the wilderness of North America is 103,000,000; all over the planet Earth 400,000,000." }, 
+            { question: "What is the area in square miles of the planet Earth?", options: ["The square mileage of the planet Earth is 196,940,000 square miles.", "The square mileage of the planet Earth is 196,940,000.", "The square mileage of the planet Earth is 139,685,000 square miles."], correct: "The square mileage of the planet Earth is 196,940,000 square miles." }, 
+            { question: "What is the exact square miles of useful land that’s used every day by the total population of the planet Earth?", options: ["The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 57,255,000 square miles.", "The useful land that’s used every day by the total population of the planet Earth is 23,000,000 square miles."], correct: "The useful land that’s used every day by the total population of the planet Earth is 29,000,000 square miles." }, 
+            { question: "How much useful land is used by the original man?", options: ["The original man uses 23,000,000 square miles.", "The original man uses 29,000,000 square miles.", "The original man uses 57,255,000 square miles."], correct: "The original man uses 23,000,000 square miles." }, 
+            { question: "How much useful land is used by the colored man?", options: ["The colored man uses 6,000,000 square miles.", "The colored man uses 23,000,000 square miles.", "The colored man uses 29,000,000 square miles."], correct: "The colored man uses 6,000,000 square miles." }, 
+            { question: "What is the said birth record of the Nation of Islam?", options: ["The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars.", "The Nation of Islam has no said birth record; it is older than the sun, moon and stars.", "The Nation of Islam has no beginning or ending; it is older than the sun, moon and stars."], correct: "The Nation of Islam has no said birth record; it has no beginning or ending; it is older than the sun, moon and stars." }, 
+            { question: "What is the said birth record of nations other than Islam?", options: ["Buddhism is 35,000 years old and Christianity is 551 years old.", "Buddhism is 35,000 years old and Christianity is 550 years old.", "Buddhism is 35,000 years old and Christianity is 555 years old."], correct: "Buddhism is 35,000 years old and Christianity is 551 years old." } 
+        ] 
+    },
+    // ==========================================
+    // 🚨 100% ACCURATE ACTUAL FACTS 🚨
+    // ==========================================
+    actualfacts: { 
+        title: "Actual Facts", 
+        studyText: "Memorize these 20 mathematical facts of our planet and universe.", 
+        exact: [ 
+            { question: "What is the total area of the land and water of the planet Earth?", options: ["196,940,000 square miles.", "139,685,000 square miles.", "57,255,000 square miles."], correct: "196,940,000 square miles." },
+            { question: "What is the circumference of the planet Earth?", options: ["24,896 miles.", "25,000 miles.", "7,926 miles."], correct: "24,896 miles." },
+            { question: "What is the diameter of the Earth?", options: ["7,926 miles.", "8,000 miles.", "24,896 miles."], correct: "7,926 miles." },
+            { question: "What is the area of the Land?", options: ["57,255,000 square miles.", "29,000,000 square miles.", "139,685,000 square miles."], correct: "57,255,000 square miles." },
+            { question: "What is the area of the Water?", options: ["139,685,000 square miles.", "196,940,000 square miles.", "57,255,000 square miles."], correct: "139,685,000 square miles." },
+            { question: "How many square miles does the Pacific Ocean cover?", options: ["68,634,000 square miles.", "41,321,000 square miles.", "29,430,000 square miles."], correct: "68,634,000 square miles." },
+            { question: "How many square miles does the Atlantic Ocean cover?", options: ["41,321,000 square miles.", "68,634,000 square miles.", "29,430,000 square miles."], correct: "41,321,000 square miles." },
+            { question: "How many square miles does the Indian Ocean cover?", options: ["29,430,000 square miles.", "41,321,000 square miles.", "68,634,000 square miles."], correct: "29,430,000 square miles." },
+            { question: "How many square miles do the Lakes and Rivers cover?", options: ["1,000,000 square miles.", "1,910,000 square miles.", "4,861,000 square miles."], correct: "1,000,000 square miles." },
+            { question: "How many square miles do the Hills and Mountains cover?", options: ["14,000,000 square miles.", "29,000,000 square miles.", "1,910,000 square miles."], correct: "14,000,000 square miles." },
+            { question: "How many square miles are the Islands?", options: ["1,910,000 square miles.", "1,000,000 square miles.", "4,861,000 square miles."], correct: "1,910,000 square miles." },
+            { question: "How many square miles are the Deserts?", options: ["4,861,000 square miles.", "14,000,000 square miles.", "1,910,000 square miles."], correct: "4,861,000 square miles." },
+            { question: "How high is Mount Everest?", options: ["29,141 feet high.", "25,000 feet high.", "14,000 feet high."], correct: "29,141 feet high." },
+            { question: "What is the area of the Producing Land?", options: ["29,000,000 square miles.", "57,255,000 square miles.", "23,000,000 square miles."], correct: "29,000,000 square miles." },
+            { question: "How much does the Earth weigh?", options: ["Six sextillion tons - (a unit followed by 21 ciphers).", "Ten billion tons.", "One trillion tons."], correct: "Six sextillion tons - (a unit followed by 21 ciphers)." },
+            { question: "How far is the Earth from the Sun?", options: ["93,000,000 miles.", "50,000,000 miles.", "186,000 miles."], correct: "93,000,000 miles." },
+            { question: "How fast does the Earth travel?", options: ["At the rate of 1,037 1/3 miles per hour.", "At the rate of 1,120 feet per second.", "At the rate of 186,000 miles per second."], correct: "At the rate of 1,037 1/3 miles per hour." },
+            { question: "How fast does Light travel?", options: ["At the rate of 186,000 miles per second.", "At the rate of 1,120 feet per second.", "At the rate of 1,037 1/3 miles per hour."], correct: "At the rate of 186,000 miles per second." },
+            { question: "How fast does Sound travel?", options: ["At the rate of 1,120 feet per second.", "At the rate of 186,000 miles per second.", "At the rate of 1,037 1/3 miles per hour."], correct: "At the rate of 1,120 feet per second." },
+            { question: "What is the diameter of the Sun?", options: ["853,000 miles.", "93,000,000 miles.", "24,896 miles."], correct: "853,000 miles." }
         ] 
     },
     jeopardyVault: {
@@ -611,7 +640,7 @@ socket.on('arena_start_question', (data) => {
     
     let deepCuts = [];
     for (let path in quizData) {
-        if (path !== 'adults') {
+        if (path !== 'adults' && path !== 'actualfacts') {
             if (quizData[path].hard) deepCuts = deepCuts.concat(quizData[path].hard);
             if (quizData[path].extreme) deepCuts = deepCuts.concat(quizData[path].extreme);
         }
@@ -755,7 +784,7 @@ socket.on('tug_start', (data) => {
     speak("The Tug of War has begun.");
     
     let allQs = [];
-    for (let path in quizData) if (path !== 'adults') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
+    for (let path in quizData) if (path !== 'adults' && path !== 'actualfacts') for (let diff in quizData[path]) if (Array.isArray(quizData[path][diff])) allQs = allQs.concat(quizData[path][diff]);
     tugActiveQs = trueShuffle(allQs);
     
     loadTugQuestion();
@@ -962,8 +991,8 @@ socket.on('round_update', (data) => {
 
 socket.on('request_question', (data) => {
     if (socket.id === data.hostId) {
-        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history', 'jeopardyVault']; 
-        const diffs = ['easy', 'medium', 'hard', 'extreme'];
+        const categories = ['kids', 'teens', 'training', 'lessons', 'health', 'history', 'jeopardyVault', 'actualfacts']; 
+        const diffs = ['easy', 'medium', 'hard', 'extreme', 'exact'];
         let randomQ = null;
         let randomCat = "";
         
@@ -1229,7 +1258,7 @@ function selectDifficulty(diff) {
 function openStudyLibrary(mode, diff) {
     masterUnlockAudio();
     currentPath = mode; currentDiff = diff;
-    if (mode === 'adults') pointMultiplier = 1000; 
+    if (mode === 'adults' || mode === 'actualfacts') pointMultiplier = 1000; 
     
     switchScreen('study-screen');
     
@@ -1257,7 +1286,8 @@ function beginQuizFromStudy() {
     
     activeQuestions = [...quizData[currentPath][currentDiff]];
     
-    if (currentPath !== 'adults') {
+    // Exact memorization tracks should NOT shuffle questions, but regular ones should.
+    if (currentPath !== 'adults' && currentPath !== 'actualfacts') {
         activeQuestions = trueShuffle(activeQuestions);
     }
     
@@ -1287,10 +1317,8 @@ function loadQuestion() {
     optionsDiv.classList.remove('locked');
     optionsDiv.innerHTML = "";
     
-    let shuffledOptions = [...q.options];
-    if (currentPath !== 'adults') {
-        shuffledOptions = trueShuffle(shuffledOptions);
-    }
+    // 🚨 1st OPTION FIX: We ALWAYS shuffle the options for EVERY question now! 🚨
+    let shuffledOptions = trueShuffle([...q.options]);
     
     shuffledOptions.forEach(opt => {
         const btn = document.createElement('button');
