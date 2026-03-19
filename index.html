@@ -11,47 +11,67 @@
         /* PERFECT MOBILE CENTERING FIX (UNTOUCHED) */
         * { box-sizing: border-box !important; -webkit-tap-highlight-color: transparent !important; }
         body, html { margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; }
-        
-        /* 🚨 STRIPS NATIVE APPLE/ANDROID BUTTON STYLING 🚨 */
-        button { -webkit-appearance: none; appearance: none; outline: none !important; }
+        button { -webkit-appearance: none !important; appearance: none !important; outline: none !important; }
         
         .quiz-container { margin: 0 auto !important; max-width: 600px; width: 100%; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 85vh; }
         
         .options-grid { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
         .options-grid.locked { pointer-events: none !important; } 
         
-        /* 🚨 ABSOLUTE COLOR LOCK - NO HOVER EFFECTS AT ALL 🚨 */
+        /* ========================================================
+           🚨 THE ULTIMATE COLOR LOCK (KILLS YELLOW & GREY) 🚨 
+           ======================================================== */
+        
+        /* 1. Base Button - Only allows shrinking, NO color fading */
         .option-btn { 
             width: 100%; max-width: 100%; margin: 0 auto; 
-            background-color: #111; 
-            border: 1px solid #333; 
-            color: white; 
-            transition: transform 0.1s ease; 
+            transition: transform 0.1s ease !important; 
             -webkit-tap-highlight-color: transparent !important;
             outline: none !important;
         }
-        
-        /* The tap animation ONLY. NO color changing. */
-        .option-btn:active { 
-            transform: scale(0.96); 
+        .option-btn:active { transform: scale(0.96) !important; }
+        .option-btn:disabled { opacity: 1 !important; }
+
+        /* 2. Standard Quiz Buttons - Locked to dark grey */
+        .options-grid .option-btn {
+            background-color: #111 !important;
+            border: 1px solid #333 !important;
+            color: white !important;
         }
-        
-        /* Prevents browser focus rings/grey boxes */
-        .option-btn:focus {
-            outline: none !important;
-        }
-        
-        .option-btn:disabled { 
-            opacity: 1 !important; 
+        .options-grid .option-btn:hover,
+        .options-grid .option-btn:focus,
+        .options-grid .option-btn:active {
+            background-color: #111 !important; 
+            border-color: #333 !important;
+            color: white !important;
+            box-shadow: none !important;
         }
 
-        /* 🚨 ENFORCES PURE RED/GREEN RESULTS 🚨 */
-        button.option-btn.correct, button.option-btn.correct:active, button.option-btn.correct:focus, button.option-btn.correct:disabled { 
+        /* 3. Difficulty Buttons - Locked to their exact colors (Never Yellow) */
+        .diff-easy { border-color: #10b981 !important; background-color: #111 !important; color: white !important; }
+        .diff-easy:hover, .diff-easy:focus, .diff-easy:active { border-color: #10b981 !important; background-color: #111 !important; }
+
+        .diff-med { border-color: #f59e0b !important; background-color: #111 !important; color: white !important; }
+        .diff-med:hover, .diff-med:focus, .diff-med:active { border-color: #f59e0b !important; background-color: #111 !important; }
+
+        .diff-hard { border-color: #ef4444 !important; background-color: #111 !important; color: white !important; }
+        .diff-hard:hover, .diff-hard:focus, .diff-hard:active { border-color: #ef4444 !important; background-color: #111 !important; }
+
+        .diff-ext { border-color: #a855f7 !important; background-color: #111 !important; color: #d8b4fe !important; }
+        .diff-ext:hover, .diff-ext:focus, .diff-ext:active { border-color: #a855f7 !important; background-color: #111 !important; color: #d8b4fe !important; }
+
+        .diff-cancel { border-color: #333 !important; background-color: #333 !important; color: white !important; }
+        .diff-cancel:hover, .diff-cancel:focus, .diff-cancel:active { border-color: #333 !important; background-color: #333 !important; }
+
+        /* 4. The RED & GREEN Result States (Overrides EVERYTHING) */
+        button.option-btn.correct, button.option-btn.correct:hover, button.option-btn.correct:focus, button.option-btn.correct:active, button.option-btn.correct:disabled { 
             border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.15) !important; color: #10b981 !important; -webkit-text-fill-color: #10b981 !important; opacity: 1 !important; 
         }
-        button.option-btn.wrong, button.option-btn.wrong:active, button.option-btn.wrong:focus, button.option-btn.wrong:disabled { 
+        button.option-btn.wrong, button.option-btn.wrong:hover, button.option-btn.wrong:focus, button.option-btn.wrong:active, button.option-btn.wrong:disabled { 
             border-color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.15) !important; color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important; opacity: 1 !important; 
         }
+
+        /* ======================================================== */
 
         .screen { display: none; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: translateY(20px); position: relative; width: 100%; }
         .screen.active { display: flex !important; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transform: translateY(0); z-index: 10; pointer-events: all; min-height: 100vh; }
@@ -98,7 +118,7 @@
             <p style="color: #aaa; margin-bottom: 30px;">Enter your name to begin your journey.</p>
             
             <input type="text" id="username-input" placeholder="Enter Name" style="width: 100%; max-width: 300px; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #0d1117; color: white; font-size: 16px; margin-bottom: 20px; text-align: center;">
-            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black; font-weight: bold; border: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); max-width: 300px;">ENTER ACADEMY</button>
+            <button class="option-btn" onclick="registerUser()" style="background: linear-gradient(135deg, var(--gold), #b8860b); color: black !important; font-weight: bold; border: none !important;">ENTER ACADEMY</button>
         </div>
     </div>
 
@@ -173,8 +193,8 @@
                     <h2 style="color: white; margin-bottom: 10px;">Waiting for Challenger...</h2>
                     <p style="font-size: 28px; color: #10b981; font-weight: bold;"><span id="t-lobby-count">1</span> / 2 Players Ready</p>
                 </div>
-                <button id="t-ready-btn" class="option-btn" onclick="sendTugReady()" style="background: #eab308; color: black; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto;">I'M READY</button>
-                <br><button class="option-btn" onclick="returnToMenu()" style="background: #333; width: 150px; margin-top: 20px; margin: 20px auto;">Back</button>
+                <button id="t-ready-btn" class="option-btn diff-easy" onclick="sendTugReady()" style="width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; color: black !important; background-color: #eab308 !important; border-color: #eab308 !important;">I'M READY</button>
+                <br><button class="option-btn diff-cancel" onclick="returnToMenu()" style="width: 150px; margin-top: 20px; margin: 20px auto;">Back</button>
             </div>
 
             <div id="t-game-view" style="display: none; width: 100%;">
@@ -199,14 +219,14 @@
                 <div id="t-options-box" class="options-grid" style="margin-bottom: 30px;"></div>
                 
                 <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-                    <button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Forfeit</button>
+                    <button class="option-btn diff-cancel" onclick="returnToMenu()" style="border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; margin: 0 auto; background: transparent !important;">Forfeit</button>
                 </div>
             </div>
 
             <div id="t-results-view" style="display: none; padding: 40px 0; width: 100%;">
                 <h1 id="t-winner-text" style="color: #eab308; font-size: 55px; margin-bottom: 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);">WINNER!</h1>
                 <p id="t-results-subtext" style="color: #aaa; margin-bottom: 30px; font-size: 18px; font-weight: bold;">The flag has been captured.</p>
-                <button class="option-btn" onclick="returnToMenu()" style="background: #eab308; color: black; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto;">Return Dashboard</button>
+                <button class="option-btn diff-easy" onclick="returnToMenu()" style="color: black !important; background-color: #eab308 !important; border-color: #eab308 !important; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto;">Return Dashboard</button>
             </div>
         </div>
     </div>
@@ -226,8 +246,8 @@
                         <button onclick="sendChatMessage()" style="background: var(--gold); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: black; border-radius: 6px; margin-left: 10px;">SEND</button>
                     </div>
                 </div>
-                <button id="ready-btn" class="option-btn" onclick="sendReady()" style="background: var(--gold); color: black; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto;">I'M READY</button>
-                <br><button class="option-btn" onclick="returnToMenu()" style="background: #333; width: 150px; margin-top: 20px; margin: 20px auto;">Back</button>
+                <button id="ready-btn" class="option-btn diff-easy" onclick="sendReady()" style="background-color: var(--gold) !important; color: black !important; font-weight: bold; width: 100%; max-width: 250px; height: 70px; font-size: 24px; margin: 0 auto; border-color: var(--gold) !important;">I'M READY</button>
+                <br><button class="option-btn diff-cancel" onclick="returnToMenu()" style="width: 150px; margin-top: 20px; margin: 20px auto;">Back</button>
             </div>
 
             <div id="j-game-view" style="display: none; width: 100%;">
@@ -246,7 +266,7 @@
                         <p id="buzzer-status" style="color: #aaa; margin-bottom: 20px; font-weight: bold; height: 20px; text-align: center; font-size: 20px; text-transform: uppercase;">...</p>
                         <div id="buzzer-btn" class="buzzer-locked" onclick="sendBuzz()" style="width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; user-select: none;">LOCKED</div>
                         <div id="j-options-box" class="options-grid" style="display: none; margin-bottom: 30px;"></div>
-                        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;"><button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button></div>
+                        <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px;"><button class="option-btn diff-cancel" onclick="returnToMenu()" style="border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; margin: 0 auto; background: transparent !important;">Quit</button></div>
                     </div>
                     <div id="j-score-sidebar" style="flex: 1; min-width: 250px; background: #111; border: 2px solid #333; border-radius: 12px; padding: 20px; width: 100%;">
                         <h3 style="color: var(--gold); margin-top: 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px;">LIVE SCORES</h3>
@@ -258,7 +278,7 @@
             <div id="j-podium-view" style="display: none; padding: 40px 0; width: 100%;">
                 <h1 style="color: var(--gold); font-size: 60px; margin-bottom: 10px;">GAME OVER</h1>
                 <div id="podium-results" style="background: #111; border: 2px solid var(--gold); padding: 30px; border-radius: 15px; margin-bottom: 40px; text-align:left;"></div>
-                <button class="option-btn" onclick="returnToMenu()" style="background: var(--gold); color: black; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto;">Return Dashboard</button>
+                <button class="option-btn diff-easy" onclick="returnToMenu()" style="background-color: var(--gold) !important; color: black !important; font-weight: bold; width: 100%; max-width: 300px; margin: 0 auto; border-color: var(--gold) !important;">Return Dashboard</button>
             </div>
         </div>
     </div>
@@ -267,11 +287,11 @@
         <div class="modal-content">
             <h2 style="color: var(--gold); text-align: center;">Difficulty</h2>
             <div class="options-grid">
-                <button class="option-btn" style="border-color: #10b981;" onclick="selectDifficulty('easy')">Easy</button>
-                <button class="option-btn" style="border-color: #f59e0b;" onclick="selectDifficulty('medium')">Medium</button>
-                <button class="option-btn" style="border-color: #ef4444;" onclick="selectDifficulty('hard')">Hard</button>
-                <button class="option-btn" style="border-color: #a855f7; color: #d8b4fe;" onclick="selectDifficulty('extreme')">Extreme</button>
-                <button class="option-btn" style="background-color: #333;" onclick="closeDifficulty()">Cancel</button>
+                <button class="option-btn diff-easy" onclick="selectDifficulty('easy')">Easy</button>
+                <button class="option-btn diff-med" onclick="selectDifficulty('medium')">Medium</button>
+                <button class="option-btn diff-hard" onclick="selectDifficulty('hard')">Hard</button>
+                <button class="option-btn diff-ext" onclick="selectDifficulty('extreme')">Extreme</button>
+                <button class="option-btn diff-cancel" onclick="closeDifficulty()">Cancel</button>
             </div>
         </div>
     </div>
@@ -281,8 +301,8 @@
             <h2 id="study-title" style="color: var(--gold); width: 100%; text-align: center;">Study</h2>
             <div id="study-text" class="study-text-box" style="text-align: center; width: 100%;"></div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width: 100%;">
-                <button class="option-btn" style="background:#333;" onclick="returnToMenu()">Back</button>
-                <button class="option-btn" style="background:var(--gold); color:black;" onclick="beginQuizFromStudy()">Begin</button>
+                <button class="option-btn diff-cancel" onclick="returnToMenu()">Back</button>
+                <button class="option-btn diff-easy" style="background-color: var(--gold) !important; color: black !important; border-color: var(--gold) !important;" onclick="beginQuizFromStudy()">Begin</button>
             </div>
         </div>
     </div>
@@ -299,7 +319,7 @@
             <div id="options" class="options-grid" style="margin-bottom: 20px;"></div>
             
             <div style="text-align: center; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-                <button class="option-btn" onclick="returnToMenu()" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 150px; margin: 0 auto;">Quit</button>
+                <button class="option-btn diff-cancel" onclick="returnToMenu()" style="border-color: #ef4444 !important; color: #ef4444 !important; width: 150px; margin: 0 auto; background: transparent !important;">Quit</button>
             </div>
         </div>
     </div>
@@ -310,7 +330,7 @@
             <h2 id="final-score" style="font-size: 40px;">0/0</h2>
             <p style="color: var(--gold); font-weight: bold; font-size: 20px;">Points Earned: <span id="earned-points">0</span></p>
             <p id="rank-display">Rank: Student</p>
-            <button class="option-btn" onclick="returnToMenu()" style="margin: 0 auto;">Back Home</button>
+            <button class="option-btn diff-cancel" onclick="returnToMenu()" style="margin: 0 auto;">Back Home</button>
         </div>
     </div>
     
@@ -318,7 +338,7 @@
         <div class="quiz-container">
             <h1 style="text-align: center;">🏆 Leaderboard</h1>
             <div id="leaderboard-list" style="width: 100%;"></div>
-            <button class="option-btn" onclick="returnToMenu()" style="margin-top:20px; margin: 20px auto;">Back</button>
+            <button class="option-btn diff-cancel" onclick="returnToMenu()" style="margin-top:20px; margin: 20px auto;">Back</button>
         </div>
     </div>
 
