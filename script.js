@@ -356,33 +356,6 @@ const quizData = {
     }
 };
 
-// ---------------------------------------------------------
-// 2. SYSTEM STATE & ACCOUNTS
-// ---------------------------------------------------------
-let currentPoints = 0;
-let currentStreak = 1;
-let currentPath = "";
-let currentDiff = "";
-let currentIdx = 0;
-let correctAnswers = 0;
-let pointsThisSession = 0;
-let pointMultiplier = 100;
-let activeQuestions = []; 
-let usedJeopardyQuestions = [];
-let tugActiveQs = [];
-let tugIdx = 0;
-let sessionCancelToken = 0;
-
-// ---------------------------------------------------------
-// 🚀 THE 4 SQUARES (FAMILY GAME) STATE 🚀
-// ---------------------------------------------------------
-let sqRoomCode = "";
-let sqIsHost = false;
-let sqTimerInt = null;
-
-// ---------------------------------------------------------
-// 3. TRUE UNBIASED RANDOMIZER
-// ---------------------------------------------------------
 function trueShuffle(array) {
     return [...array]
         .map(value => ({ value, sort: Math.random() }))
@@ -391,144 +364,7 @@ function trueShuffle(array) {
 }
 
 // ---------------------------------------------------------
-// 4. MASTER SCREEN MANAGEMENT & TOAST NOTIFICATIONS
-// ---------------------------------------------------------
-function switchScreen(screenId) {
-    const screens = ['login-screen', 'home-screen', 'study-screen', 'quiz-screen', 'result-screen', 'leaderboard-screen', 'jeopardy-screen', 'tug-screen', 'arena-screen', 'squares-game-screen'];
-    screens.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    const target = document.getElementById(screenId);
-    if (target) {
-        target.classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-}
-
-function showToast(msg) {
-    masterUnlockAudio();
-    if(sfx.correct) sfx.correct(); 
-    const toast = document.getElementById('toast-notification');
-    const toastMsg = document.getElementById('toast-msg');
-    if(toast && toastMsg) {
-        toastMsg.innerHTML = msg;
-        toast.classList.add('show');
-        if (typeof confetti !== 'undefined' && msg.includes('earned')) {
-            confetti({ particleCount: 60, spread: 70, origin: { y: 0.2 }, zIndex: 10000 });
-        }
-        setTimeout(() => { toast.classList.remove('show'); }, 4000);
-    }
-}
-
-// ---------------------------------------------------------
-// 5. RANK BADGES & AVATARS
-// ---------------------------------------------------------
-function getRankBadge(points) {
-    if (points >= 15000) return "🟡 Captain";
-    if (points >= 5000) return "🔵 Builder";
-    return "🟢 Student";
-}
-
-function getAvatar(name, points, isOnFire = false, hasBounty = false) {
-    const safeName = name && typeof name === 'string' && name.trim() !== "" ? name : "Student";
-    const colors = ['var(--accent-red)', 'var(--accent-blue)', 'var(--accent-green)', 'var(--accent-yellow)', '#8b5cf6', '#ec4899'];
-    const color = colors[safeName.length % colors.length];
-    const initial = safeName.charAt(0).toUpperCase();
-    const fireClass = isOnFire ? "on-fire-avatar" : "";
-    const rank = getRankBadge(points || 0);
-    const bountyStyle = hasBounty ? 'color: var(--accent-red); text-shadow: 0 0 5px var(--accent-red);' : '';
-    const bountyIcon = hasBounty ? '🎯' : '';
-    
-    return `<div style="display:flex; align-items:center;">
-        <div class="${fireClass}" style="width:36px; height:36px; min-width:36px; border-radius:50%; background:${color}; color:white; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:18px; border:2px solid var(--primary-gold); margin-right:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-            ${isOnFire ? '🔥' : initial}
-        </div>
-        <div style="display:flex; flex-direction:column; align-items:flex-start;">
-            <span style="font-family:var(--font-heading); font-weight:800; color:var(--text-main); font-size:16px;">${safeName}</span>
-            <span class="rank-badge" style="${bountyStyle}">${bountyIcon} ${rank}</span>
-        </div>
-    </div>`;
-}
-
-// ---------------------------------------------------------
-// 6. AUDIO ENGINE
-// ---------------------------------------------------------
-function masterUnlockAudio() {
-    if (voiceUnlocked && audioCtx && audioCtx.state === 'running') return;
-    try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const wakeup = new SpeechSynthesisUtterance("Welcome");
-            wakeup.volume = 0.1;
-            window.speechSynthesis.speak(wakeup);
-        }
-        voiceUnlocked = true;
-    } catch(e) { console.error("Audio Bypass Failed", e); }
-}
-
-document.addEventListener('touchstart', masterUnlockAudio, { once: true });
-document.addEventListener('click', masterUnlockAudio, { once: true });
-
-const sfx = {
-    playTone: (freq, type, duration) => {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            osc.type = type; osc.frequency.value = freq;
-            osc.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-        } catch(e) {}
-    },
-    buzz: () => sfx.playTone(400, 'square', 0.2),    
-    tick: () => sfx.playTone(800, 'sine', 0.05),    
-    correct: () => { sfx.playTone(523, 'sine', 0.1); setTimeout(() => sfx.playTone(659, 'sine', 0.2), 100); },   
-    wrong: () => sfx.playTone(150, 'sawtooth', 0.4),
-    heartbeat: () => { sfx.playTone(100, 'sine', 0.1); setTimeout(() => sfx.playTone(100, 'sine', 0.1), 150); },
-    siren: () => {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
-            osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 2);
-            osc.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 2);
-        } catch(e) {}
-    },
-    alarm: () => {
-        sfx.playTone(900, 'sawtooth', 0.1);
-        setTimeout(() => sfx.playTone(700, 'sawtooth', 0.1), 100);
-        setTimeout(() => sfx.playTone(900, 'sawtooth', 0.1), 200);
-    }
-};
-
-function speak(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(text);
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-        if (preferredVoice) msg.voice = preferredVoice;
-        msg.rate = 0.95; 
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        window.speechSynthesis.speak(msg);
-    }
-}
-
-// ---------------------------------------------------------
-// 🚨 7. BULLETPROOF INITIALIZATION, LOGIN & DATA RECOVERY 🚨
+// 7. INITIALIZATION, LOGIN & DATA RECOVERY
 // ---------------------------------------------------------
 function checkDailyStreak() {
     const today = new Date().toLocaleDateString('en-CA'); 
@@ -565,7 +401,6 @@ function checkDailyStreak() {
     }
 }
 
-// 🚨 REMOVED TRY/CATCH TO ENSURE LOGIN MEMORY RUNS 🚨
 window.onload = () => {
     const savedUser = localStorage.getItem('noi_user');
     const savedPoints = localStorage.getItem('noi_points');
@@ -586,7 +421,6 @@ window.onload = () => {
         checkDailyStreak(); 
         switchScreen('home-screen');
         
-        // Fetch updated leaderboard from persistent server DB
         socket.emit('get_leaderboard');
     } else {
         switchScreen('login-screen');
@@ -600,7 +434,6 @@ function registerUser() {
     const nameVal = nameInput.value.trim();
     if (nameVal === "") return alert("Please enter a name to begin.");
     
-    // 🚨 DATA RECOVERY PROTOCOL 🚨
     const savedUser = localStorage.getItem('noi_user');
     if (savedUser && savedUser.toLowerCase() === nameVal.toLowerCase()) {
         currentUser = savedUser;
@@ -632,8 +465,75 @@ function registerUser() {
 }
 
 // ---------------------------------------------------------
+// MASTER NAVIGATION & CHAT
+// ---------------------------------------------------------
+let sessionCancelToken = 0;
+
+function returnToMenu() {
+    sessionCancelToken++; 
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    clearInterval(sqTimerInt);
+    clearInterval(arenaTimerInt);
+    socket.emit('sq_leave_room');
+    socket.emit('leave_arena');
+    socket.emit('leave_jeopardy');
+    socket.emit('leave_tug');
+    sqIsHost = false;
+    sqRoomCode = "";
+    switchScreen('home-screen');
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (msg !== "") {
+        socket.emit('send_chat', { name: currentUser, message: msg });
+        input.value = "";
+    }
+}
+
+socket.on('receive_chat', (data) => {
+    const box = document.getElementById('chat-box');
+    if (!box) return;
+    const msgDiv = document.createElement('div');
+    const isSystem = data.name === "SYSTEM";
+    const isMe = data.name === currentUser;
+    
+    if (isSystem) {
+        msgDiv.style.textAlign = "center";
+        msgDiv.style.margin = "10px 0";
+        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:12px; font-size:12px; color:var(--text-muted);">${data.message}</span>`;
+    } else {
+        msgDiv.style.display = "flex";
+        msgDiv.style.margin = "10px 0";
+        msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
+        
+        let bubble = `<div style="background:${isMe ? 'var(--primary-gold-glow)' : 'var(--bg-card)'}; border:1px solid var(--border-light); padding:10px 15px; border-radius:12px; max-width:80%;">
+            <div style="font-size:11px; font-weight:800; color:var(--primary-gold); margin-bottom:4px; text-transform:uppercase; font-family:var(--font-heading);">${data.name}</div>
+            <div style="color:white; font-size:14px; line-height:1.4; word-break:break-word;">${data.message}</div>
+        </div>`;
+        
+        msgDiv.innerHTML = isMe ? bubble : getAvatar(data.name, data.globalPoints) + bubble;
+    }
+
+    box.appendChild(msgDiv);
+    box.scrollTop = box.scrollHeight; 
+});
+
+document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') {
+        sendChatMessage();
+    }
+});
+
+// ---------------------------------------------------------
 // 🚀 THE 4 SQUARES (FAMILY GAME) LOGIC 🚀
 // ---------------------------------------------------------
+let sqRoomCode = "";
+let sqIsHost = false;
+let sqTimerInt = null;
+
 function openSquaresLobbyMenu() {
     masterUnlockAudio();
     document.getElementById('squares-room-input').value = "";
@@ -700,7 +600,6 @@ socket.on('sq_lobby_update', (players) => {
     updateSqLobbyPlayers(players);
 });
 
-// 🚨 SAFETY NET: KICK EVERYONE IF HOST LEAVES 🚨
 socket.on('sq_host_left', () => {
     clearInterval(sqTimerInt);
     alert("🚨 The Host has left the game. The investigation is closed.");
@@ -746,7 +645,6 @@ socket.on('sq_start_round', (data) => {
     document.getElementById('sq-round-display').innerText = `ROUND ${data.round}/${data.maxRounds}`;
     document.getElementById('sq-waiting-msg').style.display = 'none';
     
-    // Render the Grid with Animations
     const grid = document.getElementById('sq-grid');
     grid.innerHTML = "";
     data.clues.forEach((clue, index) => {
@@ -768,7 +666,6 @@ socket.on('sq_start_round', (data) => {
         `;
     });
     
-    // Render the Options
     const optBox = document.getElementById('sq-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
@@ -851,12 +748,10 @@ socket.on('sq_game_over', (data) => {
             </div>
         `;
         
-        // Update global points if it's me
         if(s.name === currentUser) {
             currentPoints += s.score;
             if(currentPoints < 0) currentPoints = 0;
             
-            // Winner gets a global bonus!
             if(s.name === data.winnerName && data.winnerName !== "Nobody") {
                 currentPoints += 5000;
                 showToast("🏆 You won the match! +5000 Bonus Points!");
@@ -894,11 +789,10 @@ function startSqTimer(textId, barId, duration, onEnd) {
     }, 1000);
 }
 
-
 // ---------------------------------------------------------
 // THE ARENA (High Stakes Duel) LOGIC
 // ---------------------------------------------------------
-let arenaActiveQuestion = null;
+let arenaTimerInt = null;
 
 function startArena() {
     sessionCancelToken++;
@@ -977,7 +871,6 @@ function submitArenaWager() {
     socket.emit('arena_wager', { wager: wager });
 }
 
-// 🚨 FIXED: ARENA QUESTION IS NOW GENERATED SERVER-SIDE 🚨
 socket.on('arena_start_question', (data) => {
     document.getElementById('a-wager-view').style.display = 'none';
     document.getElementById('a-game-view').style.display = 'block';
@@ -987,15 +880,14 @@ socket.on('arena_start_question', (data) => {
     document.getElementById('a-p2-name').innerText = data.p2Name;
     document.getElementById('a-p2-bet').innerText = data.p2Wager;
     
-    arenaActiveQuestion = data.question; // Pulled straight from server to ensure match
-    document.getElementById('a-question-box').innerText = arenaActiveQuestion.question;
+    document.getElementById('a-question-box').innerText = data.question.question;
     
     const optBox = document.getElementById('a-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     document.getElementById('a-waiting-answer').style.display = 'none';
     
-    let options = trueShuffle(arenaActiveQuestion.options);
+    let options = data.question.options;
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -1003,14 +895,30 @@ socket.on('arena_start_question', (data) => {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitArenaAnswer(opt, this, arenaActiveQuestion.correct);
+            submitArenaAnswer(opt, this, data.question.correct);
         };
         optBox.appendChild(btn);
     });
+
+    let timeLeft = 15;
+    document.getElementById('a-waiting-answer').innerText = `Time left: ${timeLeft}s`;
+    document.getElementById('a-waiting-answer').style.display = 'block';
+    
+    clearInterval(arenaTimerInt);
+    arenaTimerInt = setInterval(() => {
+        timeLeft--;
+        if(!optBox.classList.contains('locked')) {
+            document.getElementById('a-waiting-answer').innerText = `Time left: ${timeLeft}s`;
+        }
+        if(timeLeft <= 0) {
+            clearInterval(arenaTimerInt);
+        }
+    }, 1000);
 });
 
 function submitArenaAnswer(selected, btn, correct) {
     masterUnlockAudio();
+    clearInterval(arenaTimerInt);
     const optBox = document.getElementById('a-options-box');
     optBox.classList.add('locked');
     
@@ -1022,17 +930,20 @@ function submitArenaAnswer(selected, btn, correct) {
         b.blur();
     });
     
-    if (selected === correct) {
-        btn.classList.add('correct');
-        sfx.correct();
-    } else {
-        btn.classList.add('wrong');
-        quizBtns.forEach(b => {
-            if (b.innerText === correct) b.classList.add('correct');
-        });
-        sfx.wrong();
+    if (btn) {
+        if (selected === correct) {
+            btn.classList.add('correct');
+            sfx.correct();
+        } else {
+            btn.classList.add('wrong');
+            quizBtns.forEach(b => {
+                if (b.innerText === correct) b.classList.add('correct');
+            });
+            sfx.wrong();
+        }
     }
     
+    document.getElementById('a-waiting-answer').innerText = 'Waiting for opponent to answer...';
     document.getElementById('a-waiting-answer').style.display = 'block';
     
     socket.emit('arena_answer', { correct: selected === correct });
@@ -1040,6 +951,7 @@ function submitArenaAnswer(selected, btn, correct) {
 
 socket.on('arena_game_over', (data) => {
     sessionCancelToken++;
+    clearInterval(arenaTimerInt);
     document.getElementById('a-game-view').style.display = 'none';
     document.getElementById('a-results-view').style.display = 'block';
     
@@ -1108,49 +1020,22 @@ socket.on('tug_lobby_update', (data) => {
     if (rc) rc.innerText = data.ready;
 });
 
-// 🚨 FIXED: TUG OF WAR QUESTION DB LOAD 🚨
-socket.on('tug_start', (data) => {
-    tugIdx = 0;
-    
+// 🚨 FIXED: STRICT SERVER-CONTROLLED TUG OF WAR 🚨
+socket.on('tug_start_round', (data) => {
     document.getElementById('t-p1-name').innerText = currentUser;
     document.getElementById('t-p2-name').innerText = data.opponentName;
-    document.getElementById('tug-flag').style.left = "50%";
     
-    document.getElementById('t-streak-p1').innerText = "0";
-    document.getElementById('t-streak-p2').innerText = "0";
-
     document.getElementById('t-lobby-view').style.display = 'none';
     document.getElementById('t-game-view').style.display = 'block';
     
-    speak("The Tug of War has begun.");
+    if (data.isFirst) speak("The Tug of War has begun.");
     
-    let allQs = [];
-    for (let path in quizData) {
-        if (path !== 'adults' && path !== 'actualfacts') {
-            for (let diff in quizData[path]) {
-                if (Array.isArray(quizData[path][diff])) {
-                    allQs = allQs.concat(quizData[path][diff]);
-                }
-            }
-        }
-    }
-    if (allQs.length === 0) allQs = quizData['kids']['easy']; // Fallback
-    tugActiveQs = trueShuffle(allQs);
-    
-    loadTugQuestion();
-});
-
-function loadTugQuestion() {
-    if (tugIdx >= tugActiveQs.length) return;
-    
-    const q = tugActiveQs[tugIdx];
-    document.getElementById('t-question-box').innerText = q.question;
-    
+    document.getElementById('t-question-box').innerText = data.question.question;
     const optBox = document.getElementById('t-options-box');
     optBox.innerHTML = "";
     optBox.classList.remove('locked');
     
-    let options = trueShuffle(q.options);
+    let options = data.question.options;
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -1158,11 +1043,11 @@ function loadTugQuestion() {
         btn.onclick = function(e) {
             e.preventDefault();
             this.blur();
-            submitTugAnswer(opt, this, q.correct);
+            submitTugAnswer(opt, this, data.question.correct);
         };
         optBox.appendChild(btn);
     });
-}
+});
 
 function submitTugAnswer(selected, btn, correct) {
     masterUnlockAudio();
@@ -1188,14 +1073,7 @@ function submitTugAnswer(selected, btn, correct) {
         sfx.wrong();
     }
     
-    socket.emit('tug_answer', { name: currentUser, correct: selected === correct });
-    
-    let currentToken = sessionCancelToken;
-    setTimeout(() => {
-        if (currentToken !== sessionCancelToken) return;
-        tugIdx++;
-        loadTugQuestion();
-    }, 1500);
+    socket.emit('tug_answer', { correct: selected === correct });
 }
 
 socket.on('tug_update', (data) => {
@@ -1318,7 +1196,6 @@ socket.on('score_update', (scores) => {
 });
 
 socket.on('game_starting', () => {
-    usedJeopardyQuestions = []; 
     const lView = document.getElementById('j-lobby-view');
     const gView = document.getElementById('j-game-view');
     const qBox = document.getElementById('j-question-box');
@@ -1385,10 +1262,6 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('new_question', (qData) => {
-    if (!usedJeopardyQuestions.includes(qData.question)) {
-        usedJeopardyQuestions.push(qData.question);
-    }
-    
     const qBox = document.getElementById('j-question-box');
     const bStatus = document.getElementById('buzzer-status');
     const btn = document.getElementById('buzzer-btn');
@@ -1406,7 +1279,7 @@ socket.on('new_question', (qData) => {
         btn.innerText = "BUZZ!";
     }
     if (optBox) optBox.style.display = "none";
-    window.currentJeopardyOptions = trueShuffle(qData.options);
+    window.currentJeopardyOptions = qData.options;
 });
 
 function sendBuzz() {
@@ -1449,8 +1322,8 @@ socket.on('player_buzzed', (data) => {
         if (optBox) {
             optBox.style.display = "flex";
             optBox.innerHTML = "";
-            let shuffled = trueShuffle(window.currentJeopardyOptions); 
-            shuffled.forEach(opt => {
+            let options = window.currentJeopardyOptions; 
+            options.forEach(opt => {
                 const obtn = document.createElement('button');
                 obtn.className = 'option-btn';
                 obtn.innerText = opt;
@@ -1755,67 +1628,4 @@ socket.on('leaderboard_data', (data) => {
         `;
         listDiv.appendChild(row);
     });
-});
-
-// ---------------------------------------------------------
-// 13. MASTER NAVIGATION
-// ---------------------------------------------------------
-function returnToMenu() {
-    sessionCancelToken++; 
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    clearInterval(sqTimerInt);
-    socket.emit('sq_leave_room');
-    socket.emit('leave_arena');
-    socket.emit('leave_jeopardy');
-    socket.emit('leave_tug');
-    sqIsHost = false;
-    sqRoomCode = "";
-    switchScreen('home-screen');
-}
-
-// ---------------------------------------------------------
-// 14. MODERN LOBBY CHAT LOGIC
-// ---------------------------------------------------------
-function sendChatMessage() {
-    const input = document.getElementById('chat-input');
-    if (!input) return;
-    const msg = input.value.trim();
-    if (msg !== "") {
-        socket.emit('send_chat', { name: currentUser, message: msg });
-        input.value = "";
-    }
-}
-
-socket.on('receive_chat', (data) => {
-    const box = document.getElementById('chat-box');
-    if (!box) return;
-    const msgDiv = document.createElement('div');
-    const isSystem = data.name === "SYSTEM";
-    const isMe = data.name === currentUser;
-    
-    if (isSystem) {
-        msgDiv.style.textAlign = "center";
-        msgDiv.style.margin = "10px 0";
-        msgDiv.innerHTML = `<span style="background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:12px; font-size:12px; color:var(--text-muted);">${data.message}</span>`;
-    } else {
-        msgDiv.style.display = "flex";
-        msgDiv.style.margin = "10px 0";
-        msgDiv.style.justifyContent = isMe ? "flex-end" : "flex-start";
-        
-        let bubble = `<div style="background:${isMe ? 'var(--primary-gold-glow)' : 'var(--bg-card)'}; border:1px solid var(--border-light); padding:10px 15px; border-radius:12px; max-width:80%;">
-            <div style="font-size:11px; font-weight:800; color:var(--primary-gold); margin-bottom:4px; text-transform:uppercase; font-family:var(--font-heading);">${data.name}</div>
-            <div style="color:white; font-size:14px; line-height:1.4; word-break:break-word;">${data.message}</div>
-        </div>`;
-        
-        msgDiv.innerHTML = isMe ? bubble : getAvatar(data.name, data.globalPoints) + bubble;
-    }
-
-    box.appendChild(msgDiv);
-    box.scrollTop = box.scrollHeight; 
-});
-
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') {
-        sendChatMessage();
-    }
 });
